@@ -1,14 +1,17 @@
 .container {
-  position: absolute;
-  top: 30%;
-  left: 10px;
-  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.container h2 {
-  font-size: 5rem;
+.board {
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: scroll;
 }
 
-.container a {
-  font-size: 1.4rem;
+.editor {
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
 }

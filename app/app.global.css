@@ -3,19 +3,29 @@
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
 @import '~@fortawesome/fontawesome-free/css/all.css';
-@import "~normalize.css";
-@import "~@blueprintjs/core/lib/css/blueprint.css";
-@import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
+@import '~normalize.css';
+@import '~@blueprintjs/core/lib/css/blueprint.css';
+@import '~@blueprintjs/icons/lib/css/blueprint-icons.css';
 
 body {
   position: relative;
-  color: white;
+  color: #f5f8fa;
   height: 100vh;
-  background-color: #232c39;
+  background-color: #182026;
   background-image: linear-gradient(
-    45deg,
-    rgba(0, 216, 255, 0.5) 10%,
-    rgba(0, 1, 127, 0.7)
+    to bottom,
+    #182026,
+    #1e282f,
+    #243038,
+    #2a3842,
+    #30404c,
+    #30404c,
+    #30404c,
+    #30404c,
+    #2a3842,
+    #243038,
+    #1e282f,
+    #182026
   );
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
@@ -26,7 +36,7 @@ h2 {
   font-size: 2.25rem;
   font-weight: bold;
   letter-spacing: -0.025em;
-  color: #fff;
+  color: #f5f8fa;
 }
 
 p {
@@ -38,7 +48,7 @@ li {
 }
 
 a {
-  color: white;
+  color: #f5f8fa;
   opacity: 0.75;
   text-decoration: none;
 }
@@ -47,4 +57,56 @@ a:hover {
   opacity: 1;
   text-decoration: none;
   cursor: pointer;
+}
+
+.Resizer {
+  background: #f5f8fa;
+  opacity: 0.4;
+  z-index: 1;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  -moz-background-clip: padding;
+  -webkit-background-clip: padding;
+  background-clip: padding-box;
+}
+
+.Resizer:hover {
+  -webkit-transition: all 2s ease;
+  transition: all 2s ease;
+}
+
+.Resizer.horizontal {
+  height: 11px;
+  margin: -5px 0;
+  border-top: 5px solid rgba(255, 255, 255, 0);
+  border-bottom: 5px solid rgba(255, 255, 255, 0);
+  cursor: row-resize;
+  width: 100%;
+}
+
+.Resizer.horizontal:hover {
+  border-top: 5px solid #8a9ba8;
+  border-bottom: 5px solid #8a9ba8;
+}
+
+.Resizer.vertical {
+  width: 11px;
+  margin: 0 -5px;
+  border-left: 5px solid rgba(255, 255, 255, 0);
+  border-right: 5px solid rgba(255, 255, 255, 0);
+  cursor: col-resize;
+}
+
+.Resizer.vertical:hover {
+  border-left: 5px solid #8a9ba8;
+  border-right: 5px solid #8a9ba8;
+}
+
+.Resizer.disabled {
+  cursor: not-allowed;
+}
+
+.Resizer.disabled:hover {
+  border-color: transparent;
 }
