@@ -6,6 +6,7 @@
 @import '~normalize.css';
 @import '~@blueprintjs/core/lib/css/blueprint.css';
 @import '~@blueprintjs/icons/lib/css/blueprint-icons.css';
+@import '~overlayscrollbars/css/OverlayScrollbars.css';
 
 body {
   position: relative;
@@ -13,50 +14,22 @@ body {
   height: 100vh;
   background-color: #182026;
   background-image: linear-gradient(
-    to bottom,
-    #182026,
-    #1e282f,
-    #243038,
-    #2a3842,
-    #30404c,
-    #30404c,
-    #30404c,
-    #30404c,
-    #2a3842,
-    #243038,
-    #1e282f,
-    #182026
+    to right top,
+    #293742,
+    #32414d,
+    #3c4c58,
+    #455664,
+    #4f6170,
+    #506372,
+    #526574,
+    #536776,
+    #4c606f,
+    #465967,
+    #3f5260,
+    #394b59
   );
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
-}
-
-h2 {
-  margin: 0;
-  font-size: 2.25rem;
-  font-weight: bold;
-  letter-spacing: -0.025em;
-  color: #f5f8fa;
-}
-
-p {
-  font-size: 24px;
-}
-
-li {
-  list-style: none;
-}
-
-a {
-  color: #f5f8fa;
-  opacity: 0.75;
-  text-decoration: none;
-}
-
-a:hover {
-  opacity: 1;
-  text-decoration: none;
-  cursor: pointer;
 }
 
 .Resizer {
@@ -69,11 +42,6 @@ a:hover {
   -moz-background-clip: padding;
   -webkit-background-clip: padding;
   background-clip: padding-box;
-}
-
-.Resizer:hover {
-  -webkit-transition: all 2s ease;
-  transition: all 2s ease;
 }
 
 .Resizer.horizontal {
@@ -99,8 +67,7 @@ a:hover {
 }
 
 .Resizer.vertical:hover {
-  border-left: 5px solid #8a9ba8;
-  border-right: 5px solid #8a9ba8;
+  opacity: 0.7;
 }
 
 .Resizer.disabled {

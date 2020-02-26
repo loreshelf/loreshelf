@@ -6,8 +6,19 @@
 
 .board {
   height: 100%;
-  overflow-x: auto;
-  overflow-y: scroll;
+  display: flex;
+  justify-content: center;
+  align-content: flex-start;
+  align-items: flex-start;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  padding: 10px;
+}
+
+.card {
+  margin: 10px;
+  font-size: small;
+  width: 300px;
 }
 
 .editor {
