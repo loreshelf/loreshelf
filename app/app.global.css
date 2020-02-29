@@ -77,3 +77,7 @@ body {
 .Resizer.disabled:hover {
   border-color: transparent;
 }
+
+.bp3-card {
+  padding: 10px;
+}

@@ -10,7 +10,7 @@ class Home extends Component {
   constructor(props) {
     super();
     const content = `
-# POJIŠTĚNÍ
+# POJIŠteni
 
 % Uzavřeno
 01.12.2017
@@ -43,14 +43,63 @@ dfsdf sdf sd fs ffsdf
 
 % Platba
 10 000 Kč měsíčně
+
+# SMLOUVA Y
+
+% Uzavřeno
+01.07.2017
+
+% Konec
+01.07.2050
+
+% Zprostředkovatel
+SDFSF dfs
+
+% Hodnota
+dfsdf sdf sd fs ffsdf
+
+% Platba
+10 000 Kč měsíčně
+
+# SMLOUVA Z
+
+% Uzavřeno
+01.07.2017
+
+% Konec
+01.07.2050
+
+% Zprostředkovatel
+SDFSF dfs
+
+% Hodnota
+dfsdf sdf sd fs ffsdf
+
+% Platba
+10 000 Kč měsíčně
     `;
     this.state = {
-      markdownSrc: content
+      markdownSrc: content,
+      editSrc: ''
     };
+    this.editItem = this.editItem.bind(this);
+    this.handleEdit = this.handleEdit.bind(this);
+  }
+
+  editItem(item) {
+    this.setState({ editSrc: item });
+  }
+
+  handleEdit(e) {
+    const { markdownSrc, editSrc } = this.state;
+    this.setState({
+      markdownSrc: markdownSrc.replace(editSrc, e.target.value)
+    });
+    this.setState({ editSrc: e.target.value });
   }
 
   render() {
-    const { markdownSrc } = this.state;
+    const { markdownSrc, editSrc } = this.state;
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -65,35 +114,10 @@ dfsdf sdf sd fs ffsdf
             className="os-theme-light"
             style={{ maxHeight: '100%' }}
           >
-            <div className={styles.board}>
-              <Card elevation={Elevation.ZERO} className={styles.card}>
-                <h5>
-                  <a href="https://test.com">Card heading</a>
-                </h5>
-                <p>Card content</p>
-              </Card>
-              <Card elevation={Elevation.ZERO} className={styles.card}>
-                <h5>
-                  <a href="https://test.com">Card heading</a>
-                </h5>
-                <p>Card content</p>
-              </Card>
-              <Card elevation={Elevation.ZERO} className={styles.card}>
-                <h5>
-                  <a href="https://test.com">Card heading</a>
-                </h5>
-                <p>Card content</p>
-              </Card>
-              <Card elevation={Elevation.ZERO} className={styles.card}>
-                <h5>
-                  <a href="https://test.com">Card heading</a>
-                </h5>
-                <p>Card content</p>
-              </Card>
-            </div>
+            <Board markdownSrc={markdownSrc} onEdit={this.editItem} />
           </OverlayScrollbarsComponent>
           <div className={styles.editor}>
-            <Editor />
+            <Editor content={editSrc} onChange={this.handleEdit} />
           </div>
         </SplitPane>
       </div>
