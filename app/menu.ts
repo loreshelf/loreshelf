@@ -4,7 +4,8 @@ import {
   Menu,
   shell,
   BrowserWindow,
-  MenuItemConstructorOptions
+  MenuItemConstructorOptions,
+  dialog
 } from 'electron';
 
 export default class MenuBuilder {
@@ -12,6 +13,31 @@ export default class MenuBuilder {
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
+  }
+
+  openBoard() {
+    const options = {
+      title: 'Open a file or folder',
+      // defaultPath: '/path/to/something/',
+      buttonLabel: 'Open',
+      filters: [{ extensions: ['md'] }],
+      properties: ['openFile']
+    };
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showOpenDialog(this.mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+      } else {
+        self.mainWindow.webContents.send('board-load', data.filePaths[0]);
+      }
+    });
+  }
+
+  saveBoard() {
+    this.mainWindow.webContents.send('board-save');
   }
 
   buildMenu() {
@@ -198,7 +224,17 @@ export default class MenuBuilder {
         submenu: [
           {
             label: '&Open',
-            accelerator: 'Ctrl+O'
+            accelerator: 'Ctrl+O',
+            click: () => {
+              this.openBoard();
+            }
+          },
+          {
+            label: '&Save',
+            accelerator: 'Ctrl+S',
+            click: () => {
+              this.saveBoard();
+            }
           },
           {
             label: '&Close',

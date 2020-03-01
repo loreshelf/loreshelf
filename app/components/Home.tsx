@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import fs from 'fs';
+import { ipcRenderer } from 'electron';
 import { Classes } from '@blueprintjs/core';
 import SplitPane from 'react-split-pane';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
@@ -9,79 +11,12 @@ import Board from './Board';
 class Home extends Component {
   constructor() {
     super();
-    const content = `
-# POJIŠteni
 
-% Uzavřeno
-01.12.2017
-
-% Konec
-01.12.2050
-
-% Zprostředkovatel
-Generali
-
-% Hodnota
-100/den pri hospitalizaci, 3.1M uraz, 5.2M invalidita, 2.6M smrt, 300/den prac. Neschopnost od 15teho dne
-
-% Platba
-1 500 Kč měsíčně
-
-# SMLOUVA X
-
-% Uzavřeno
-01.07.2017
-
-% Konec
-01.07.2050
-
-% Zprostředkovatel
-SDFSF dfs
-
-% Hodnota
-dfsdf sdf sd fs ffsdf
-
-% Platba
-10 000 Kč měsíčně
-
-# SMLOUVA Y
-
-% Uzavřeno
-01.07.2017
-
-% Konec
-01.07.2050
-
-% Zprostředkovatel
-SDFSF dfs
-
-% Hodnota
-dfsdf sdf sd fs ffsdf
-
-% Platba
-10 000 Kč měsíčně
-
-# SMLOUVA Z
-
-% Uzavřeno
-01.07.2017
-
-% Konec
-01.07.2050
-
-% Zprostředkovatel
-SDFSF dfs
-
-% Hodnota
-dfsdf sdf sd fs ffsdf
-
-% Platba
-10 000 Kč měsíčně
-    `;
-
-    const items = content.trim().split(/(?=# )/g);
+    const items = [];
+    const board = undefined;
 
     this.state = {
+      board,
       items,
       editId: -1,
       editSrc: '',
@@ -93,8 +28,37 @@ dfsdf sdf sd fs ffsdf
     this.handleTitleEdit = this.handleTitleEdit.bind(this);
   }
 
+  componentDidMount() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    ipcRenderer.on('board-load', (event, boardPath) => {
+      self.loadBoard(boardPath);
+    });
+    ipcRenderer.on('board-save', event => {
+      self.saveBoard();
+    });
+  }
+
+  getCurrentBoardMd() {
+    const { items } = this.state;
+    return items.join();
+  }
+
+  loadBoard(board) {
+    const text = fs.readFileSync(board, 'utf8');
+    const items = text.trim().split(/(?=# )/g);
+    this.setState({
+      board,
+      items
+    });
+  }
+
+  saveBoard() {
+    const { board } = this.state;
+    fs.writeFileSync(board, this.getCurrentBoardMd(), 'utf8');
+  }
+
   addNewItem() {
-    console.log('add new');
     const { items } = this.state;
     items.push('# \n\n');
     this.setState({ items });
