@@ -20,3 +20,14 @@
   width: 200px;
   max-width: 300px;
 }
+
+.newCard {
+  text-align: center;
+  margin: 5px;
+  font-size: xx-large;
+  min-width: 100px;
+  width: 100px;
+  max-width: 100px;
+  min-height: 50px;
+  line-height: 50px;
+}

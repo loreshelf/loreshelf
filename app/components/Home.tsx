@@ -87,9 +87,17 @@ dfsdf sdf sd fs ffsdf
       editSrc: '',
       editTitle: ''
     };
+    this.addNewItem = this.addNewItem.bind(this);
     this.editItem = this.editItem.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
     this.handleTitleEdit = this.handleTitleEdit.bind(this);
+  }
+
+  addNewItem() {
+    console.log('add new');
+    const { items } = this.state;
+    items.push('# \n\n');
+    this.setState({ items });
   }
 
   editItem(id, item) {
@@ -136,7 +144,11 @@ dfsdf sdf sd fs ffsdf
             className="os-theme-light"
             style={{ maxHeight: '100%' }}
           >
-            <Board items={items} onEdit={this.editItem} />
+            <Board
+              items={items}
+              onEdit={this.editItem}
+              addNewItem={this.addNewItem}
+            />
           </OverlayScrollbarsComponent>
           <div className={styles.editor}>
             <Editor

@@ -7,12 +7,13 @@ import ItemProperty from './ItemProperty';
 import styles from './Board.css';
 
 function Board(props) {
-  const { items, onEdit } = props;
+  const { items, onEdit, addNewItem } = props;
   return (
     <div className={styles.board}>
       {items.map((item, id) => (
         <Card
-          key={item.toString()}
+          // eslint-disable-next-line react/no-array-index-key
+          key={id}
           elevation={Elevation.ZERO}
           interactive
           className={styles.card}
@@ -27,6 +28,15 @@ function Board(props) {
           />
         </Card>
       ))}
+      <Card
+        key="addNew"
+        elevation={Elevation.ZERO}
+        interactive
+        className={styles.newCard}
+        onClick={addNewItem}
+      >
+        +
+      </Card>
     </div>
   );
 }
