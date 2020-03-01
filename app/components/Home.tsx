@@ -5,6 +5,7 @@ import { Classes } from '@blueprintjs/core';
 import SplitPane from 'react-split-pane';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Home.css';
+import Menu from './Menu';
 import Editor from './Editor';
 import Board from './Board';
 
@@ -12,11 +13,13 @@ class Home extends Component {
   constructor() {
     super();
 
+    const menuItems = [];
     const items = [];
     const board = undefined;
 
     this.state = {
       board,
+      menuItems,
       items,
       editId: -1,
       editSrc: '',
@@ -34,21 +37,27 @@ class Home extends Component {
     ipcRenderer.on('board-load', (event, boardPath) => {
       self.loadBoard(boardPath);
     });
-    ipcRenderer.on('board-save', event => {
+    ipcRenderer.on('board-save', () => {
       self.saveBoard();
     });
+    this.loadBoard('/home/ibek/test.md');
   }
 
   getCurrentBoardMd() {
     const { items } = this.state;
-    return items.join();
+    return items.join('');
   }
 
   loadBoard(board) {
     const text = fs.readFileSync(board, 'utf8');
-    const items = text.trim().split(/(?=# )/g);
+    const items = text.trim().split(/^(?=# )/gm);
+    const { menuItems } = this.state;
+    menuItems.push(
+      board.substring(board.lastIndexOf('/') + 1, board.length - 3)
+    );
     this.setState({
       board,
+      menuItems,
       items
     });
   }
@@ -93,15 +102,16 @@ class Home extends Component {
   }
 
   render() {
-    const { items, editSrc, editTitle } = this.state;
+    const { menuItems, items, editSrc, editTitle } = this.state;
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
         data-tid="container"
       >
+        <Menu menuItems={menuItems} />
         <SplitPane
           split="vertical"
-          style={{ height: '100%' }}
+          style={{ height: '100%', marginLeft: '160px' }}
           defaultSize="50%"
         >
           <OverlayScrollbarsComponent
