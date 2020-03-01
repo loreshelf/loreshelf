@@ -3,11 +3,16 @@ import { TextArea, EditableText } from '@blueprintjs/core';
 
 export default function Editor(props) {
   // eslint-disable-next-line react/prop-types
-  const { content, onChange } = props;
+  const { content, onChange, title, onTitleChange } = props;
   return (
     <div style={{ height: '100%', padding: '20px' }}>
       <h1>
-        <EditableText maxLength={30} placeholder="Edit title..." />
+        <EditableText
+          maxLength={30}
+          placeholder="Edit title..."
+          value={title}
+          onChange={onTitleChange}
+        />
       </h1>
       <TextArea
         value={content}

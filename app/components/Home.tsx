@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Card, Classes, Elevation } from '@blueprintjs/core';
+import { Classes } from '@blueprintjs/core';
 import SplitPane from 'react-split-pane';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Home.css';
@@ -7,7 +7,7 @@ import Editor from './Editor';
 import Board from './Board';
 
 class Home extends Component {
-  constructor(props) {
+  constructor() {
     super();
     const content = `
 # POJIŠteni
@@ -78,28 +78,50 @@ dfsdf sdf sd fs ffsdf
 % Platba
 10 000 Kč měsíčně
     `;
+
+    const items = content.trim().split(/(?=# )/g);
+
     this.state = {
-      markdownSrc: content,
-      editSrc: ''
+      items,
+      editId: -1,
+      editSrc: '',
+      editTitle: ''
     };
     this.editItem = this.editItem.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
+    this.handleTitleEdit = this.handleTitleEdit.bind(this);
   }
 
-  editItem(item) {
-    this.setState({ editSrc: item });
+  editItem(id, item) {
+    let title = item.match(/# (.*)\n/);
+    if (title) {
+      // eslint-disable-next-line prefer-destructuring
+      title = title[1];
+    } else {
+      title = '';
+    }
+    let src = '';
+    const notEmpty = item.indexOf('\n\n');
+    if (notEmpty) {
+      src = item.substring(notEmpty + 2);
+    }
+    this.setState({ editId: id, editSrc: src, editTitle: title });
   }
 
   handleEdit(e) {
-    const { markdownSrc, editSrc } = this.state;
-    this.setState({
-      markdownSrc: markdownSrc.replace(editSrc, e.target.value)
-    });
+    const { items, editId, editTitle } = this.state;
+    items[editId] = `# ${editTitle}\n\n${e.target.value}`;
     this.setState({ editSrc: e.target.value });
   }
 
+  handleTitleEdit(e) {
+    const { items, editId, editSrc } = this.state;
+    items[editId] = `# ${e}\n\n${editSrc}`;
+    this.setState({ editTitle: e });
+  }
+
   render() {
-    const { markdownSrc, editSrc } = this.state;
+    const { items, editSrc, editTitle } = this.state;
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -114,10 +136,15 @@ dfsdf sdf sd fs ffsdf
             className="os-theme-light"
             style={{ maxHeight: '100%' }}
           >
-            <Board markdownSrc={markdownSrc} onEdit={this.editItem} />
+            <Board items={items} onEdit={this.editItem} />
           </OverlayScrollbarsComponent>
           <div className={styles.editor}>
-            <Editor content={editSrc} onChange={this.handleEdit} />
+            <Editor
+              content={editSrc}
+              title={editTitle}
+              onChange={this.handleEdit}
+              onTitleChange={this.handleTitleEdit}
+            />
           </div>
         </SplitPane>
       </div>

@@ -1,29 +1,22 @@
+/* eslint-disable react/prop-types */
 import React from 'react';
-import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
 import { Card, Elevation } from '@blueprintjs/core';
-import Item from './Item';
 import ItemHeader from './ItemHeader';
 import ItemProperty from './ItemProperty';
 import styles from './Board.css';
 
 function Board(props) {
-  function editItem(item) {
-    // eslint-disable-next-line react/prop-types
-    props.onEdit(item);
-  }
-
-  const { markdownSrc } = props;
-  const items = markdownSrc.trim().split(/(?=# )/g);
+  const { items, onEdit } = props;
   return (
     <div className={styles.board}>
-      {items.map(item => (
+      {items.map((item, id) => (
         <Card
           key={item.toString()}
           elevation={Elevation.ZERO}
           interactive
           className={styles.card}
-          onClick={() => editItem(item)}
+          onClick={() => onEdit(id, item)}
         >
           <ReactMarkdown
             source={item}
@@ -37,9 +30,5 @@ function Board(props) {
     </div>
   );
 }
-
-Board.propTypes = {
-  markdownSrc: PropTypes.string.isRequired
-};
 
 export default Board;
