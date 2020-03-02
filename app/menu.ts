@@ -5,7 +5,8 @@ import {
   shell,
   BrowserWindow,
   MenuItemConstructorOptions,
-  dialog
+  dialog,
+  ipcMain
 } from 'electron';
 
 export default class MenuBuilder {
@@ -13,6 +14,12 @@ export default class MenuBuilder {
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    ipcMain.on('workspace-new', event => {
+      self.addAndOpenWorkspace(event);
+    });
   }
 
   openBoard() {
@@ -32,6 +39,25 @@ export default class MenuBuilder {
         console.log('No file selected');
       } else {
         self.mainWindow.webContents.send('board-load', data.filePaths[0]);
+      }
+    });
+  }
+
+  addAndOpenWorkspace(event) {
+    const options = {
+      title: 'Add and open a workspace',
+      buttonLabel: 'Open workspace',
+      properties: ['openDirectory']
+    };
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showOpenDialog(this.mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+      } else {
+        event.reply('workspace-load', data.filePaths[0]);
       }
     });
   }

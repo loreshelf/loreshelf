@@ -14,13 +14,17 @@ class Home extends Component {
     super();
 
     const menuItems = [];
-    const items = [];
-    const board = undefined;
+    const selectedWorkspace = undefined;
+    const selectedBoard = undefined;
+    const workspaces = [];
+    const boards = {}; // key: boardName, value: {items:[], path:string}
 
     this.state = {
-      board,
+      workspaces,
+      selectedWorkspace,
+      selectedBoard,
+      boards,
       menuItems,
-      items,
       editId: -1,
       editSrc: '',
       editTitle: ''
@@ -29,6 +33,8 @@ class Home extends Component {
     this.editItem = this.editItem.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
     this.handleTitleEdit = this.handleTitleEdit.bind(this);
+    this.selectBoard = this.selectBoard.bind(this);
+    this.changeWorkspace = this.changeWorkspace.bind(this);
   }
 
   componentDidMount() {
@@ -40,37 +46,117 @@ class Home extends Component {
     ipcRenderer.on('board-save', () => {
       self.saveBoard();
     });
-    this.loadBoard('/home/ibek/test.md');
+    ipcRenderer.on('workspace-load', (event, workspacePath) => {
+      self.loadDirectory(workspacePath);
+    });
+    this.loadDirectory('/home/ibek/Boards');
+    setTimeout(() => {
+      this.loadDirectory('/home/ibek/Temp');
+    }, 1000);
   }
 
   getCurrentBoardMd() {
-    const { items } = this.state;
-    return items.join('');
+    const { boards, selectedBoard } = this.state;
+    const items = boards[selectedBoard].items.map(i => i.trim());
+    return items.join('\n\n');
+  }
+
+  getWorkspaceFromPath(path) {
+    const { workspaces } = this.state;
+    for (let i = 0; i < workspaces.length; i += 1) {
+      if (workspaces[i].path === path) {
+        return workspaces[i];
+      }
+    }
+    return undefined;
+  }
+
+  loadDirectory(directory) {
+    const { workspaces } = this.state;
+    this.setState({
+      boards: {},
+      menuItems: [],
+      selectedBoard: undefined
+    });
+    let selectedWorkspace;
+    const existingWorkspace = this.getWorkspaceFromPath(directory);
+    if (existingWorkspace) {
+      selectedWorkspace = existingWorkspace.name;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    fs.readdir(directory, (err, files) => {
+      let firstBoardName;
+      let numBoards = 0;
+      files.forEach(file => {
+        if (file.endsWith('.md')) {
+          const boardName = self.loadBoard(`${directory}/${file}`);
+          if (!firstBoardName) {
+            firstBoardName = boardName;
+          }
+          numBoards += 1;
+        }
+      });
+      if (!selectedWorkspace) {
+        const name = directory.substring(directory.lastIndexOf('/') + 1);
+        const newWorkspace = { name, path: directory, numBoards };
+        workspaces.push(newWorkspace);
+        selectedWorkspace = newWorkspace.name;
+      } else {
+        existingWorkspace.numBoards = numBoards;
+      }
+      self.setState({
+        workspaces,
+        selectedWorkspace
+      });
+      if (firstBoardName) {
+        self.selectBoard(firstBoardName);
+      }
+    });
   }
 
   loadBoard(board) {
     const text = fs.readFileSync(board, 'utf8');
     const items = text.trim().split(/^(?=# )/gm);
-    const { menuItems } = this.state;
-    menuItems.push(
-      board.substring(board.lastIndexOf('/') + 1, board.length - 3)
+    const { menuItems, boards } = this.state;
+    const boardName = board.substring(
+      board.lastIndexOf('/') + 1,
+      board.length - 3
     );
+    menuItems.push(boardName);
+    boards[boardName] = { path: board, items };
     this.setState({
-      board,
       menuItems,
-      items
+      boards
+    });
+    return boardName;
+  }
+
+  selectBoard(boardName) {
+    this.setState({
+      selectedBoard: boardName
     });
   }
 
+  changeWorkspace(workspace) {
+    this.loadDirectory(workspace.path);
+  }
+
   saveBoard() {
-    const { board } = this.state;
-    fs.writeFileSync(board, this.getCurrentBoardMd(), 'utf8');
+    const { boards, selectedBoard } = this.state;
+    fs.writeFileSync(
+      boards[selectedBoard].path,
+      this.getCurrentBoardMd(),
+      'utf8'
+    );
   }
 
   addNewItem() {
-    const { items } = this.state;
-    items.push('# \n\n');
-    this.setState({ items });
+    const { boards, selectedBoard } = this.state;
+    const { items } = boards[selectedBoard];
+    items.push('\n\n# \n\n');
+    this.setState({ boards });
+    this.editItem(items.length - 1, items[items.length - 1]);
   }
 
   editItem(id, item) {
@@ -90,25 +176,45 @@ class Home extends Component {
   }
 
   handleEdit(e) {
-    const { items, editId, editTitle } = this.state;
-    items[editId] = `# ${editTitle}\n\n${e.target.value}`;
+    const { boards, selectedBoard, editId, editTitle } = this.state;
+    boards[selectedBoard].items[editId] = `# ${editTitle}\n\n${e.target.value}`;
     this.setState({ editSrc: e.target.value });
   }
 
   handleTitleEdit(e) {
-    const { items, editId, editSrc } = this.state;
-    items[editId] = `# ${e}\n\n${editSrc}`;
+    const { boards, selectedBoard, editId, editSrc } = this.state;
+    boards[selectedBoard].items[editId] = `# ${e}\n\n${editSrc}`;
     this.setState({ editTitle: e });
   }
 
   render() {
-    const { menuItems, items, editSrc, editTitle } = this.state;
+    const {
+      menuItems,
+      workspaces,
+      selectedWorkspace,
+      boards,
+      selectedBoard,
+      editSrc,
+      editTitle
+    } = this.state;
+    let items = [];
+    if (selectedBoard) {
+      items = boards[selectedBoard].items;
+    }
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
         data-tid="container"
       >
-        <Menu menuItems={menuItems} />
+        <Menu
+          menuItems={menuItems}
+          onClick={this.selectBoard}
+          workspaces={workspaces}
+          selectedWorkspace={selectedWorkspace}
+          selectedBoard={selectedBoard}
+          onNewWorkspace={() => ipcRenderer.send('workspace-new')}
+          onWorkspaceChanged={this.changeWorkspace}
+        />
         <SplitPane
           split="vertical"
           style={{ height: '100%', marginLeft: '160px' }}

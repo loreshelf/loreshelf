@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Card, Elevation } from '@blueprintjs/core';
+import { Card, Elevation, Icon } from '@blueprintjs/core';
 import ItemHeader from './ItemHeader';
 import ItemProperty from './ItemProperty';
 import styles from './Board.css';
@@ -35,7 +35,7 @@ function Board(props) {
         className={styles.newCard}
         onClick={addNewItem}
       >
-        +
+        <Icon icon="plus" iconSize={Icon.SIZE_LARGE} />
       </Card>
     </div>
   );
