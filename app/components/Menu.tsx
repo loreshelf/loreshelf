@@ -6,7 +6,8 @@ import {
   MenuItem,
   Popover,
   Tooltip,
-  Position
+  Position,
+  Icon
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import styles from './Menu.css';
@@ -22,6 +23,7 @@ function Menu(props) {
     selectedBoard,
     selectedWorkspace,
     workspaces,
+    boardModified,
     onNewWorkspace,
     onWorkspaceChanged
   } = props;
@@ -85,6 +87,21 @@ function Menu(props) {
         <Button active key="selectedBoard" onClick={onNewBoard}>
           {selectedBoard}
         </Button>
+        <div
+          style={{
+            fontSize: 'small',
+            paddingRight: '5px',
+            paddingTop: '10px',
+            paddingBottom: '10px'
+          }}
+        >
+          <Icon
+            icon="automatic-updates"
+            iconSize={Icon.SIZE_STANDARD}
+            style={{ marginLeft: '10px', float: 'left' }}
+          />
+          <div style={{ paddingLeft: '25px' }}>{boardModified}</div>
+        </div>
         <ButtonGroup>
           <Popover>
             <Tooltip

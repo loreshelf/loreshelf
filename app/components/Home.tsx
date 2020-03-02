@@ -17,7 +17,7 @@ class Home extends Component {
     const selectedWorkspace = undefined;
     const selectedBoard = undefined;
     const workspaces = [];
-    const boards = {}; // key: boardName, value: {items:[], path:string}
+    const boards = {}; // key: boardName, value: {items:[], path:string, modified: string}
 
     this.state = {
       workspaces,
@@ -27,7 +27,8 @@ class Home extends Component {
       menuItems,
       editId: -1,
       editSrc: '',
-      editTitle: ''
+      editTitle: '',
+      saving: false
     };
     this.addNewItem = this.addNewItem.bind(this);
     this.editItem = this.editItem.bind(this);
@@ -124,7 +125,9 @@ class Home extends Component {
       board.length - 3
     );
     menuItems.push(boardName);
-    boards[boardName] = { path: board, items };
+    const stats = fs.statSync(board);
+    const modified = this.timeSince(stats.mtime);
+    boards[boardName] = { path: board, items, modified };
     this.setState({
       menuItems,
       boards
@@ -132,7 +135,40 @@ class Home extends Component {
     return boardName;
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  timeSince(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    let interval = Math.floor(seconds / 31536000);
+
+    if (interval > 1) {
+      return `${interval} years ago`;
+    }
+    interval = Math.floor(seconds / 2592000);
+    if (interval > 1) {
+      return `${interval} months ago`;
+    }
+    interval = Math.floor(seconds / 86400);
+    if (interval > 1) {
+      return `${interval} days ago`;
+    }
+    interval = Math.floor(seconds / 3600);
+    if (interval > 1) {
+      return `${interval} hours ago`;
+    }
+    interval = Math.floor(seconds / 60);
+    if (interval > 1) {
+      return `${interval} minutes ago`;
+    }
+    return `${Math.floor(seconds)} seconds ago`;
+  }
+
   selectBoard(boardName) {
+    const { boards, selectedBoard, saving } = this.state;
+    const sb = boards[selectedBoard];
+    if (saving) {
+      this.saveBoard();
+    }
     this.setState({
       selectedBoard: boardName
     });
@@ -143,12 +179,13 @@ class Home extends Component {
   }
 
   saveBoard() {
-    const { boards, selectedBoard } = this.state;
-    fs.writeFileSync(
-      boards[selectedBoard].path,
-      this.getCurrentBoardMd(),
-      'utf8'
-    );
+    const { boards, selectedBoard, saving } = this.state;
+    if (saving) {
+      const { path } = boards[selectedBoard];
+      fs.writeFileSync(path, this.getCurrentBoardMd(), 'utf8');
+      boards[selectedBoard].modified = 'All changes saved';
+      this.setState({ boards, saving: false });
+    }
   }
 
   addNewItem() {
@@ -177,14 +214,30 @@ class Home extends Component {
 
   handleEdit(e) {
     const { boards, selectedBoard, editId, editTitle } = this.state;
-    boards[selectedBoard].items[editId] = `# ${editTitle}\n\n${e.target.value}`;
-    this.setState({ editSrc: e.target.value });
+    const sb = boards[selectedBoard];
+    sb.items[editId] = `# ${editTitle}\n\n${e.target.value}`;
+    this.autoSave();
+    this.setState({ boards, editSrc: e.target.value });
   }
 
   handleTitleEdit(e) {
     const { boards, selectedBoard, editId, editSrc } = this.state;
-    boards[selectedBoard].items[editId] = `# ${e}\n\n${editSrc}`;
-    this.setState({ editTitle: e });
+    const sb = boards[selectedBoard];
+    sb.items[editId] = `# ${e}\n\n${editSrc}`;
+    this.autoSave();
+    this.setState({ boards, editTitle: e });
+  }
+
+  autoSave() {
+    const { boards, selectedBoard, saving } = this.state;
+    if (!saving) {
+      const sb = boards[selectedBoard];
+      sb.modified = 'Saving...';
+      this.setState({ boards, saving: true });
+      setTimeout(() => {
+        this.saveBoard();
+      }, 3000);
+    }
   }
 
   render() {
@@ -198,9 +251,24 @@ class Home extends Component {
       editTitle
     } = this.state;
     let items = [];
+    let boardModified;
     if (selectedBoard) {
-      items = boards[selectedBoard].items;
+      const sb = boards[selectedBoard];
+      items = sb.items;
+      boardModified = sb.modified;
     }
+    const REUSE_BOARD = (
+      <OverlayScrollbarsComponent
+        className="os-theme-light"
+        style={{ maxHeight: '100%' }}
+      >
+        <Board
+          items={items}
+          onEdit={this.editItem}
+          addNewItem={this.addNewItem}
+        />
+      </OverlayScrollbarsComponent>
+    );
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -212,33 +280,39 @@ class Home extends Component {
           workspaces={workspaces}
           selectedWorkspace={selectedWorkspace}
           selectedBoard={selectedBoard}
+          boardModified={boardModified}
           onNewWorkspace={() => ipcRenderer.send('workspace-new')}
           onWorkspaceChanged={this.changeWorkspace}
         />
-        <SplitPane
-          split="vertical"
-          style={{ height: '100%', marginLeft: '160px' }}
-          defaultSize="50%"
-        >
-          <OverlayScrollbarsComponent
-            className="os-theme-light"
-            style={{ maxHeight: '100%' }}
+        {editSrc ? (
+          <SplitPane
+            split="vertical"
+            style={{ height: '100%', marginLeft: '160px' }}
+            defaultSize="50%"
           >
-            <Board
-              items={items}
-              onEdit={this.editItem}
-              addNewItem={this.addNewItem}
-            />
-          </OverlayScrollbarsComponent>
-          <div className={styles.editor}>
-            <Editor
-              content={editSrc}
-              title={editTitle}
-              onChange={this.handleEdit}
-              onTitleChange={this.handleTitleEdit}
-            />
+            {REUSE_BOARD}
+            <div className={styles.editor}>
+              <Editor
+                content={editSrc}
+                title={editTitle}
+                onChange={this.handleEdit}
+                onTitleChange={this.handleTitleEdit}
+              />
+            </div>
+          </SplitPane>
+        ) : (
+          <div
+            style={{
+              height: '100%',
+              marginLeft: '160px',
+              position: 'absolute',
+              left: '0px',
+              width: 'calc(100% - 170px)'
+            }}
+          >
+            {REUSE_BOARD}
           </div>
-        </SplitPane>
+        )}
       </div>
     );
   }
