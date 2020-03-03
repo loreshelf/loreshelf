@@ -1,13 +1,12 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Card, Elevation, Icon } from '@blueprintjs/core';
-import ItemHeader from './ItemHeader';
-import ItemProperty from './ItemProperty';
+import CKEditor from '@ckeditor/ckeditor5-react';
+import MarkdownEditor from '@ibek/ckeditor5-build-markdown';
 import styles from './Board.css';
 
 function Board(props) {
-  const { items, onEdit, addNewItem } = props;
+  const { items, onChange, addNewItem } = props;
   return (
     <div className={styles.board}>
       {items.map((item, id) => (
@@ -15,15 +14,14 @@ function Board(props) {
           // eslint-disable-next-line react/no-array-index-key
           key={id}
           elevation={Elevation.ZERO}
-          interactive
           className={styles.card}
-          onClick={() => onEdit(id, item)}
         >
-          <ReactMarkdown
-            source={item}
-            renderers={{
-              ...{ heading: ItemHeader },
-              ...{ text: ItemProperty }
+          <CKEditor
+            editor={MarkdownEditor}
+            data={item}
+            onChange={(event, editor) => {
+              const data = editor.getData();
+              onChange(id, data);
             }}
           />
         </Card>

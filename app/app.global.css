@@ -30,6 +30,11 @@ body {
   );
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+#root {
+  height: 100%;
 }
 
 .Resizer {

@@ -2,11 +2,9 @@ import React, { Component } from 'react';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import { Classes } from '@blueprintjs/core';
-import SplitPane from 'react-split-pane';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Home.css';
 import Menu from './Menu';
-import Editor from './Editor';
 import Board from './Board';
 
 class Home extends Component {
@@ -26,15 +24,10 @@ class Home extends Component {
       selectedBoard,
       boards,
       menuItems,
-      editId: -1,
-      editSrc: '',
-      editTitle: '',
       saveTimer
     };
     this.addNewItem = this.addNewItem.bind(this);
-    this.editItem = this.editItem.bind(this);
-    this.handleEdit = this.handleEdit.bind(this);
-    this.handleTitleEdit = this.handleTitleEdit.bind(this);
+    this.handleEditCard = this.handleEditCard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
     this.changeWorkspace = this.changeWorkspace.bind(this);
   }
@@ -197,36 +190,11 @@ class Home extends Component {
     this.editItem(items.length - 1, items[items.length - 1]);
   }
 
-  editItem(id, item) {
-    let title = item.match(/# (.*)\n/);
-    if (title) {
-      // eslint-disable-next-line prefer-destructuring
-      title = title[1];
-    } else {
-      title = '';
-    }
-    let src = '';
-    const notEmpty = item.indexOf('\n\n');
-    if (notEmpty) {
-      src = item.substring(notEmpty + 2);
-    }
-    this.setState({ editId: id, editSrc: src, editTitle: title });
-  }
-
-  handleEdit(e) {
-    const { boards, selectedBoard, editId, editTitle } = this.state;
-    const sb = boards[selectedBoard];
-    sb.items[editId] = `# ${editTitle}\n\n${e.target.value}`;
+  handleEditCard(cardId, newContent) {
+    const { boards, selectedBoard } = this.state;
+    boards[selectedBoard].items[cardId] = newContent;
     this.autoSave();
-    this.setState({ boards, editSrc: e.target.value });
-  }
-
-  handleTitleEdit(e) {
-    const { boards, selectedBoard, editId, editSrc } = this.state;
-    const sb = boards[selectedBoard];
-    sb.items[editId] = `# ${e}\n\n${editSrc}`;
-    this.autoSave();
-    this.setState({ boards, editTitle: e });
+    this.setState({ boards });
   }
 
   autoSave() {
@@ -249,9 +217,7 @@ class Home extends Component {
       workspaces,
       selectedWorkspace,
       boards,
-      selectedBoard,
-      editSrc,
-      editTitle
+      selectedBoard
     } = this.state;
     let items = [];
     let boardModified;
@@ -260,18 +226,6 @@ class Home extends Component {
       items = sb.items;
       boardModified = sb.modified;
     }
-    const REUSE_BOARD = (
-      <OverlayScrollbarsComponent
-        className="os-theme-light"
-        style={{ maxHeight: '100%' }}
-      >
-        <Board
-          items={items}
-          onEdit={this.editItem}
-          addNewItem={this.addNewItem}
-        />
-      </OverlayScrollbarsComponent>
-    );
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -287,35 +241,26 @@ class Home extends Component {
           onNewWorkspace={() => ipcRenderer.send('workspace-new')}
           onWorkspaceChanged={this.changeWorkspace}
         />
-        {true ? (
-          <SplitPane
-            split="vertical"
-            style={{ height: '100%', marginLeft: '160px' }}
-            defaultSize="50%"
+        <div
+          style={{
+            position: 'relative',
+            marginLeft: '10px',
+            marginTop: '30px',
+            width: 'calc(100% - 10px)',
+            height: 'calc(100% - 30px)'
+          }}
+        >
+          <OverlayScrollbarsComponent
+            className="os-theme-light"
+            style={{ maxHeight: '100%' }}
           >
-            {REUSE_BOARD}
-            <div className={styles.editor}>
-              <Editor
-                content={editSrc}
-                title={editTitle}
-                onChange={this.handleEdit}
-                onTitleChange={this.handleTitleEdit}
-              />
-            </div>
-          </SplitPane>
-        ) : (
-          <div
-            style={{
-              height: '100%',
-              marginLeft: '160px',
-              position: 'absolute',
-              left: '0px',
-              width: 'calc(100% - 170px)'
-            }}
-          >
-            {REUSE_BOARD}
-          </div>
-        )}
+            <Board
+              items={items}
+              onChange={this.handleEditCard}
+              addNewItem={this.addNewItem}
+            />
+          </OverlayScrollbarsComponent>
+        </div>
       </div>
     );
   }
