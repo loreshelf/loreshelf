@@ -16,6 +16,7 @@ class Home extends Component {
     const menuItems = [];
     const selectedWorkspace = undefined;
     const selectedBoard = undefined;
+    const saveTimer = undefined;
     const workspaces = [];
     const boards = {}; // key: boardName, value: {items:[], path:string, modified: string}
 
@@ -28,7 +29,7 @@ class Home extends Component {
       editId: -1,
       editSrc: '',
       editTitle: '',
-      saving: false
+      saveTimer
     };
     this.addNewItem = this.addNewItem.bind(this);
     this.editItem = this.editItem.bind(this);
@@ -164,9 +165,9 @@ class Home extends Component {
   }
 
   selectBoard(boardName) {
-    const { boards, selectedBoard, saving } = this.state;
-    const sb = boards[selectedBoard];
-    if (saving) {
+    const { saveTimer } = this.state;
+    if (saveTimer) {
+      // save board for unsaved changes
       this.saveBoard();
     }
     this.setState({
@@ -179,12 +180,12 @@ class Home extends Component {
   }
 
   saveBoard() {
-    const { boards, selectedBoard, saving } = this.state;
-    if (saving) {
+    const { boards, selectedBoard, saveTimer } = this.state;
+    if (saveTimer) {
       const { path } = boards[selectedBoard];
       fs.writeFileSync(path, this.getCurrentBoardMd(), 'utf8');
       boards[selectedBoard].modified = 'All changes saved';
-      this.setState({ boards, saving: false });
+      this.setState({ boards, saveTimer: undefined });
     }
   }
 
@@ -229,15 +230,17 @@ class Home extends Component {
   }
 
   autoSave() {
-    const { boards, selectedBoard, saving } = this.state;
-    if (!saving) {
-      const sb = boards[selectedBoard];
-      sb.modified = 'Saving...';
-      this.setState({ boards, saving: true });
-      setTimeout(() => {
-        this.saveBoard();
-      }, 3000);
+    const { boards, selectedBoard } = this.state;
+    let { saveTimer } = this.state;
+    if (saveTimer) {
+      clearTimeout(saveTimer);
     }
+    const sb = boards[selectedBoard];
+    sb.modified = 'Saving...';
+    saveTimer = setTimeout(() => {
+      this.saveBoard(); // save board 3s after the last change
+    }, 3000);
+    this.setState({ boards, saveTimer });
   }
 
   render() {
@@ -284,7 +287,7 @@ class Home extends Component {
           onNewWorkspace={() => ipcRenderer.send('workspace-new')}
           onWorkspaceChanged={this.changeWorkspace}
         />
-        {editSrc ? (
+        {true ? (
           <SplitPane
             split="vertical"
             style={{ height: '100%', marginLeft: '160px' }}
