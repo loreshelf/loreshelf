@@ -112,7 +112,8 @@ class Home extends Component {
 
   loadBoard(board) {
     const text = fs.readFileSync(board, 'utf8');
-    const items = text.trim().split(/^(?=# )/gm);
+    // Workaround: single # is not working in the editor properly right now, try with newer version of ckeditor5-markdown-gfm when available
+    const items = text.trim().split(/^(?=## )/gm);
     const { menuItems, boards } = this.state;
     const boardName = board.substring(
       board.lastIndexOf('/') + 1,
@@ -185,7 +186,7 @@ class Home extends Component {
   addNewItem() {
     const { boards, selectedBoard } = this.state;
     const { items } = boards[selectedBoard];
-    items.push('\n\n# \n\n');
+    items.push('\n\n## Edit Title...\n\n');
     this.setState({ boards });
     this.editItem(items.length - 1, items[items.length - 1]);
   }
@@ -243,10 +244,11 @@ class Home extends Component {
         />
         <div
           style={{
-            position: 'relative',
-            marginLeft: '10px',
-            marginTop: '30px',
-            width: 'calc(100% - 10px)',
+            marginLeft: '160px',
+            position: 'absolute',
+            left: '0px',
+            top: '30px',
+            width: 'calc(100% - 170px)',
             height: 'calc(100% - 30px)'
           }}
         >

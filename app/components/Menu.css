@@ -1,7 +1,7 @@
 .menu {
+  position: absolute;
   text-align: right;
   height: 100%;
   padding-top: 10px;
   background-color: #30404d;
-  width: 150px;
 }
