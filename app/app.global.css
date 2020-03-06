@@ -10,24 +10,9 @@
 
 body {
   position: relative;
-  color: #f5f8fa;
+  color: hsla(204, 33%, 97%, 1);
   height: 100vh;
-  background-color: #182026;
-  background-image: linear-gradient(
-    to right top,
-    #293742,
-    #32414d,
-    #3c4c58,
-    #455664,
-    #4f6170,
-    #506372,
-    #526574,
-    #536776,
-    #4c606f,
-    #465967,
-    #3f5260,
-    #394b59
-  );
+  background-color: hsla(206, 24%, 21%, 1);
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
   overflow-x: hidden;

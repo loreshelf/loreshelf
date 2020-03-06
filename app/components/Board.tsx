@@ -13,7 +13,7 @@ function Board(props) {
         <Card
           // eslint-disable-next-line react/no-array-index-key
           key={id}
-          elevation={Elevation.ZERO}
+          elevation={Elevation.TWO}
           className={styles.card}
         >
           <CKEditor
