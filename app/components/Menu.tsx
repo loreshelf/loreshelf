@@ -108,27 +108,13 @@ function Menu(props) {
               content="Create new board in the workspace"
               position={Position.RIGHT}
             >
-              <Button
-                key="newBoard"
-                onClick={onNewBoard}
-                alignText="center"
-                icon="add-to-artifact"
-                style={{ maxWidth: '75px' }}
-              />
-            </Tooltip>
-          </Popover>
-          <Popover>
-            <Tooltip
-              content="Duplicate the current board."
-              position={Position.RIGHT}
-            >
-              <Button
-                key="duplicateBoard"
-                onClick={onNewBoard}
-                alignText="center"
-                icon="duplicate"
-                style={{ maxWidth: '75px' }}
-              />
+              <Button key="newBoard" onClick={onNewBoard}>
+                <Icon
+                  icon="add-to-artifact"
+                  iconSize={Icon.SIZE_STANDARD}
+                  style={{ marginRight: '10px', float: 'right' }}
+                />
+              </Button>
             </Tooltip>
           </Popover>
         </ButtonGroup>

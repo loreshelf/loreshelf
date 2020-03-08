@@ -45,9 +45,9 @@ class Home extends Component {
       self.loadDirectory(workspacePath);
     });
     this.loadDirectory('/home/ibek/Boards');
-    setTimeout(() => {
+    /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
-    }, 1000);
+    }, 1000); */
   }
 
   getCurrentBoardMd() {
@@ -191,11 +191,16 @@ class Home extends Component {
     this.editItem(items.length - 1, items[items.length - 1]);
   }
 
-  handleEditCard(cardId, newContent) {
+  // eslint-disable-next-line class-methods-use-this
+  handleEditCard(editorState) {
+    console.log(editorState);
+    // console.log(newContent);
+    /**
     const { boards, selectedBoard } = this.state;
     boards[selectedBoard].items[cardId] = newContent;
     this.autoSave();
     this.setState({ boards });
+    */
   }
 
   autoSave() {
@@ -247,9 +252,8 @@ class Home extends Component {
             marginLeft: '160px',
             position: 'absolute',
             left: '0px',
-            top: '30px',
             width: 'calc(100% - 170px)',
-            height: 'calc(100% - 30px)'
+            height: 'calc(100%)'
           }}
         >
           <OverlayScrollbarsComponent

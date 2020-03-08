@@ -8,6 +8,7 @@
   flex-wrap: wrap;
   padding: 5px;
   padding-right: 10px;
+  margin-top: 30px;
 }
 
 .board > * {
@@ -19,7 +20,7 @@
   font-size: small;
   min-width: 200px;
   width: 200px;
-  max-width: auto;
+  max-width: 400px;
 }
 
 .newCard {
@@ -31,4 +32,23 @@
   max-width: 100px;
   min-height: 200px;
   line-height: 200px;
+}
+
+.toolbarAbsolute {
+  position: absolute !important;
+  top: 5px !important;
+  width: auto;
+  border-radius: 3px !important;
+  background: #f3f3f3 !important;
+  border: 1px solid #e3e3e3 !important;
+}
+
+.editor {
+  border-radius: 2px !important;
+  border: 1px solid transparent;
+  padding: 10px;
+}
+
+.hasFocus {
+  border: 1px solid hsl(206, 24%, 64%) !important;
 }
