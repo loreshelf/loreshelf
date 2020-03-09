@@ -27,6 +27,7 @@ body {
   border-radius: 2px !important;
   border: 1px solid transparent;
   padding: 10px;
+  white-space: pre-wrap;
 }
 
 .ProseMirror + div {
@@ -35,6 +36,7 @@ body {
 
 .ProseMirror-focused {
   border: 1px solid hsl(206, 24%, 64%) !important;
+  outline: none;
 }
 
 .ProseMirror-focused + div {

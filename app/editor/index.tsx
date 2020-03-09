@@ -1,6 +1,6 @@
 // An example setup, adapted from prosemirror-example-setup
 
-import schema from './schema';
+import { schema } from './schema';
 import plugins from './plugins';
 
 export const options = {

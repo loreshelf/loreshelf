@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { Component } from 'react';
+import React from 'react';
 import {
   Button,
   ButtonGroup,
@@ -17,17 +17,20 @@ const WorkspaceSelect = Select.ofType<Workspace>();
 
 function Menu(props) {
   const {
-    menuItems,
-    onClick,
-    onNewBoard,
-    selectedBoard,
-    selectedWorkspace,
-    workspaces,
-    boardModified,
-    onNewWorkspace,
-    onWorkspaceChanged
+    knownWorkspaces,
+    workspace,
+    boardData,
+    onSelectBoard,
+    onLoadWorkspace,
+    onSwitchWorkspace
   } = props;
   const noResults = <MenuItem text="Open the first workspace" />;
+  const workspaceName =
+    workspace && workspace.name ? workspace.name : '(No selection)';
+  const selectedBoardName =
+    boardData && boardData.name ? boardData.name : 'No board selected';
+  const boardStatus = boardData && boardData.status ? boardData.status : '';
+  const boards = workspace && workspace.boards ? workspace.boards : [];
   return (
     <div className={styles.menu}>
       <ButtonGroup
@@ -48,7 +51,7 @@ function Menu(props) {
             >
               <Button
                 key="openWorkspace"
-                onClick={onNewWorkspace}
+                onClick={onLoadWorkspace}
                 icon="folder-open"
                 style={{ maxWidth: '75px' }}
               />
@@ -61,7 +64,7 @@ function Menu(props) {
             >
               <Button
                 key="closeWorkspace"
-                onClick={onNewBoard}
+                onClick={onLoadWorkspace}
                 icon="cross"
                 style={{ maxWidth: '75px' }}
               />
@@ -69,23 +72,23 @@ function Menu(props) {
           </Popover>
         </ButtonGroup>
         <WorkspaceSelect
-          items={workspaces}
+          items={knownWorkspaces}
           noResults={noResults}
           itemRenderer={workspaceSelectProps.itemRenderer}
-          onItemSelect={onWorkspaceChanged}
+          onItemSelect={onSwitchWorkspace}
         >
           <Button
             rightIcon="caret-down"
             alignText="left"
-            text={selectedWorkspace ? `${selectedWorkspace}` : '(No selection)'}
+            text={workspaceName}
             style={{
               minWidth: '150px',
               maxWidth: '150px'
             }}
           />
         </WorkspaceSelect>
-        <Button active key="selectedBoard" onClick={onNewBoard}>
-          {selectedBoard}
+        <Button active key="selectedBoard">
+          {selectedBoardName}
         </Button>
         <div
           style={{
@@ -100,7 +103,7 @@ function Menu(props) {
             iconSize={Icon.SIZE_STANDARD}
             style={{ marginLeft: '10px', float: 'left' }}
           />
-          <div style={{ paddingLeft: '25px' }}>{boardModified}</div>
+          <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
         </div>
         <ButtonGroup>
           <Popover>
@@ -108,7 +111,7 @@ function Menu(props) {
               content="Create new board in the workspace"
               position={Position.RIGHT}
             >
-              <Button key="newBoard" onClick={onNewBoard}>
+              <Button key="newBoard">
                 <Icon
                   icon="add-to-artifact"
                   iconSize={Icon.SIZE_STANDARD}
@@ -118,12 +121,12 @@ function Menu(props) {
             </Tooltip>
           </Popover>
         </ButtonGroup>
-        {menuItems.map((item, id) => {
-          if (item !== selectedBoard) {
+        {boards.map((boardMeta, id) => {
+          if (boardMeta.name !== selectedBoardName) {
             return (
               // eslint-disable-next-line react/no-array-index-key
-              <Button key={id} onClick={() => onClick(item)}>
-                {item}
+              <Button key={id} onClick={() => onSelectBoard(boardMeta)}>
+                {boardMeta.name}
               </Button>
             );
           }

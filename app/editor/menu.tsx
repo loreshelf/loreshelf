@@ -1,9 +1,8 @@
-import { setBlockType, toggleMark } from 'prosemirror-commands';
+import { toggleMark } from 'prosemirror-commands';
 import { redo, undo } from 'prosemirror-history';
 import { wrapInList } from 'prosemirror-schema-list';
-// import { addColumnAfter, addColumnBefore } from 'prosemirror-tables'
 
-import schema from './schema';
+import { schema } from './schema';
 import icons from './icons';
 
 const markActive = type => state => {

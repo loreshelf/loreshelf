@@ -1,51 +1,40 @@
 /* eslint-disable react/prop-types */
-import React, { Component } from 'react';
+import React from 'react';
 import { Card, Elevation, Icon } from '@blueprintjs/core';
 import Editor from '../editor/Editor';
-import MenuBar from '../editor/MenuBar';
-import { options, menu } from '../editor/index';
 import styles from './Board.css';
 
-class Board extends Component {
-  constructor() {
-    super();
-    this.state = {
-      focusId: -1
-    };
-  }
-
-  render() {
-    const { items, onChange, addNewItem } = this.props;
-    const { focusId } = this.state;
-    return (
-      <div className={styles.board}>
-        {items.map((item, id) => (
-          <Card
-            // eslint-disable-next-line react/no-array-index-key
-            key={id}
-            elevation={Elevation.TWO}
-            className={`${styles.card} `}
-          >
-            <Editor
-              options={options}
-              onChange={doc => {
-                console.log(doc);
-              }}
-            />
-          </Card>
-        ))}
+function Board(props) {
+  const { boardData, onChange, addNewItem } = props;
+  const items = boardData && boardData.items ? boardData.items : [];
+  return (
+    <div className={styles.board}>
+      {items.map((item, id) => (
         <Card
-          key="addNew"
-          elevation={Elevation.ZERO}
-          interactive
-          className={styles.newCard}
-          onClick={addNewItem}
+          // eslint-disable-next-line react/no-array-index-key
+          key={id}
+          elevation={Elevation.TWO}
+          className={`${styles.card} `}
         >
-          <Icon icon="plus" iconSize={Icon.SIZE_LARGE} />
+          <Editor
+            doc={item}
+            onChange={doc => {
+              onChange(id, doc);
+            }}
+          />
         </Card>
-      </div>
-    );
-  }
+      ))}
+      <Card
+        key="addNew"
+        elevation={Elevation.ZERO}
+        interactive
+        className={styles.newCard}
+        onClick={addNewItem}
+      >
+        <Icon icon="plus" iconSize={Icon.SIZE_LARGE} />
+      </Card>
+    </div>
+  );
 }
 
 export default Board;

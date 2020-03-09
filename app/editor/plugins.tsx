@@ -1,25 +1,23 @@
 import { history } from 'prosemirror-history';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
-import { placeholder } from '@aeaton/prosemirror-placeholder';
+import { baseKeymap } from 'prosemirror-commands';
+import { keymap } from 'prosemirror-keymap';
 
 import 'prosemirror-tables/style/tables.css';
 import 'prosemirror-gapcursor/style/gapcursor.css';
 import '@aeaton/prosemirror-footnotes/style/footnotes.css';
 import '@aeaton/prosemirror-placeholder/style/placeholder.css';
 
-import keys from './keys';
-import rules from './rules';
+import { schema } from './schema';
+import { buildKeymap } from './keys';
+import { buildInputRules } from './rules';
 
 export default [
-  rules,
-  keys,
-  placeholder(),
+  buildInputRules(schema),
+  keymap(buildKeymap(schema)),
+  keymap(baseKeymap),
   dropCursor(),
   gapCursor(),
   history()
 ];
-
-// for tables
-// document.execCommand('enableObjectResizing', false, false);
-// document.execCommand('enableInlineTableEditing', false, false);

@@ -2,20 +2,25 @@
 import React from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import './Editor.css';
 import MenuBar from './MenuBar';
-import { options, menu } from './index';
+import menu from './menu';
+import plugins from './plugins';
 
 class Editor extends React.Component {
   constructor(props) {
     super(props);
 
     this.editorRef = React.createRef();
-    const { attributes, nodeViews } = this.props;
+    const { attributes, nodeViews, doc } = this.props;
 
     this.view = new EditorView(null, {
-      state: EditorState.create(props.options),
+      state: EditorState.create({
+        doc,
+        plugins
+      }),
       dispatchTransaction: transaction => {
         const { state, transactions } = this.view.state.applyTransaction(
           transaction
@@ -33,6 +38,7 @@ class Editor extends React.Component {
       attributes,
       nodeViews
     });
+    // console.log(this.view.state.doc);
   }
 
   componentDidMount() {
@@ -40,11 +46,28 @@ class Editor extends React.Component {
       this.view.dom,
       this.editorRef.current.firstChild
     );
-    const autoFocus = this.props;
+    const { autoFocus } = this.props;
 
     if (autoFocus) {
       this.view.focus();
     }
+  }
+
+  componentDidUpdate() {
+    const { doc } = this.props;
+    if (this.view.state.doc !== doc) {
+      this.view.updateState(
+        EditorState.create({
+          doc,
+          plugins
+        })
+      );
+      this.forceUpdate();
+    }
+  }
+
+  get content() {
+    return defaultMarkdownSerializer.serialize(this.view.state.doc);
   }
 
   render() {

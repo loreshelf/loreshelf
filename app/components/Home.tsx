@@ -2,34 +2,37 @@ import React, { Component } from 'react';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import { Classes } from '@blueprintjs/core';
+import {
+  MarkdownParser,
+  defaultMarkdownSerializer
+} from 'prosemirror-markdown';
+import markdownit from 'markdown-it';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
+import { schema } from '../editor/schema';
 
 class Home extends Component {
   constructor() {
     super();
 
-    const menuItems = [];
-    const selectedWorkspace = undefined;
-    const selectedBoard = undefined;
+    const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
+    const boardData = undefined; // {items, path, name, status}
     const saveTimer = undefined;
-    const workspaces = [];
-    const boards = {}; // key: boardName, value: {items:[], path:string, modified: string}
+    const knownWorkspaces = []; // [{name, path, numBoards, boards:[path1, path2] }]
 
     this.state = {
-      workspaces,
-      selectedWorkspace,
-      selectedBoard,
-      boards,
-      menuItems,
-      saveTimer
+      workspace,
+      boardData,
+      saveTimer,
+      knownWorkspaces
     };
     this.addNewItem = this.addNewItem.bind(this);
     this.handleEditCard = this.handleEditCard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
-    this.changeWorkspace = this.changeWorkspace.bind(this);
+    this.switchWorkspace = this.switchWorkspace.bind(this);
+    this.boardPathToName = this.boardPathToName.bind(this);
   }
 
   componentDidMount() {
@@ -44,90 +47,141 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    this.loadDirectory('/home/ibek/Boards');
+    this.loadDirectory('/home/ibek/Temp');
+    // this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
     }, 1000); */
   }
 
   getCurrentBoardMd() {
-    const { boards, selectedBoard } = this.state;
-    const items = boards[selectedBoard].items.map(i => i.trim());
+    const { boardData } = this.state;
+    const items = boardData.items.map(i =>
+      defaultMarkdownSerializer.serialize(i).trim()
+    );
     return items.join('\n\n');
   }
 
   getWorkspaceFromPath(path) {
-    const { workspaces } = this.state;
-    for (let i = 0; i < workspaces.length; i += 1) {
-      if (workspaces[i].path === path) {
-        return workspaces[i];
+    const { knownWorkspaces } = this.state;
+    for (let i = 0; i < knownWorkspaces.length; i += 1) {
+      if (knownWorkspaces[i].path === path) {
+        return knownWorkspaces[i];
       }
     }
     return undefined;
   }
 
   loadDirectory(directory) {
-    const { workspaces } = this.state;
+    const { knownWorkspaces } = this.state;
     this.setState({
-      boards: {},
-      menuItems: [],
-      selectedBoard: undefined
+      boardData: undefined
     });
-    let selectedWorkspace;
-    const existingWorkspace = this.getWorkspaceFromPath(directory);
-    if (existingWorkspace) {
-      selectedWorkspace = existingWorkspace.name;
-    }
+    let workspace = this.getWorkspaceFromPath(directory);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     fs.readdir(directory, (err, files) => {
-      let firstBoardName;
       let numBoards = 0;
+      const boards = [];
       files.forEach(file => {
         if (file.endsWith('.md')) {
-          const boardName = self.loadBoard(`${directory}/${file}`);
-          if (!firstBoardName) {
-            firstBoardName = boardName;
-          }
+          const boardPath = `${directory}/${file}`;
+          boards.push({
+            path: boardPath,
+            name: self.boardPathToName(boardPath)
+          });
           numBoards += 1;
         }
       });
-      if (!selectedWorkspace) {
+      if (!workspace) {
         const name = directory.substring(directory.lastIndexOf('/') + 1);
-        const newWorkspace = { name, path: directory, numBoards };
-        workspaces.push(newWorkspace);
-        selectedWorkspace = newWorkspace.name;
-      } else {
-        existingWorkspace.numBoards = numBoards;
+        workspace = { selectedBoard: -1, name, path: directory };
+        knownWorkspaces.push(workspace);
+      }
+      workspace.numBoards = numBoards;
+      workspace.boards = boards;
+      if (numBoards > 0) {
+        workspace.selectedBoard = 0;
+        self.selectBoard(boards[0]);
       }
       self.setState({
-        workspaces,
-        selectedWorkspace
+        knownWorkspaces,
+        workspace
       });
-      if (firstBoardName) {
-        self.selectBoard(firstBoardName);
-      }
     });
   }
 
-  loadBoard(board) {
-    const text = fs.readFileSync(board, 'utf8');
-    // Workaround: single # is not working in the editor properly right now, try with newer version of ckeditor5-markdown-gfm when available
-    const items = text.trim().split(/^(?=## )/gm);
-    const { menuItems, boards } = this.state;
-    const boardName = board.substring(
-      board.lastIndexOf('/') + 1,
-      board.length - 3
+  // eslint-disable-next-line class-methods-use-this
+  boardPathToName(boardPath) {
+    return boardPath.substring(
+      boardPath.lastIndexOf('/') + 1,
+      boardPath.length - 3
     );
-    menuItems.push(boardName);
-    const stats = fs.statSync(board);
-    const modified = this.timeSince(stats.mtime);
-    boards[boardName] = { path: board, items, modified };
-    this.setState({
-      menuItems,
-      boards
+  }
+
+  loadBoard(boardMeta) {
+    const text = fs.readFileSync(boardMeta.path, 'utf8');
+    const mdItems = text.trim().split(/^(?=# )/gm);
+    const markdownParser = new MarkdownParser(
+      schema,
+      markdownit('commonmark', { html: false }),
+      {
+        blockquote: { block: 'blockquote' },
+        paragraph: { block: 'paragraph' },
+        list_item: { block: 'list_item' },
+        bullet_list: { block: 'bullet_list' },
+        ordered_list: {
+          block: 'ordered_list',
+          getAttrs: tok => ({ order: +tok.attrGet('start') || 1 })
+        },
+        heading: {
+          block: 'heading',
+          getAttrs: tok => ({ level: +tok.tag.slice(1) })
+        },
+        code_block: { block: 'code_block' },
+        fence: {
+          block: 'code_block',
+          getAttrs: tok => ({ params: tok.info || '' })
+        },
+        hr: { node: 'horizontal_rule' },
+        image: {
+          node: 'image',
+          getAttrs: tok => ({
+            src: tok.attrGet('src'),
+            title: tok.attrGet('title') || null,
+            alt: (tok.children[0] && tok.children[0].content) || null
+          })
+        },
+        hardbreak: { node: 'hard_break' },
+
+        em: { mark: 'em' },
+        strong: { mark: 'strong' },
+        link: {
+          mark: 'link',
+          getAttrs: tok => ({
+            href: tok.attrGet('href'),
+            title: tok.attrGet('title') || null
+          })
+        },
+        code_inline: { mark: 'code' }
+      }
+    );
+    const items = [];
+    mdItems.forEach(md => {
+      items.push(markdownParser.parse(md));
     });
-    return boardName;
+    const stats = fs.statSync(boardMeta.path);
+    const status = this.timeSince(stats.mtime);
+    const boardData = {
+      path: boardMeta.path,
+      items,
+      status,
+      name: boardMeta.name
+    };
+    console.log(boardData);
+    this.setState({
+      boardData
+    });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -158,94 +212,71 @@ class Home extends Component {
     return `${Math.floor(seconds)} seconds ago`;
   }
 
-  selectBoard(boardName) {
+  selectBoard(boardMeta) {
     const { saveTimer } = this.state;
     if (saveTimer) {
       // save board for unsaved changes
       this.saveBoard();
     }
-    this.setState({
-      selectedBoard: boardName
-    });
+    this.loadBoard(boardMeta);
   }
 
-  changeWorkspace(workspace) {
+  switchWorkspace(workspace) {
     this.loadDirectory(workspace.path);
   }
 
   saveBoard() {
-    const { boards, selectedBoard, saveTimer } = this.state;
+    const { boardData, saveTimer } = this.state;
     if (saveTimer) {
-      const { path } = boards[selectedBoard];
+      const { path } = boardData;
       fs.writeFileSync(path, this.getCurrentBoardMd(), 'utf8');
-      boards[selectedBoard].modified = 'All changes saved';
-      this.setState({ boards, saveTimer: undefined });
+      boardData.status = 'All changes saved';
+      this.setState({ boardData, saveTimer: undefined });
     }
   }
 
   addNewItem() {
-    const { boards, selectedBoard } = this.state;
-    const { items } = boards[selectedBoard];
-    items.push('\n\n## Edit Title...\n\n');
-    this.setState({ boards });
-    this.editItem(items.length - 1, items[items.length - 1]);
+    const { boardData } = this.state;
+    const { items } = boardData;
+    items.push('\n\n# Edit Title...\n\n');
+    this.setState({ boardData });
+    // this.editItem(items.length - 1, items[items.length - 1]);
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  handleEditCard(editorState) {
-    console.log(editorState);
-    // console.log(newContent);
-    /**
-    const { boards, selectedBoard } = this.state;
-    boards[selectedBoard].items[cardId] = newContent;
+  handleEditCard(cardId, doc) {
+    const { boardData } = this.state;
+    boardData.items[cardId] = doc;
     this.autoSave();
-    this.setState({ boards });
-    */
+    this.setState({ boardData });
   }
 
   autoSave() {
-    const { boards, selectedBoard } = this.state;
+    const { boardData } = this.state;
     let { saveTimer } = this.state;
     if (saveTimer) {
       clearTimeout(saveTimer);
     }
-    const sb = boards[selectedBoard];
-    sb.modified = 'Saving...';
+    boardData.status = 'Saving...';
     saveTimer = setTimeout(() => {
       this.saveBoard(); // save board 3s after the last change
     }, 3000);
-    this.setState({ boards, saveTimer });
+    this.setState({ boardData, saveTimer });
   }
 
   render() {
-    const {
-      menuItems,
-      workspaces,
-      selectedWorkspace,
-      boards,
-      selectedBoard
-    } = this.state;
-    let items = [];
-    let boardModified;
-    if (selectedBoard) {
-      const sb = boards[selectedBoard];
-      items = sb.items;
-      boardModified = sb.modified;
-    }
+    const { knownWorkspaces, workspace, boardData } = this.state;
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
         data-tid="container"
       >
         <Menu
-          menuItems={menuItems}
-          onClick={this.selectBoard}
-          workspaces={workspaces}
-          selectedWorkspace={selectedWorkspace}
-          selectedBoard={selectedBoard}
-          boardModified={boardModified}
-          onNewWorkspace={() => ipcRenderer.send('workspace-new')}
-          onWorkspaceChanged={this.changeWorkspace}
+          knownWorkspaces={knownWorkspaces}
+          workspace={workspace}
+          boardData={boardData}
+          onSelectBoard={this.selectBoard}
+          onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
+          onSwitchWorkspace={this.switchWorkspace}
         />
         <div
           style={{
@@ -261,7 +292,7 @@ class Home extends Component {
             style={{ maxHeight: '100%' }}
           >
             <Board
-              items={items}
+              boardData={boardData}
               onChange={this.handleEditCard}
               addNewItem={this.addNewItem}
             />

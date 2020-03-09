@@ -11,24 +11,27 @@
 }
 
 .button {
-  background: #fff;
+  background: hsl(207, 23%, 33%);
   border: none;
   font-size: inherit;
   cursor: pointer;
-  color: #777;
+  color: hsla(204, 33%, 97%, 1);
   border-radius: 0;
   padding: 5px 10px;
 }
 
 .button:hover {
-  color: #000;
-  background: #f6f6f6;
+  color: hsla(204, 33%, 97%, 1);
+  background: hsl(207, 23%, 37%);
+  z-index: 2;
 }
 
 .button.active {
-  color: #000;
+  color: hsla(204, 33%, 97%, 1);
 }
 
 .button:disabled {
-  color: #ccc;
+  background: hsl(207, 23%, 33%);
+  color: hsla(204, 33%, 97%, 0.38);
+  cursor: default;
 }
