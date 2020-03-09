@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React from 'react';
+import React, { ReactDOM } from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
@@ -38,6 +38,8 @@ class Editor extends React.Component {
       attributes,
       nodeViews
     });
+
+    this.state = { top: '-999px' };
     // console.log(this.view.state.doc);
   }
 
@@ -51,6 +53,11 @@ class Editor extends React.Component {
     if (autoFocus) {
       this.view.focus();
     }
+
+    // eslint-disable-next-line react/no-find-dom-node
+    const rect = this.editorRef.current.getBoundingClientRect();
+    const top = `${rect.y - 25}px`;
+    this.setState({ top });
   }
 
   componentDidUpdate() {
@@ -71,9 +78,10 @@ class Editor extends React.Component {
   }
 
   render() {
+    const { top } = this.state;
     return (
       <div ref={this.editorRef}>
-        <MenuBar menu={menu} view={this.view} />
+        <MenuBar menu={menu} view={this.view} top={top} />
       </div>
     );
   }

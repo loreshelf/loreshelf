@@ -1,6 +1,5 @@
 .bar {
-  position: absolute !important;
-  top: 25px !important;
+  position: absolute;
   margin-bottom: 5px;
   display: flex;
   align-items: baseline;

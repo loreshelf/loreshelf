@@ -13,6 +13,82 @@ import Menu from './Menu';
 import Board from './Board';
 import { schema } from '../editor/schema';
 
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  let interval = Math.floor(seconds / 31536000);
+
+  if (interval > 1) {
+    return `${interval} years ago`;
+  }
+  interval = Math.floor(seconds / 2592000);
+  if (interval > 1) {
+    return `${interval} months ago`;
+  }
+  interval = Math.floor(seconds / 86400);
+  if (interval > 1) {
+    return `${interval} days ago`;
+  }
+  interval = Math.floor(seconds / 3600);
+  if (interval > 1) {
+    return `${interval} hours ago`;
+  }
+  interval = Math.floor(seconds / 60);
+  if (interval > 1) {
+    return `${interval} minutes ago`;
+  }
+  return `${Math.floor(seconds)} seconds ago`;
+}
+
+const markdownParser = new MarkdownParser(
+  schema,
+  markdownit('commonmark', { html: false }),
+  {
+    blockquote: { block: 'blockquote' },
+    paragraph: { block: 'paragraph' },
+    list_item: { block: 'list_item' },
+    bullet_list: { block: 'bullet_list' },
+    ordered_list: {
+      block: 'ordered_list',
+      getAttrs: tok => ({ order: +tok.attrGet('start') || 1 })
+    },
+    heading: {
+      block: 'heading',
+      getAttrs: tok => ({ level: +tok.tag.slice(1) })
+    },
+    code_block: { block: 'code_block' },
+    fence: {
+      block: 'code_block',
+      getAttrs: tok => ({ params: tok.info || '' })
+    },
+    hr: { node: 'horizontal_rule' },
+    image: {
+      node: 'image',
+      getAttrs: tok => ({
+        src: tok.attrGet('src'),
+        title: tok.attrGet('title') || null,
+        alt: (tok.children[0] && tok.children[0].content) || null
+      })
+    },
+    hardbreak: { node: 'hard_break' },
+
+    em: { mark: 'em' },
+    strong: { mark: 'strong' },
+    link: {
+      mark: 'link',
+      getAttrs: tok => ({
+        href: tok.attrGet('href'),
+        title: tok.attrGet('title') || null
+      })
+    },
+    code_inline: { mark: 'code' }
+  }
+);
+
+function parseMarkdown(markdownContent) {
+  return markdownParser.parse(markdownContent);
+}
+
 class Home extends Component {
   constructor() {
     super();
@@ -122,56 +198,12 @@ class Home extends Component {
   loadBoard(boardMeta) {
     const text = fs.readFileSync(boardMeta.path, 'utf8');
     const mdItems = text.trim().split(/^(?=# )/gm);
-    const markdownParser = new MarkdownParser(
-      schema,
-      markdownit('commonmark', { html: false }),
-      {
-        blockquote: { block: 'blockquote' },
-        paragraph: { block: 'paragraph' },
-        list_item: { block: 'list_item' },
-        bullet_list: { block: 'bullet_list' },
-        ordered_list: {
-          block: 'ordered_list',
-          getAttrs: tok => ({ order: +tok.attrGet('start') || 1 })
-        },
-        heading: {
-          block: 'heading',
-          getAttrs: tok => ({ level: +tok.tag.slice(1) })
-        },
-        code_block: { block: 'code_block' },
-        fence: {
-          block: 'code_block',
-          getAttrs: tok => ({ params: tok.info || '' })
-        },
-        hr: { node: 'horizontal_rule' },
-        image: {
-          node: 'image',
-          getAttrs: tok => ({
-            src: tok.attrGet('src'),
-            title: tok.attrGet('title') || null,
-            alt: (tok.children[0] && tok.children[0].content) || null
-          })
-        },
-        hardbreak: { node: 'hard_break' },
-
-        em: { mark: 'em' },
-        strong: { mark: 'strong' },
-        link: {
-          mark: 'link',
-          getAttrs: tok => ({
-            href: tok.attrGet('href'),
-            title: tok.attrGet('title') || null
-          })
-        },
-        code_inline: { mark: 'code' }
-      }
-    );
     const items = [];
     mdItems.forEach(md => {
-      items.push(markdownParser.parse(md));
+      items.push(parseMarkdown(md));
     });
     const stats = fs.statSync(boardMeta.path);
-    const status = this.timeSince(stats.mtime);
+    const status = timeSince(stats.mtime);
     const boardData = {
       path: boardMeta.path,
       items,
@@ -182,34 +214,6 @@ class Home extends Component {
     this.setState({
       boardData
     });
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  timeSince(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
-
-    let interval = Math.floor(seconds / 31536000);
-
-    if (interval > 1) {
-      return `${interval} years ago`;
-    }
-    interval = Math.floor(seconds / 2592000);
-    if (interval > 1) {
-      return `${interval} months ago`;
-    }
-    interval = Math.floor(seconds / 86400);
-    if (interval > 1) {
-      return `${interval} days ago`;
-    }
-    interval = Math.floor(seconds / 3600);
-    if (interval > 1) {
-      return `${interval} hours ago`;
-    }
-    interval = Math.floor(seconds / 60);
-    if (interval > 1) {
-      return `${interval} minutes ago`;
-    }
-    return `${Math.floor(seconds)} seconds ago`;
   }
 
   selectBoard(boardMeta) {
@@ -238,7 +242,8 @@ class Home extends Component {
   addNewItem() {
     const { boardData } = this.state;
     const { items } = boardData;
-    items.push('\n\n# Edit Title...\n\n');
+    const doc = parseMarkdown('\n\n# Edit Title...\n\n');
+    items.push(doc);
     this.setState({ boardData });
     // this.editItem(items.length - 1, items[items.length - 1]);
   }
