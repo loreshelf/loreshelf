@@ -7,7 +7,6 @@
 @import '~@blueprintjs/core/lib/css/blueprint.css';
 @import '~@blueprintjs/icons/lib/css/blueprint-icons.css';
 @import '~overlayscrollbars/css/OverlayScrollbars.css';
-@import '~react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 body {
   position: relative;
@@ -21,6 +20,30 @@ body {
 
 #root {
   height: 100%;
+}
+
+.ProseMirror {
+  background: transparent;
+  border-radius: 2px !important;
+  border: 1px solid transparent;
+  padding: 10px;
+}
+
+.ProseMirror + div {
+  visibility: hidden;
+}
+
+.ProseMirror-focused {
+  border: 1px solid hsl(206, 24%, 64%) !important;
+}
+
+.ProseMirror-focused + div {
+  visibility: visible;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 15px;
 }
 
 .Resizer {

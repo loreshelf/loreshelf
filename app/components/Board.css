@@ -50,5 +50,9 @@
 }
 
 .hasFocus {
-  border: 1px solid hsl(206, 24%, 64%) !important;
+  visibility: visible;
+}
+
+.withoutFocus {
+  visibility: hidden;
 }
