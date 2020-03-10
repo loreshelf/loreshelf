@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
-import React, { ReactDOM } from 'react';
+import React from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
-import './Editor.css';
+import style from './Editor.css';
 import MenuBar from './MenuBar';
 import menu from './menu';
 import plugins from './plugins';
@@ -78,10 +78,16 @@ class Editor extends React.Component {
   }
 
   render() {
+    const { onRemoveCard } = this.props;
     const { top } = this.state;
     return (
       <div ref={this.editorRef}>
-        <MenuBar menu={menu} view={this.view} top={top} />
+        <MenuBar
+          menu={menu}
+          view={this.view}
+          onRemoveCard={onRemoveCard}
+          top={top}
+        />
       </div>
     );
   }

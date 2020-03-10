@@ -1,12 +1,13 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { Card, Elevation, Icon } from '@blueprintjs/core';
+import { Card, Elevation, Icon, EditableText } from '@blueprintjs/core';
 import Editor from '../editor/Editor';
 import styles from './Board.css';
 
 function Board(props) {
-  const { boardData, onChange, addNewItem } = props;
+  const { boardData, onEditCard, onNewCard, onRemoveCard, onEditTitle } = props;
   const items = boardData && boardData.items ? boardData.items : [];
+  const titles = boardData && boardData.titles ? boardData.titles : [];
   return (
     <div className={styles.board}>
       {items.map((item, id) => (
@@ -16,11 +17,23 @@ function Board(props) {
           elevation={Elevation.TWO}
           className={`${styles.card} `}
         >
+          <h1>
+            <EditableText
+              maxLength={30}
+              placeholder="Edit title..."
+              alwaysRenderInput
+              value={titles[id]}
+              onChange={e => onEditTitle(id, e)}
+              className={styles.title}
+            />
+          </h1>
           <Editor
             doc={item}
             onChange={doc => {
-              onChange(id, doc);
+              onEditCard(id, doc);
             }}
+            onRemoveCard={() => onRemoveCard(id)}
+            className={styles.editor}
           />
         </Card>
       ))}
@@ -29,7 +42,7 @@ function Board(props) {
         elevation={Elevation.ZERO}
         interactive
         className={styles.newCard}
-        onClick={addNewItem}
+        onClick={onNewCard}
       >
         <Icon icon="plus" iconSize={Icon.SIZE_LARGE} />
       </Card>

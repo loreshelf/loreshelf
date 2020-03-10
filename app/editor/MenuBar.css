@@ -2,7 +2,7 @@
   position: absolute;
   margin-bottom: 5px;
   display: flex;
-  align-items: baseline;
+  align-items: stretch;
 }
 
 .group {
@@ -33,4 +33,8 @@
   background: hsl(207, 23%, 33%);
   color: hsla(204, 33%, 97%, 0.38);
   cursor: default;
+}
+
+.button.right {
+  margin-inline-start: auto;
 }

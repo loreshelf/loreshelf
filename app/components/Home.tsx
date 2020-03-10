@@ -94,7 +94,7 @@ class Home extends Component {
     super();
 
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
-    const boardData = undefined; // {items, path, name, status}
+    const boardData = undefined; // {items, titles, path, name, status}
     const saveTimer = undefined;
     const knownWorkspaces = []; // [{name, path, numBoards, boards:[path1, path2] }]
 
@@ -104,8 +104,10 @@ class Home extends Component {
       saveTimer,
       knownWorkspaces
     };
-    this.addNewItem = this.addNewItem.bind(this);
-    this.handleEditCard = this.handleEditCard.bind(this);
+    this.newCard = this.newCard.bind(this);
+    this.editTitle = this.editTitle.bind(this);
+    this.editCard = this.editCard.bind(this);
+    this.removeCard = this.removeCard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
@@ -132,8 +134,11 @@ class Home extends Component {
 
   getCurrentBoardMd() {
     const { boardData } = this.state;
-    const items = boardData.items.map(i =>
-      defaultMarkdownSerializer.serialize(i).trim()
+    const items = boardData.items.map(
+      (i, k) =>
+        `# ${boardData.titles[k]}\n\n${defaultMarkdownSerializer
+          .serialize(i)
+          .trim()}`
     );
     return items.join('\n\n');
   }
@@ -199,18 +204,30 @@ class Home extends Component {
     const text = fs.readFileSync(boardMeta.path, 'utf8');
     const mdItems = text.trim().split(/^(?=# )/gm);
     const items = [];
+    const titles = [];
     mdItems.forEach(md => {
-      items.push(parseMarkdown(md));
+      let title = md.match(/# (.*)\n/);
+      if (title) {
+        // eslint-disable-next-line prefer-destructuring
+        title = title[1];
+        titles.push(title);
+        let src = '';
+        const notEmpty = md.indexOf('\n\n');
+        if (notEmpty) {
+          src = md.substring(notEmpty + 2);
+        }
+        items.push(parseMarkdown(src));
+      }
     });
     const stats = fs.statSync(boardMeta.path);
     const status = timeSince(stats.mtime);
     const boardData = {
       path: boardMeta.path,
       items,
+      titles,
       status,
       name: boardMeta.name
     };
-    console.log(boardData);
     this.setState({
       boardData
     });
@@ -239,7 +256,7 @@ class Home extends Component {
     }
   }
 
-  addNewItem() {
+  newCard() {
     const { boardData } = this.state;
     const { items } = boardData;
     const doc = parseMarkdown('\n\n# Edit Title...\n\n');
@@ -248,9 +265,23 @@ class Home extends Component {
     // this.editItem(items.length - 1, items[items.length - 1]);
   }
 
-  handleEditCard(cardId, doc) {
+  editTitle(cardId, newTitle) {
+    const { boardData } = this.state;
+    boardData.titles[cardId] = newTitle;
+    this.autoSave();
+    this.setState({ boardData });
+  }
+
+  editCard(cardId, doc) {
     const { boardData } = this.state;
     boardData.items[cardId] = doc;
+    this.autoSave();
+    this.setState({ boardData });
+  }
+
+  removeCard(cardId) {
+    const { boardData } = this.state;
+    boardData.items.splice(cardId, 1);
     this.autoSave();
     this.setState({ boardData });
   }
@@ -298,8 +329,10 @@ class Home extends Component {
           >
             <Board
               boardData={boardData}
-              onChange={this.handleEditCard}
-              addNewItem={this.addNewItem}
+              onEditTitle={this.editTitle}
+              onEditCard={this.editCard}
+              onNewCard={this.newCard}
+              onRemoveCard={this.removeCard}
             />
           </OverlayScrollbarsComponent>
         </div>

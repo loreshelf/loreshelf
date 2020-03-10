@@ -20,7 +20,8 @@ import {
   faUndo,
   faRedo,
   faOutdent,
-  faAngleUp
+  faAngleUp,
+  faTrash
 } from '@fortawesome/fontawesome-free-solid';
 
 export default {
@@ -45,6 +46,7 @@ export default {
   footnote: <FontAwesomeIcon icon={faAsterisk} />,
   undo: <FontAwesomeIcon icon={faUndo} />,
   redo: <FontAwesomeIcon icon={faRedo} />,
+  remove: <FontAwesomeIcon icon={faTrash} />,
   lift: <FontAwesomeIcon icon={faOutdent} />,
   join_up: <FontAwesomeIcon icon={faAngleUp} />
 };
