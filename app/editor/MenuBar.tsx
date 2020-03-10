@@ -19,7 +19,7 @@ const blockActive = (type, attrs = {}) => state => {
 const MenuBar = ({ view, onRemoveCard, top }) => {
   const { state, dispatch } = view;
   return (
-    <ButtonGroup vertical className={classes.bar} style={{ top }}>
+    <ButtonGroup vertical className={classes.bar} style={{ top: `${top}px` }}>
       <Button
         onMouseDown={e => {
           e.preventDefault();
@@ -36,6 +36,7 @@ const MenuBar = ({ view, onRemoveCard, top }) => {
         disabled={!redo(state)}
         icon="redo"
       />
+      <div style={{ margin: '5px' }} />
       <Button
         onMouseDown={e => {
           e.preventDefault();
@@ -44,6 +45,7 @@ const MenuBar = ({ view, onRemoveCard, top }) => {
         disabled={!wrapInList(schema.nodes.bullet_list)(state)}
         icon="properties"
       />
+      <div style={{ margin: '10px' }} />
       <Button
         onMouseDown={e => {
           e.preventDefault();

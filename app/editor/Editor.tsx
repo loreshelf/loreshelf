@@ -16,11 +16,9 @@ class Editor extends React.Component {
     this.editorRef = React.createRef();
     const { attributes, nodeViews, doc } = this.props;
 
-    this.state = { top: '-999px' };
-
     plugins.push(
       keymap({
-        Escape: (state, dispatch) => {
+        Escape: () => {
           this.view.root.activeElement.blur();
         }
       })
@@ -62,11 +60,6 @@ class Editor extends React.Component {
     if (autoFocus) {
       this.view.focus();
     }
-
-    // eslint-disable-next-line react/no-find-dom-node
-    const rect = this.editorRef.current.getBoundingClientRect();
-    const top = `${rect.y - 0}px`;
-    this.setState({ top });
   }
 
   componentDidUpdate() {
@@ -87,11 +80,18 @@ class Editor extends React.Component {
   }
 
   render() {
-    const { onRemoveCard } = this.props;
-    const { top } = this.state;
+    const { onRemoveCard, scrollPos } = this.props;
+    const rect = this.editorRef.current
+      ? this.editorRef.current.getBoundingClientRect()
+      : undefined;
+    const top = rect ? rect.y : -999;
     return (
       <div ref={this.editorRef} className={style.editor}>
-        <MenuBar view={this.view} onRemoveCard={onRemoveCard} top={top} />
+        <MenuBar
+          view={this.view}
+          onRemoveCard={onRemoveCard}
+          top={top + scrollPos}
+        />
       </div>
     );
   }

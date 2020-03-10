@@ -98,11 +98,14 @@ class Home extends Component {
     const saveTimer = undefined;
     const knownWorkspaces = []; // [{name, path, numBoards, boards:[path1, path2] }]
 
+    this.viewRef = React.createRef();
+
     this.state = {
       workspace,
       boardData,
       saveTimer,
-      knownWorkspaces
+      knownWorkspaces,
+      scrollPos: 0
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -283,6 +286,7 @@ class Home extends Component {
   removeCard(cardId) {
     const { boardData } = this.state;
     boardData.items.splice(cardId, 1);
+    boardData.titles.splice(cardId, 1);
     this.autoSave();
     this.setState({ boardData });
   }
@@ -301,7 +305,7 @@ class Home extends Component {
   }
 
   render() {
-    const { knownWorkspaces, workspace, boardData } = this.state;
+    const { knownWorkspaces, workspace, boardData, scrollPos } = this.state;
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -315,28 +319,32 @@ class Home extends Component {
           onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
           onSwitchWorkspace={this.switchWorkspace}
         />
-        <div
+        <OverlayScrollbarsComponent
+          ref={this.viewRef}
+          className="os-theme-light"
           style={{
             marginLeft: '160px',
             position: 'absolute',
             left: '0px',
             width: 'calc(100% - 170px)',
-            height: 'calc(100%)'
+            maxHeight: '100%'
+          }}
+          onScroll={e => {
+            const newPos = this.viewRef.current.osInstance().scroll().position
+              .y;
+            // Performance problem, perhaps I could try the React Context
+            // this.setState({ scrollPos: newPos });
           }}
         >
-          <OverlayScrollbarsComponent
-            className="os-theme-light"
-            style={{ maxHeight: '100%' }}
-          >
-            <Board
-              boardData={boardData}
-              onEditTitle={this.editTitle}
-              onEditCard={this.editCard}
-              onNewCard={this.newCard}
-              onRemoveCard={this.removeCard}
-            />
-          </OverlayScrollbarsComponent>
-        </div>
+          <Board
+            boardData={boardData}
+            scrollPos={scrollPos}
+            onEditTitle={this.editTitle}
+            onEditCard={this.editCard}
+            onNewCard={this.newCard}
+            onRemoveCard={this.removeCard}
+          />
+        </OverlayScrollbarsComponent>
       </div>
     );
   }

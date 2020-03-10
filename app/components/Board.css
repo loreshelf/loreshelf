@@ -21,6 +21,8 @@
   width: 100%;
   background: hsl(207, 23%, 37%);
   padding: 5px 10px;
+  position: sticky;
+  top: 0;
 }
 
 .card {

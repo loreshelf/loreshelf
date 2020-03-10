@@ -5,7 +5,14 @@ import Editor from '../editor/Editor';
 import styles from './Board.css';
 
 function Board(props) {
-  const { boardData, onEditCard, onNewCard, onRemoveCard, onEditTitle } = props;
+  const {
+    boardData,
+    onEditCard,
+    onNewCard,
+    onRemoveCard,
+    onEditTitle,
+    scrollPos
+  } = props;
   const items = boardData && boardData.items ? boardData.items : [];
   const titles = boardData && boardData.titles ? boardData.titles : [];
   return (
@@ -17,18 +24,18 @@ function Board(props) {
           elevation={Elevation.TWO}
           className={`${styles.card} `}
         >
-          <h1>
+          <h1 className={styles.title}>
             <EditableText
               maxLength={30}
               placeholder="Edit title..."
               alwaysRenderInput
               value={titles[id]}
               onChange={e => onEditTitle(id, e)}
-              className={styles.title}
             />
           </h1>
           <Editor
             doc={item}
+            scrollPos={scrollPos}
             onChange={doc => {
               onEditCard(id, doc);
             }}
