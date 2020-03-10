@@ -32,6 +32,7 @@ h1 {
   border: 1px solid transparent;
   padding: 5px;
   white-space: pre-wrap;
+  width: 100%;
 }
 
 .ProseMirror + div {

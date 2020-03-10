@@ -1,47 +1,57 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { Icon } from '@blueprintjs/core';
-import map from 'lodash/map';
-import classnames from 'classnames';
+import { Button, ButtonGroup } from '@blueprintjs/core';
+import { redo, undo } from 'prosemirror-history';
+import { wrapInList } from 'prosemirror-schema-list';
 import classes from './MenuBar.css';
-import icons from './icons';
+import { schema } from './schema';
 
-const Button = ({ state, dispatch }) => (item, key) => (
-  <button
-    key={key}
-    type="button"
-    className={classnames({
-      [classes.button]: true,
-      [classes.active]: item.active && item.active(state),
-      [classes.right]: item.right
-    })}
-    title={item.title}
-    disabled={item.enable && !item.enable(state)}
-    onMouseDown={e => {
-      e.preventDefault();
-      item.run(state, dispatch);
-    }}
-  >
-    {item.content}
-  </button>
-);
+const blockActive = (type, attrs = {}) => state => {
+  const { $from, to, node } = state.selection;
 
-const MenuBar = ({ menu, view, onRemoveCard, top }) => {
-  const menuItems = menu;
-  menuItems.marks.remove = {
-    title: 'Remove Card',
-    content: icons.remove,
-    right: true,
-    run: onRemoveCard
-  };
+  if (node) {
+    return node.hasMarkup(type, attrs);
+  }
+
+  return to <= $from.end() && $from.parent.hasMarkup(type, attrs);
+};
+
+const MenuBar = ({ view, onRemoveCard, top }) => {
+  const { state, dispatch } = view;
   return (
-    <div className={classes.bar} style={{ top }}>
-      {map(menuItems, (item, key) => (
-        <div key={key} className={classes.group}>
-          {map(item, Button(view))}
-        </div>
-      ))}
-    </div>
+    <ButtonGroup vertical className={classes.bar} style={{ top }}>
+      <Button
+        onMouseDown={e => {
+          e.preventDefault();
+          undo(state, dispatch);
+        }}
+        disabled={!undo(state)}
+        icon="undo"
+      />
+      <Button
+        onMouseDown={e => {
+          e.preventDefault();
+          redo(state, dispatch);
+        }}
+        disabled={!redo(state)}
+        icon="redo"
+      />
+      <Button
+        onMouseDown={e => {
+          e.preventDefault();
+          wrapInList(schema.nodes.bullet_list)(state, dispatch);
+        }}
+        disabled={!wrapInList(schema.nodes.bullet_list)(state)}
+        icon="properties"
+      />
+      <Button
+        onMouseDown={e => {
+          e.preventDefault();
+          onRemoveCard();
+        }}
+        icon="trash"
+      />
+    </ButtonGroup>
   );
 };
 

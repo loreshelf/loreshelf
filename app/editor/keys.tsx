@@ -66,7 +66,6 @@ export function buildKeymap(schema) {
   bind('Alt-ArrowUp', joinUp);
   bind('Alt-ArrowDown', joinDown);
   bind('Mod-BracketLeft', lift);
-  bind('Escape', selectParentNode);
 
   if ((type = schema.marks.strong)) {
     bind('Mod-b', toggleMark(type));
@@ -79,7 +78,6 @@ export function buildKeymap(schema) {
   if ((type = schema.marks.code)) bind('Mod-`', toggleMark(type));
 
   if ((type = schema.nodes.bullet_list)) {
-    console.log('bullet');
     bind('Shift-Ctrl-8', wrapInList(type));
   }
   if ((type = schema.nodes.ordered_list))

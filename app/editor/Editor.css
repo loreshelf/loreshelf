@@ -1,3 +1,9 @@
+.editor {
+  display: flex;
+  height: calc(100% - 30px);
+  min-height: calc(100% - 30px);
+}
+
 .ProseMirror {
   font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;

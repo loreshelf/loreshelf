@@ -4,9 +4,9 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
+import { keymap } from 'prosemirror-keymap';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
-import menu from './menu';
 import plugins from './plugins';
 
 class Editor extends React.Component {
@@ -15,6 +15,16 @@ class Editor extends React.Component {
 
     this.editorRef = React.createRef();
     const { attributes, nodeViews, doc } = this.props;
+
+    this.state = { top: '-999px' };
+
+    plugins.push(
+      keymap({
+        Escape: (state, dispatch) => {
+          this.view.root.activeElement.blur();
+        }
+      })
+    );
 
     this.view = new EditorView(null, {
       state: EditorState.create({
@@ -39,7 +49,6 @@ class Editor extends React.Component {
       nodeViews
     });
 
-    this.state = { top: '-999px' };
     // console.log(this.view.state.doc);
   }
 
@@ -56,7 +65,7 @@ class Editor extends React.Component {
 
     // eslint-disable-next-line react/no-find-dom-node
     const rect = this.editorRef.current.getBoundingClientRect();
-    const top = `${rect.y - 25}px`;
+    const top = `${rect.y - 0}px`;
     this.setState({ top });
   }
 
@@ -81,13 +90,8 @@ class Editor extends React.Component {
     const { onRemoveCard } = this.props;
     const { top } = this.state;
     return (
-      <div ref={this.editorRef}>
-        <MenuBar
-          menu={menu}
-          view={this.view}
-          onRemoveCard={onRemoveCard}
-          top={top}
-        />
+      <div ref={this.editorRef} className={style.editor}>
+        <MenuBar view={this.view} onRemoveCard={onRemoveCard} top={top} />
       </div>
     );
   }

@@ -1,12 +1,8 @@
 .bar {
   position: absolute;
-  margin-bottom: 5px;
-  display: flex;
-  align-items: stretch;
-}
-
-.group {
-  margin-right: 5px;
+  z-index: 1;
+  margin-left: -31px;
+  background: #30404d;
 }
 
 .button {

@@ -258,11 +258,12 @@ class Home extends Component {
 
   newCard() {
     const { boardData } = this.state;
-    const { items } = boardData;
-    const doc = parseMarkdown('\n\n# Edit Title...\n\n');
+    const { items, titles } = boardData;
+    const doc = parseMarkdown('');
     items.push(doc);
+    titles.push('Edit Title...');
+    this.autoSave();
     this.setState({ boardData });
-    // this.editItem(items.length - 1, items[items.length - 1]);
   }
 
   editTitle(cardId, newTitle) {
