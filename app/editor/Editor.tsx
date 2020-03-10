@@ -57,6 +57,8 @@ class Editor extends React.Component {
     );
     const { autoFocus } = this.props;
 
+    console.log(this.editorRef.current.parentElement);
+
     if (autoFocus) {
       this.view.focus();
     }
@@ -80,18 +82,10 @@ class Editor extends React.Component {
   }
 
   render() {
-    const { onRemoveCard, scrollPos } = this.props;
-    const rect = this.editorRef.current
-      ? this.editorRef.current.getBoundingClientRect()
-      : undefined;
-    const top = rect ? rect.y : -999;
+    const { onRemoveCard } = this.props;
     return (
       <div ref={this.editorRef} className={style.editor}>
-        <MenuBar
-          view={this.view}
-          onRemoveCard={onRemoveCard}
-          top={top + scrollPos}
-        />
+        <MenuBar view={this.view} onRemoveCard={onRemoveCard} />
       </div>
     );
   }

@@ -5,14 +5,7 @@ import Editor from '../editor/Editor';
 import styles from './Board.css';
 
 function Board(props) {
-  const {
-    boardData,
-    onEditCard,
-    onNewCard,
-    onRemoveCard,
-    onEditTitle,
-    scrollPos
-  } = props;
+  const { boardData, onEditCard, onNewCard, onRemoveCard, onEditTitle } = props;
   const items = boardData && boardData.items ? boardData.items : [];
   const titles = boardData && boardData.titles ? boardData.titles : [];
   return (
@@ -35,7 +28,6 @@ function Board(props) {
           </h1>
           <Editor
             doc={item}
-            scrollPos={scrollPos}
             onChange={doc => {
               onEditCard(id, doc);
             }}

@@ -104,8 +104,7 @@ class Home extends Component {
       workspace,
       boardData,
       saveTimer,
-      knownWorkspaces,
-      scrollPos: 0
+      knownWorkspaces
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -305,7 +304,7 @@ class Home extends Component {
   }
 
   render() {
-    const { knownWorkspaces, workspace, boardData, scrollPos } = this.state;
+    const { knownWorkspaces, workspace, boardData } = this.state;
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -329,16 +328,9 @@ class Home extends Component {
             width: 'calc(100% - 170px)',
             maxHeight: '100%'
           }}
-          onScroll={e => {
-            const newPos = this.viewRef.current.osInstance().scroll().position
-              .y;
-            // Performance problem, perhaps I could try the React Context
-            // this.setState({ scrollPos: newPos });
-          }}
         >
           <Board
             boardData={boardData}
-            scrollPos={scrollPos}
             onEditTitle={this.editTitle}
             onEditCard={this.editCard}
             onNewCard={this.newCard}

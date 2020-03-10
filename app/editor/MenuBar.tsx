@@ -16,44 +16,46 @@ const blockActive = (type, attrs = {}) => state => {
   return to <= $from.end() && $from.parent.hasMarkup(type, attrs);
 };
 
-const MenuBar = ({ view, onRemoveCard, top }) => {
+const MenuBar = ({ view, onRemoveCard }) => {
   const { state, dispatch } = view;
   return (
-    <ButtonGroup vertical className={classes.bar} style={{ top: `${top}px` }}>
-      <Button
-        onMouseDown={e => {
-          e.preventDefault();
-          undo(state, dispatch);
-        }}
-        disabled={!undo(state)}
-        icon="undo"
-      />
-      <Button
-        onMouseDown={e => {
-          e.preventDefault();
-          redo(state, dispatch);
-        }}
-        disabled={!redo(state)}
-        icon="redo"
-      />
-      <div style={{ margin: '5px' }} />
-      <Button
-        onMouseDown={e => {
-          e.preventDefault();
-          wrapInList(schema.nodes.bullet_list)(state, dispatch);
-        }}
-        disabled={!wrapInList(schema.nodes.bullet_list)(state)}
-        icon="properties"
-      />
-      <div style={{ margin: '10px' }} />
-      <Button
-        onMouseDown={e => {
-          e.preventDefault();
-          onRemoveCard();
-        }}
-        icon="trash"
-      />
-    </ButtonGroup>
+    <div className={classes.bar}>
+      <ButtonGroup vertical style={{ background: '#30404d' }}>
+        <Button
+          onMouseDown={e => {
+            e.preventDefault();
+            undo(state, dispatch);
+          }}
+          disabled={!undo(state)}
+          icon="undo"
+        />
+        <Button
+          onMouseDown={e => {
+            e.preventDefault();
+            redo(state, dispatch);
+          }}
+          disabled={!redo(state)}
+          icon="redo"
+        />
+        <div style={{ margin: '5px' }} />
+        <Button
+          onMouseDown={e => {
+            e.preventDefault();
+            wrapInList(schema.nodes.bullet_list)(state, dispatch);
+          }}
+          disabled={!wrapInList(schema.nodes.bullet_list)(state)}
+          icon="properties"
+        />
+        <div style={{ margin: '10px' }} />
+        <Button
+          onMouseDown={e => {
+            e.preventDefault();
+            onRemoveCard();
+          }}
+          icon="trash"
+        />
+      </ButtonGroup>
+    </div>
   );
 };
 

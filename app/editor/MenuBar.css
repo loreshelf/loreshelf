@@ -1,8 +1,7 @@
 .bar {
-  position: absolute;
   z-index: 1;
-  margin-left: -31px;
-  background: #30404d;
+  margin-left: -32px;
+  padding-right: 1px;
 }
 
 .button {
