@@ -1,21 +1,21 @@
 # Comboard
 
+Comboard is a supervisory tool for tracking purposeful records in card-board view.
+
 <br>
 
 ## Install
 
-- **If you have installation or compilation issues with this project, please see [our debugging guide](https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues/400)**
-
 First, clone the repo via git:
 
 ```bash
-git clone --depth 1 --single-branch --branch master https://github.com/electron-react-boilerplate/electron-react-boilerplate.git your-project-name
+git clone https://github.com/ibek/comboard.git
 ```
 
 And then install the dependencies with yarn.
 
 ```bash
-$ cd your-project-name
+$ cd comboard
 $ yarn
 ```
 
