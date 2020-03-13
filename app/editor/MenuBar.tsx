@@ -3,20 +3,17 @@ import React from 'react';
 import { Button, ButtonGroup } from '@blueprintjs/core';
 import { redo, undo } from 'prosemirror-history';
 import { wrapInList } from 'prosemirror-schema-list';
+import { lift } from 'prosemirror-commands';
 import classes from './MenuBar.css';
 import { schema } from './schema';
 
-const blockActive = (type, attrs = {}) => state => {
-  const { $from, to, node } = state.selection;
-
-  if (node) {
-    return node.hasMarkup(type, attrs);
-  }
-
-  return to <= $from.end() && $from.parent.hasMarkup(type, attrs);
+const listActive = (type, attrs = {}) => state => {
+  const { $from } = state.selection;
+  return $from.path[3].type === type;
 };
 
-const MenuBar = ({ view, onRemoveCard }) => {
+function MenuBar(props) {
+  const { view, onRemoveCard } = props;
   const { state, dispatch } = view;
   return (
     <div className={classes.bar}>
@@ -41,9 +38,14 @@ const MenuBar = ({ view, onRemoveCard }) => {
         <Button
           onMouseDown={e => {
             e.preventDefault();
-            wrapInList(schema.nodes.bullet_list)(state, dispatch);
+            if (listActive(schema.nodes.bullet_list)(state)) {
+              lift(state, dispatch);
+            } else {
+              wrapInList(schema.nodes.bullet_list)(state, dispatch);
+            }
           }}
-          disabled={!wrapInList(schema.nodes.bullet_list)(state)}
+          active={listActive(schema.nodes.bullet_list)(state)}
+          // disabled={!wrapInList(schema.nodes.bullet_list)(state)}
           icon="properties"
         />
         <div style={{ margin: '10px' }} />
@@ -57,6 +59,6 @@ const MenuBar = ({ view, onRemoveCard }) => {
       </ButtonGroup>
     </div>
   );
-};
+}
 
 export default MenuBar;

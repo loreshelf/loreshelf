@@ -7,6 +7,7 @@ import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
+import LinkPopup from './LinkPopup';
 import plugins from './plugins';
 
 class Editor extends React.Component {
@@ -14,6 +15,7 @@ class Editor extends React.Component {
     super(props);
 
     this.editorRef = React.createRef();
+    this.linkRef = React.createRef();
     const { attributes, nodeViews, doc } = this.props;
 
     plugins.push(
@@ -47,6 +49,8 @@ class Editor extends React.Component {
       nodeViews
     });
 
+    this.setLink = this.setLink.bind(this);
+
     // console.log(this.view.state.doc);
   }
 
@@ -56,8 +60,6 @@ class Editor extends React.Component {
       this.editorRef.current.firstChild
     );
     const { autoFocus } = this.props;
-
-    console.log(this.editorRef.current.parentElement);
 
     if (autoFocus) {
       this.view.focus();
@@ -81,11 +83,24 @@ class Editor extends React.Component {
     return defaultMarkdownSerializer.serialize(this.view.state.doc);
   }
 
+  setLink() {
+    this.linkRef.current.setLink();
+  }
+
   render() {
     const { onRemoveCard } = this.props;
+    const { state } = this.view;
+    const { from } = state.selection;
+    // TODO: improve performance?
+    const url = this.view.domAtPos(from).node.parentElement.href;
     return (
       <div ref={this.editorRef} className={style.editor}>
-        <MenuBar view={this.view} onRemoveCard={onRemoveCard} />
+        <MenuBar
+          view={this.view}
+          onRemoveCard={onRemoveCard}
+          onSetLink={this.setLink}
+        />
+        <LinkPopup ref={this.linkRef} url={url} view={this.view} />
       </div>
     );
   }

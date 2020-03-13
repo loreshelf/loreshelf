@@ -5,8 +5,10 @@ import {
   textblockTypeInputRule,
   smartQuotes,
   emDash,
-  ellipsis
+  ellipsis,
+  InputRule
 } from 'prosemirror-inputrules';
+import { toggleMark } from 'prosemirror-commands';
 
 // : (NodeType) → InputRule
 // Given a blockquote node type, returns an input rule that turns `"> "`
@@ -65,6 +67,34 @@ export function buildInputRules(schema) {
   if ((type = schema.nodes.ordered_list)) rules.push(orderedListRule(type));
   if ((type = schema.nodes.bullet_list)) rules.push(bulletListRule(type));
   if ((type = schema.nodes.code_block)) rules.push(codeBlockRule(type));
-  if ((type = schema.nodes.heading)) rules.push(headingRule(type, 6));
+  if ((type = schema.nodes.heading)) rules.push(headingRule(type, 2));
+  const linkRegexp = new RegExp(
+    `(https?://(?:www.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9].[^\\s]{2,}|www.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9].[^\\s]{2,}|https?://(?:www.|(?!www))[a-zA-Z0-9]+.[^\\s]{2,}|www.[a-zA-Z0-9]+.[^\\s]{2,}) ?$`
+  );
+  if ((type = schema.marks.link))
+    rules.push(
+      new InputRule(linkRegexp, (state, match, start, end) => {
+        let insert = 'Web address';
+        let newStart = start;
+        const url = match[0];
+        if (match[1]) {
+          const offset = match[0].lastIndexOf(match[1]);
+          insert += match[0].slice(offset + match[1].length);
+          newStart += offset;
+          const cutOff = newStart - end;
+          if (cutOff > 0) {
+            insert = match[0].slice(offset - cutOff, offset) + insert;
+            newStart = end;
+          }
+        }
+        return state.tr
+          .insertText(insert, newStart, end)
+          .addMark(
+            newStart,
+            newStart + insert.length + 1,
+            schema.marks.link.create({ href: url })
+          );
+      })
+    );
   return inputRules({ rules });
 }

@@ -195,8 +195,7 @@ export const schema = new Schema({
 
     link: {
       attrs: {
-        href: {},
-        title: { default: null }
+        href: {}
       },
       inclusive: false,
       parseDOM: [
@@ -204,8 +203,7 @@ export const schema = new Schema({
           tag: 'a[href]',
           getAttrs(dom) {
             return {
-              href: dom.getAttribute('href'),
-              title: dom.getAttribute('title')
+              href: dom.getAttribute('href')
             };
           }
         }
