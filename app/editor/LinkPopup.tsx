@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import { Callout, ButtonGroup, Button } from '@blueprintjs/core';
-import { clipboard } from 'electron';
-import { toggleMark } from 'prosemirror-commands';
+import { clipboard, shell } from 'electron';
 import { schema } from './schema';
 
 class LinkPopup extends Component {
@@ -52,7 +51,11 @@ class LinkPopup extends Component {
             <Button
               onMouseDown={e => {
                 e.preventDefault();
-                window.open(url, '_blank');
+                if (url.startsWith('file')) {
+                  shell.openItem(url);
+                } else {
+                  window.open(url, '_blank');
+                }
               }}
               title={url}
               icon="share"

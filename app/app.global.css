@@ -48,6 +48,14 @@ h1 {
   visibility: visible;
 }
 
+.ProseMirror + div + div {
+  visibility: hidden;
+}
+
+.ProseMirror-focused + div + div {
+  visibility: visible;
+}
+
 .ProseMirror ul,
 .ProseMirror ol {
   padding-left: 15px;

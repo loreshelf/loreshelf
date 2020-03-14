@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable no-cond-assign */
 import {
   inputRules,
@@ -71,7 +72,17 @@ export function buildInputRules(schema) {
   const linkRegexp = new RegExp(
     `(https?://(?:www.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9].[^\\s]{2,}|www.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9].[^\\s]{2,}|https?://(?:www.|(?!www))[a-zA-Z0-9]+.[^\\s]{2,}|www.[a-zA-Z0-9]+.[^\\s]{2,}) ?$`
   );
-  if ((type = schema.marks.link))
+  const fileRegexp = new RegExp(
+    `(/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,}) ?$`
+  );
+  const localImageRegexp = new RegExp(
+    `![[]Photo\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] ?$`
+  );
+  /** const str =
+    '![Photo](/home/ibek/Pictures/Screenshot from 2019-11-19 17-30-40.png) ';
+  const res = localImageRegexp.exec(str);
+  console.log(res); */
+  if ((type = schema.marks.link)) {
     rules.push(
       new InputRule(linkRegexp, (state, match, start, end) => {
         let insert = 'Web address';
@@ -96,5 +107,38 @@ export function buildInputRules(schema) {
           );
       })
     );
+    rules.push(
+      new InputRule(fileRegexp, (state, match, start, end) => {
+        let insert = 'Local file';
+        let newStart = start;
+        const url = match[0];
+        if (match[1]) {
+          const offset = match[0].lastIndexOf(match[1]);
+          insert += match[0].slice(offset + match[1].length);
+          newStart += offset;
+          const cutOff = newStart - end;
+          if (cutOff > 0) {
+            insert = match[0].slice(offset - cutOff, offset) + insert;
+            newStart = end;
+          }
+        }
+        return state.tr
+          .insertText(insert, newStart, end)
+          .addMark(
+            newStart,
+            newStart + insert.length + 1,
+            schema.marks.link.create({ href: url })
+          );
+      })
+    );
+    rules.push(
+      new InputRule(localImageRegexp, (state, match, start, end) => {
+        const src = match[1];
+        const insert = schema.nodes.image.create({ src });
+        console.log(insert);
+        return state.tr.replaceWith(start, end, insert);
+      })
+    );
+  }
   return inputRules({ rules });
 }

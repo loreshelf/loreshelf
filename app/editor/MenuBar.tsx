@@ -4,6 +4,7 @@ import { Button, ButtonGroup } from '@blueprintjs/core';
 import { redo, undo } from 'prosemirror-history';
 import { wrapInList } from 'prosemirror-schema-list';
 import { lift } from 'prosemirror-commands';
+import { ipcRenderer } from 'electron';
 import classes from './MenuBar.css';
 import { schema } from './schema';
 
@@ -24,6 +25,7 @@ function MenuBar(props) {
             undo(state, dispatch);
           }}
           disabled={!undo(state)}
+          title="Undo"
           icon="undo"
         />
         <Button
@@ -32,6 +34,7 @@ function MenuBar(props) {
             redo(state, dispatch);
           }}
           disabled={!redo(state)}
+          title="Redo"
           icon="redo"
         />
         <div style={{ margin: '5px' }} />
@@ -46,7 +49,34 @@ function MenuBar(props) {
           }}
           active={listActive(schema.nodes.bullet_list)(state)}
           // disabled={!wrapInList(schema.nodes.bullet_list)(state)}
+          title="Bullet list"
           icon="properties"
+        />
+        <Button
+          onMouseDown={e => {
+            e.preventDefault();
+            setTimeout(() => {
+              const filePath = ipcRenderer.sendSync('file-link');
+              if (filePath) {
+                dispatch(state.tr.insertText(filePath));
+              }
+            }, 200);
+          }}
+          title="Add link to a file"
+          icon="document-open"
+        />
+        <Button
+          onMouseDown={e => {
+            e.preventDefault();
+            setTimeout(() => {
+              const filePath = ipcRenderer.sendSync('file-link');
+              if (filePath) {
+                dispatch(state.tr.insertText(`![Photo](${filePath})`));
+              }
+            }, 200);
+          }}
+          title="Add a local image"
+          icon="media"
         />
         <div style={{ margin: '10px' }} />
         <Button
@@ -54,6 +84,7 @@ function MenuBar(props) {
             e.preventDefault();
             onRemoveCard();
           }}
+          title="Remove the card"
           icon="trash"
         />
       </ButtonGroup>

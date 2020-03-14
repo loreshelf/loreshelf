@@ -5,6 +5,7 @@ import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
+import { ipcRenderer } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
 import LinkPopup from './LinkPopup';

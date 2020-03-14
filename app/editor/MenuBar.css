@@ -2,6 +2,9 @@
   z-index: 1;
   margin-left: -32px;
   padding-right: 1px;
+  height: 215px;
+  position: sticky;
+  top: 0;
 }
 
 .button {

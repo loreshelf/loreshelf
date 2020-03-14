@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable prefer-destructuring */
 /* eslint @typescript-eslint/ban-ts-ignore: off */
 import {
   app,
@@ -19,6 +21,12 @@ export default class MenuBuilder {
     const self = this;
     ipcMain.on('workspace-new', event => {
       self.addAndOpenWorkspace(event);
+    });
+
+    ipcMain.on('file-link', event => {
+      self.addFileLink(event);
+      // eslint-disable-next-line no-param-reassign
+      // event.returnValue = 'ahoj';
     });
   }
 
@@ -43,14 +51,32 @@ export default class MenuBuilder {
     });
   }
 
+  addFileLink(event) {
+    const options = {
+      title: 'Add file link',
+      buttonLabel: 'Add file link',
+      properties: ['openFile']
+    };
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showOpenDialog(this.mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+        // eslint-disable-next-line no-restricted-globals
+        event.returnValue = undefined;
+      } else {
+        // eslint-disable-next-line no-restricted-globals
+        event.returnValue = data.filePaths[0];
+      }
+    });
+  }
+
   addAndOpenWorkspace(event) {
     const options = {
       title: 'Add and open a workspace',
       buttonLabel: 'Open workspace',
       properties: ['openDirectory']
     };
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
     // eslint-disable-next-line promise/catch-or-return
     dialog.showOpenDialog(this.mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return

@@ -135,7 +135,8 @@ export const schema = new Schema({
       attrs: {
         src: {},
         alt: { default: null },
-        title: { default: null }
+        title: { default: null },
+        style: { default: 'width: calc(100% + 10px); margin: -5px;' }
       },
       group: 'inline',
       draggable: true,
