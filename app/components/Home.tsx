@@ -321,13 +321,8 @@ class Home extends Component {
         <OverlayScrollbarsComponent
           ref={this.viewRef}
           className="os-theme-light"
-          style={{
-            marginLeft: '160px',
-            position: 'absolute',
-            left: '0px',
-            width: 'calc(100% - 170px)',
-            maxHeight: '100%'
-          }}
+          style={{ width: 'auto' }}
+          options={{ textarea: { dynHeight: true } }}
         >
           <Board
             boardData={boardData}

@@ -1,5 +1,5 @@
 .board {
-  height: 100%;
+  width: calc(100vw - 150px);
   display: flex;
   justify-content: space-evenly;
   align-content: stretch;
@@ -28,8 +28,8 @@
 .card {
   margin: 5px;
   font-size: small;
-  min-width: 200px;
-  width: 200px;
+  min-width: 220px;
+  width: 220px;
   max-width: 400px;
 }
 

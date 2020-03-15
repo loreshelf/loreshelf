@@ -75,6 +75,9 @@ export function buildInputRules(schema) {
   const fileRegexp = new RegExp(
     `(/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,}) ?$`
   );
+  const imageUrlRegexp = new RegExp(
+    `((?:https?:\/\/|www\.)[^\s]+\.(?:png|jpg)) ?$`
+  );
   const localImageRegexp = new RegExp(
     `![[]Photo\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] ?$`
   );
@@ -83,6 +86,14 @@ export function buildInputRules(schema) {
   const res = localImageRegexp.exec(str);
   console.log(res); */
   if ((type = schema.marks.link)) {
+    rules.push(
+      new InputRule(imageUrlRegexp, (state, match, start, end) => {
+        const src = match[1];
+        console.log(src);
+        const insert = schema.nodes.image.create({ src });
+        return state.tr.replaceWith(start, end, insert);
+      })
+    );
     rules.push(
       new InputRule(linkRegexp, (state, match, start, end) => {
         let insert = 'Web address';
@@ -135,7 +146,6 @@ export function buildInputRules(schema) {
       new InputRule(localImageRegexp, (state, match, start, end) => {
         const src = match[1];
         const insert = schema.nodes.image.create({ src });
-        console.log(insert);
         return state.tr.replaceWith(start, end, insert);
       })
     );
