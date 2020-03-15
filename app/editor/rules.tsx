@@ -9,7 +9,6 @@ import {
   ellipsis,
   InputRule
 } from 'prosemirror-inputrules';
-import { toggleMark } from 'prosemirror-commands';
 
 // : (NodeType) → InputRule
 // Given a blockquote node type, returns an input rule that turns `"> "`
