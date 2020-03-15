@@ -66,7 +66,7 @@ const markdownParser = new MarkdownParser(
       node: 'image',
       getAttrs: tok => ({
         src: tok.attrGet('src'),
-        title: tok.attrGet('title') || null,
+        title: (tok.children[0] && tok.children[0].content) || null,
         alt: (tok.children[0] && tok.children[0].content) || null
       })
     },

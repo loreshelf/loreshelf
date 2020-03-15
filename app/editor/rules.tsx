@@ -79,7 +79,7 @@ export function buildInputRules(schema) {
     `((?:https?:\/\/|www\.)[^\s]+\.(?:png|jpg)) ?$`
   );
   const localImageRegexp = new RegExp(
-    `![[]Photo\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] ?$`
+    `![[](.*)\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] ?$`
   );
   /** const str =
     '![Photo](/home/ibek/Pictures/Screenshot from 2019-11-19 17-30-40.png) ';
@@ -88,9 +88,11 @@ export function buildInputRules(schema) {
   if ((type = schema.marks.link)) {
     rules.push(
       new InputRule(imageUrlRegexp, (state, match, start, end) => {
-        const src = match[1];
-        console.log(src);
-        const insert = schema.nodes.image.create({ src });
+        const src = encodeURI(match[1]);
+        const insert = schema.nodes.image.create({
+          src,
+          alt: 'WebImage'
+        });
         return state.tr.replaceWith(start, end, insert);
       })
     );
@@ -144,8 +146,9 @@ export function buildInputRules(schema) {
     );
     rules.push(
       new InputRule(localImageRegexp, (state, match, start, end) => {
-        const src = match[1];
-        const insert = schema.nodes.image.create({ src });
+        const alt = match[1];
+        const src = encodeURI(match[2]);
+        const insert = schema.nodes.image.create({ src, alt });
         return state.tr.replaceWith(start, end, insert);
       })
     );
