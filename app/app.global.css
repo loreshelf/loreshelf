@@ -22,8 +22,23 @@ h1 {
   margin: 0;
 }
 
+p {
+  margin-bottom: 5px;
+}
+
 #root {
   height: 100%;
+}
+
+.property {
+  font-size: small;
+  padding: 4px;
+  margin: 3px -5px;
+  border-left: 5px solid hsl(207, 23%, 37%);
+}
+
+.property::after {
+  content: ':';
 }
 
 .ProseMirror {
