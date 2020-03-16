@@ -1,187 +1,248 @@
 /* eslint-disable react/prop-types */
-import React from 'react';
+import React, { Component } from 'react';
 import {
   Button,
   ButtonGroup,
+  Classes,
   MenuItem,
   ContextMenu,
+  InputGroup,
   Menu as BJMenu,
   Popover,
-  Intent,
   Tooltip,
-  Position,
-  Icon
+  Intent,
+  AnchorButton,
+  Dialog,
+  Icon,
+  PopoverPosition
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
+import fs from 'fs';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 
-function Menu(props) {
-  const {
-    knownWorkspaces,
-    workspace,
-    boardData,
-    onSelectBoard,
-    onDeleteBoard,
-    onLoadWorkspace,
-    onSwitchWorkspace
-  } = props;
-  const noResults = <MenuItem text="Open the first workspace" />;
-  const workspaceName =
-    workspace && workspace.name ? workspace.name : '(No selection)';
-  const selectedBoardName =
-    boardData && boardData.name ? boardData.name : 'No board selected';
-  const boardStatus = boardData && boardData.status ? boardData.status : '';
-  const boards = workspace && workspace.boards ? workspace.boards : [];
-  return (
-    <div className={styles.menu}>
-      <ButtonGroup
-        vertical
-        large
-        minimal
-        alignText="right"
-        style={{
-          minWidth: '150px',
-          maxWidth: '150px'
-        }}
-      >
-        <ButtonGroup>
-          <Popover>
-            <Tooltip
-              content="Add and open new workspace"
-              position={Position.RIGHT}
-            >
-              <Button
-                key="openWorkspace"
-                onClick={onLoadWorkspace}
-                icon="folder-open"
-                style={{ maxWidth: '75px' }}
-              />
-            </Tooltip>
-          </Popover>
-          <Popover>
-            <Tooltip
-              content="Close the current workspace."
-              position={Position.RIGHT}
-            >
-              <Button
-                key="closeWorkspace"
-                onClick={onLoadWorkspace}
-                icon="cross"
-                style={{ maxWidth: '75px' }}
-              />
-            </Tooltip>
-          </Popover>
-        </ButtonGroup>
-        <WorkspaceSelect
-          items={knownWorkspaces}
-          noResults={noResults}
-          itemRenderer={workspaceSelectProps.itemRenderer}
-          onItemSelect={onSwitchWorkspace}
-        >
-          <Button
-            rightIcon="caret-down"
-            alignText="left"
-            text={workspaceName}
-            style={{
-              minWidth: '150px',
-              maxWidth: '150px'
-            }}
-          />
-        </WorkspaceSelect>
-        <Button
-          active
-          key="selectedBoard"
-          onContextMenu={e => {
-            e.preventDefault();
-            const parent = e.target.offsetParent;
-            const boardContextMenu = React.createElement(
-              BJMenu,
-              {},
-              React.createElement(MenuItem, {
-                onClick: () => {
-                  console.log('duplicate');
-                },
-                icon: 'duplicate',
-                text: 'Duplicate'
-              }),
-              React.createElement(MenuItem, {
-                onClick: () => {
-                  console.log('export');
-                },
-                icon: 'export',
-                text: 'Export'
-              }),
-              React.createElement(MenuItem, {
-                onClick: onDeleteBoard,
-                icon: 'trash',
-                intent: Intent.DANGER,
-                text: 'Delete'
-              })
-            );
+class Menu extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      newBoardOpen: false,
+      newBoardName: 'NewBoard.md',
+      newBoardIntent: Intent.NONE
+    };
+    this.newBoardOpen = this.newBoardOpen.bind(this);
+    this.newBoardClose = this.newBoardClose.bind(this);
+    this.handleNameChange = this.handleNameChange.bind(this);
+  }
 
-            ContextMenu.show(
-              boardContextMenu,
-              {
-                left: parent.offsetLeft + parent.offsetWidth + 1,
-                top: parent.offsetTop
-              },
-              () => {
-                // menu was closed; callback optional
-              },
-              true
-            );
-          }}
-        >
-          {selectedBoardName}
-        </Button>
-        <div
+  newBoardOpen() {
+    this.setState({ newBoardOpen: true, newBoardName: 'NewBoard.md' });
+  }
+
+  newBoardClose() {
+    this.setState({ newBoardOpen: false });
+  }
+
+  handleNameChange(event, workspacePath) {
+    // Check if board already exists
+    const newBoardName = `${event.target.value}.md`;
+    let newBoardIntent;
+    if (fs.existsSync(`${workspacePath}/${newBoardName}`)) {
+      newBoardIntent = Intent.DANGER;
+    } else {
+      newBoardIntent = Intent.NONE;
+    }
+    this.setState({ newBoardName, newBoardIntent });
+  }
+
+  render() {
+    const {
+      knownWorkspaces,
+      workspace,
+      boardData,
+      onNewBoard,
+      onSelectBoard,
+      onDeleteBoard,
+      onLoadWorkspace,
+      onSwitchWorkspace
+    } = this.props;
+    const { newBoardOpen, newBoardName, newBoardIntent } = this.state;
+    const noResults = <MenuItem text="Open the first workspace" />;
+    const workspaceName =
+      workspace && workspace.name ? workspace.name : '(No selection)';
+    const workspacePath =
+      workspace && workspace.path ? workspace.path : 'unknown';
+    const selectedBoardName =
+      boardData && boardData.name ? boardData.name : 'No board selected';
+    const boardStatus = boardData && boardData.status ? boardData.status : '';
+    const boards = workspace && workspace.boards ? workspace.boards : [];
+    return (
+      <div className={styles.menu}>
+        <ButtonGroup
+          vertical
+          large
+          minimal
+          alignText="right"
           style={{
-            fontSize: 'small',
-            paddingRight: '5px',
-            paddingTop: '10px',
-            paddingBottom: '10px'
+            minWidth: '150px',
+            maxWidth: '150px'
           }}
         >
-          <Icon
-            icon="automatic-updates"
-            iconSize={Icon.SIZE_STANDARD}
-            style={{ marginLeft: '10px', float: 'left' }}
+          <ButtonGroup>
+            <Button
+              key="openWorkspace"
+              title="Add and open new workspace"
+              onClick={onLoadWorkspace}
+              icon="folder-open"
+              style={{ maxWidth: '75px' }}
+            />
+            <Button
+              key="closeWorkspace"
+              title="Close the current workspace"
+              onClick={onLoadWorkspace}
+              icon="cross"
+              style={{ maxWidth: '75px' }}
+            />
+          </ButtonGroup>
+          <WorkspaceSelect
+            items={knownWorkspaces}
+            noResults={noResults}
+            itemRenderer={workspaceSelectProps.itemRenderer}
+            onItemSelect={onSwitchWorkspace}
+          >
+            <Button
+              rightIcon="caret-down"
+              alignText="left"
+              text={workspaceName}
+              style={{
+                minWidth: '150px',
+                maxWidth: '150px'
+              }}
+            />
+          </WorkspaceSelect>
+          <Button
+            active
+            key="selectedBoard"
+            onContextMenu={e => {
+              e.preventDefault();
+              const parent = e.target.offsetParent;
+              const boardContextMenu = React.createElement(
+                BJMenu,
+                {},
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    console.log('duplicate');
+                  },
+                  icon: 'duplicate',
+                  text: 'Duplicate'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    console.log('export');
+                  },
+                  icon: 'export',
+                  text: 'Export'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: onDeleteBoard,
+                  icon: 'trash',
+                  intent: Intent.DANGER,
+                  text: 'Delete'
+                })
+              );
+
+              ContextMenu.show(
+                boardContextMenu,
+                {
+                  left: parent.offsetLeft + parent.offsetWidth + 1,
+                  top: parent.offsetTop
+                },
+                () => {
+                  // menu was closed; callback optional
+                },
+                true
+              );
+            }}
+          >
+            {selectedBoardName}
+          </Button>
+          <div
+            style={{
+              fontSize: 'small',
+              paddingRight: '5px',
+              paddingTop: '10px',
+              paddingBottom: '10px'
+            }}
+          >
+            <Icon
+              icon="automatic-updates"
+              iconSize={Icon.SIZE_STANDARD}
+              style={{ marginLeft: '10px', float: 'left' }}
+            />
+            <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
+          </div>
+          <Button
+            key="newBoard"
+            title="Create a new board"
+            icon="plus"
+            onClick={this.newBoardOpen}
           />
-          <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
-        </div>
-        <ButtonGroup>
-          <Popover>
-            <Tooltip
-              content="Create new board in the workspace"
-              position={Position.RIGHT}
-            >
-              <Button key="newBoard">
-                <Icon
-                  icon="add-to-artifact"
-                  iconSize={Icon.SIZE_STANDARD}
-                  style={{ marginRight: '10px', float: 'right' }}
-                />
-              </Button>
-            </Tooltip>
-          </Popover>
+          {boards.map((boardMeta, id) => {
+            if (boardMeta.name !== selectedBoardName) {
+              return (
+                // eslint-disable-next-line react/no-array-index-key
+                <Button key={id} onClick={() => onSelectBoard(id)}>
+                  {boardMeta.name}
+                </Button>
+              );
+            }
+            return undefined;
+          })}
         </ButtonGroup>
-        {boards.map((boardMeta, id) => {
-          if (boardMeta.name !== selectedBoardName) {
-            return (
-              // eslint-disable-next-line react/no-array-index-key
-              <Button key={id} onClick={() => onSelectBoard(id)}>
-                {boardMeta.name}
+        <Dialog
+          className={Classes.DARK}
+          icon="control"
+          onClose={this.newBoardClose}
+          isOpen={newBoardOpen}
+          title="Create a new board"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>
+              The new board will be stored at
+              <strong>{` ${workspacePath}/${newBoardName}`}</strong>
+            </p>
+            <p style={{ color: 'red' }}>
+              {newBoardIntent === Intent.DANGER
+                ? 'A board with this name already exists.'
+                : ''}
+            </p>
+            <InputGroup
+              onChange={e => this.handleNameChange(e, workspacePath)}
+              intent={newBoardIntent}
+              placeholder="Enter new name..."
+            />
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.newBoardClose}>Close</Button>
+              <Button
+                intent={Intent.PRIMARY}
+                onClick={() => {
+                  if (newBoardIntent === Intent.NONE) {
+                    onNewBoard(newBoardName);
+                    this.setState({ newBoardOpen: false });
+                  }
+                }}
+              >
+                Create
               </Button>
-            );
-          }
-          return undefined;
-        })}
-      </ButtonGroup>
-    </div>
-  );
+            </div>
+          </div>
+        </Dialog>
+      </div>
+    );
+  }
 }
 
 export default Menu;

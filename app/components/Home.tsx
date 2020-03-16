@@ -30,6 +30,7 @@ class Home extends Component {
     this.editTitle = this.editTitle.bind(this);
     this.editCard = this.editCard.bind(this);
     this.removeCard = this.removeCard.bind(this);
+    this.newBoard = this.newBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
@@ -116,7 +117,7 @@ class Home extends Component {
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
     const text = fs.readFileSync(boardMeta.path, 'utf8');
-    const mdItems = text.trim().split(/^(?=# )/gm);
+    const mdItems = text.split(/^(?=# )/gm);
     const items = [];
     const titles = [];
     mdItems.forEach(md => {
@@ -146,6 +147,25 @@ class Home extends Component {
       boardData,
       workspace
     });
+  }
+
+  newBoard(newBoardName) {
+    const { saveTimer, workspace } = this.state;
+    if (saveTimer) {
+      // save board for unsaved changes
+      this.saveBoard();
+    }
+    const newBoardPath = `${workspace.path}/${newBoardName}`;
+    fs.writeFileSync(newBoardPath, '# Edit Title...\n\n');
+    // This part might not be need when I add workspace watching..
+    workspace.numBoards += 1;
+    const newBoardMetaIndex =
+      workspace.boards.push({
+        path: newBoardPath,
+        name: this.boardPathToName(newBoardPath)
+      }) - 1;
+    this.setState({ workspace });
+    this.selectBoard(newBoardMetaIndex);
   }
 
   selectBoard(boardMetaIndex) {
@@ -260,6 +280,7 @@ class Home extends Component {
           knownWorkspaces={knownWorkspaces}
           workspace={workspace}
           boardData={boardData}
+          onNewBoard={this.newBoard}
           onSelectBoard={this.selectBoard}
           onDeleteBoard={this.deleteBoard}
           onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
