@@ -4,7 +4,10 @@ import {
   Button,
   ButtonGroup,
   MenuItem,
+  ContextMenu,
+  Menu as BJMenu,
   Popover,
+  Intent,
   Tooltip,
   Position,
   Icon
@@ -21,6 +24,7 @@ function Menu(props) {
     workspace,
     boardData,
     onSelectBoard,
+    onDeleteBoard,
     onLoadWorkspace,
     onSwitchWorkspace
   } = props;
@@ -87,7 +91,50 @@ function Menu(props) {
             }}
           />
         </WorkspaceSelect>
-        <Button active key="selectedBoard">
+        <Button
+          active
+          key="selectedBoard"
+          onContextMenu={e => {
+            e.preventDefault();
+            const parent = e.target.offsetParent;
+            const boardContextMenu = React.createElement(
+              BJMenu,
+              {},
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  console.log('duplicate');
+                },
+                icon: 'duplicate',
+                text: 'Duplicate'
+              }),
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  console.log('export');
+                },
+                icon: 'export',
+                text: 'Export'
+              }),
+              React.createElement(MenuItem, {
+                onClick: onDeleteBoard,
+                icon: 'trash',
+                intent: Intent.DANGER,
+                text: 'Delete'
+              })
+            );
+
+            ContextMenu.show(
+              boardContextMenu,
+              {
+                left: parent.offsetLeft + parent.offsetWidth + 1,
+                top: parent.offsetTop
+              },
+              () => {
+                // menu was closed; callback optional
+              },
+              true
+            );
+          }}
+        >
           {selectedBoardName}
         </Button>
         <div
@@ -125,7 +172,7 @@ function Menu(props) {
           if (boardMeta.name !== selectedBoardName) {
             return (
               // eslint-disable-next-line react/no-array-index-key
-              <Button key={id} onClick={() => onSelectBoard(boardMeta)}>
+              <Button key={id} onClick={() => onSelectBoard(id)}>
                 {boardMeta.name}
               </Button>
             );

@@ -148,7 +148,7 @@ export function buildInputRules(schema) {
       new InputRule(localImageRegexp, (state, match, start, end) => {
         const alt = match[1];
         const src = encodeURI(match[2]);
-        const insert = schema.nodes.image.create({ src, alt });
+        const insert = schema.nodes.image.create({ src, alt, title: alt });
         return state.tr.replaceWith(start, end, insert);
       })
     );

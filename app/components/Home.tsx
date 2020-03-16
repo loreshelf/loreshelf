@@ -16,7 +16,7 @@ class Home extends Component {
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
     const boardData = undefined; // {items, titles, path, name, status}
     const saveTimer = undefined;
-    const knownWorkspaces = []; // [{name, path, numBoards, boards:[path1, path2] }]
+    const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
 
     this.viewRef = React.createRef();
 
@@ -31,6 +31,7 @@ class Home extends Component {
     this.editCard = this.editCard.bind(this);
     this.removeCard = this.removeCard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
+    this.deleteBoard = this.deleteBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
   }
@@ -62,22 +63,14 @@ class Home extends Component {
     return items.join('\n\n');
   }
 
-  getWorkspaceFromPath(path) {
-    const { knownWorkspaces } = this.state;
-    for (let i = 0; i < knownWorkspaces.length; i += 1) {
-      if (knownWorkspaces[i].path === path) {
-        return knownWorkspaces[i];
-      }
-    }
-    return undefined;
-  }
-
   loadDirectory(directory) {
     const { knownWorkspaces } = this.state;
     this.setState({
       boardData: undefined
     });
-    let workspace = this.getWorkspaceFromPath(directory);
+    let workspace = knownWorkspaces.find(w => {
+      return directory === w.path;
+    });
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     fs.readdir(directory, (err, files) => {
@@ -100,14 +93,13 @@ class Home extends Component {
       }
       workspace.numBoards = numBoards;
       workspace.boards = boards;
-      if (numBoards > 0) {
-        workspace.selectedBoard = 0;
-        self.selectBoard(boards[0]);
-      }
-      self.setState({
+      this.setState({
         knownWorkspaces,
         workspace
       });
+      if (numBoards > 0) {
+        this.selectBoard(0);
+      }
     });
   }
 
@@ -119,7 +111,10 @@ class Home extends Component {
     );
   }
 
-  loadBoard(boardMeta) {
+  loadBoard(boardMetaIndex) {
+    const { workspace } = this.state;
+    workspace.selectedBoard = boardMetaIndex;
+    const boardMeta = workspace.boards[boardMetaIndex];
     const text = fs.readFileSync(boardMeta.path, 'utf8');
     const mdItems = text.trim().split(/^(?=# )/gm);
     const items = [];
@@ -148,17 +143,18 @@ class Home extends Component {
       name: boardMeta.name
     };
     this.setState({
-      boardData
+      boardData,
+      workspace
     });
   }
 
-  selectBoard(boardMeta) {
+  selectBoard(boardMetaIndex) {
     const { saveTimer } = this.state;
     if (saveTimer) {
       // save board for unsaved changes
       this.saveBoard();
     }
-    this.loadBoard(boardMeta);
+    this.loadBoard(boardMetaIndex);
   }
 
   switchWorkspace(workspace) {
@@ -207,6 +203,39 @@ class Home extends Component {
     this.setState({ boardData });
   }
 
+  deleteBoard() {
+    const { boardData, workspace, knownWorkspaces } = this.state;
+    const { path } = boardData;
+    if (boardData) {
+      const { saveTimer } = this.state;
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        this.setState({ saveTimer: undefined });
+      }
+      let boardIndex = workspace.boards.findIndex(board => {
+        return board.path === boardData.path;
+      });
+      workspace.boards.splice(boardIndex, 1);
+      const workspaceIndex = knownWorkspaces.findIndex(w => {
+        return w.path === workspace.path;
+      });
+      knownWorkspaces[workspaceIndex].numBoards -= 1;
+      fs.unlinkSync(path);
+      if (boardIndex >= workspace.boards.length) {
+        if (workspace.boards.length >= 0) {
+          boardIndex = 0;
+        } else {
+          boardIndex = -1;
+        }
+      }
+      this.setState({ workspace, knownWorkspaces, boardData: undefined });
+      // select next board
+      if (boardIndex >= 0) {
+        this.selectBoard(boardIndex);
+      }
+    }
+  }
+
   autoSave() {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
@@ -232,6 +261,7 @@ class Home extends Component {
           workspace={workspace}
           boardData={boardData}
           onSelectBoard={this.selectBoard}
+          onDeleteBoard={this.deleteBoard}
           onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
           onSwitchWorkspace={this.switchWorkspace}
         />
