@@ -82,6 +82,7 @@ class Menu extends Component {
       onSelectBoard,
       onDeleteBoard,
       onLoadWorkspace,
+      onCloseWorkspace,
       onSwitchWorkspace
     } = this.props;
     const {
@@ -123,7 +124,7 @@ class Menu extends Component {
             <Button
               key="closeWorkspace"
               title="Close the current workspace"
-              onClick={onLoadWorkspace}
+              onClick={onCloseWorkspace}
               icon="cross"
               style={{ maxWidth: '75px' }}
             />

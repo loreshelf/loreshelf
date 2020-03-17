@@ -33,6 +33,7 @@ class Home extends Component {
     this.selectBoard = this.selectBoard.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
+    this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
   }
 
@@ -48,8 +49,8 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    // this.loadDirectory('/home/ibek/Temp');
-    // this.loadDirectory('/home/ibek/Boards');
+    this.loadDirectory('/home/ibek/Temp');
+    this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
     }, 1000); */
@@ -206,6 +207,34 @@ class Home extends Component {
     this.loadDirectory(workspace.path);
   }
 
+  closeWorkspace() {
+    const { saveTimer, knownWorkspaces, workspace } = this.state;
+    if (saveTimer) {
+      // save board for unsaved changes
+      this.saveBoard();
+    }
+    const workspaceIndex = knownWorkspaces.findIndex(w => {
+      return w.path === workspace.path;
+    });
+    knownWorkspaces.splice(workspaceIndex, 1);
+    let newWorkspaceIndex = workspaceIndex;
+    if (workspaceIndex >= knownWorkspaces.length) {
+      if (knownWorkspaces.length > 0) {
+        newWorkspaceIndex = 0;
+      } else if (knownWorkspaces.length === 0) {
+        newWorkspaceIndex = -1;
+        this.setState({
+          knownWorkspaces,
+          workspace: undefined,
+          boardData: undefined
+        });
+        return;
+      }
+    }
+    this.setState({ knownWorkspaces });
+    this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
+  }
+
   saveBoard() {
     const { boardData, saveTimer } = this.state;
     if (saveTimer) {
@@ -320,6 +349,7 @@ class Home extends Component {
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
               onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
+              onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
             />
             <OverlayScrollbarsComponent
