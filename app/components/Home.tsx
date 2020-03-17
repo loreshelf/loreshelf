@@ -31,6 +31,7 @@ class Home extends Component {
     this.editCard = this.editCard.bind(this);
     this.removeCard = this.removeCard.bind(this);
     this.newBoard = this.newBoard.bind(this);
+    this.duplicateBoard = this.duplicateBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
@@ -149,23 +150,47 @@ class Home extends Component {
     });
   }
 
-  newBoard(newBoardName) {
+  newBoard(newBoardName, content?) {
     const { saveTimer, workspace } = this.state;
     if (saveTimer) {
       // save board for unsaved changes
       this.saveBoard();
     }
     const newBoardPath = `${workspace.path}/${newBoardName}`;
-    fs.writeFileSync(newBoardPath, '# Edit Title...\n\n');
+    let addContent = content;
+    if (!addContent) {
+      addContent = '# Edit Title...\n\n';
+    }
+    fs.writeFileSync(newBoardPath, addContent);
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
-    const newBoardMetaIndex =
-      workspace.boards.push({
-        path: newBoardPath,
-        name: this.boardPathToName(newBoardPath)
-      }) - 1;
+    workspace.boards.push({
+      path: newBoardPath,
+      name: this.boardPathToName(newBoardPath)
+    });
+    workspace.boards.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
+    });
+    const newBoardMetaIndex = workspace.boards.findIndex(board => {
+      return board.path === newBoardPath;
+    });
     this.setState({ workspace });
     this.selectBoard(newBoardMetaIndex);
+  }
+
+  duplicateBoard(newBoardName) {
+    const { saveTimer } = this.state;
+    if (saveTimer) {
+      // save board for unsaved changes
+      this.saveBoard();
+    }
+    this.newBoard(newBoardName, this.getCurrentBoardMd());
   }
 
   selectBoard(boardMetaIndex) {
@@ -281,6 +306,7 @@ class Home extends Component {
           workspace={workspace}
           boardData={boardData}
           onNewBoard={this.newBoard}
+          onDuplicateBoard={this.duplicateBoard}
           onSelectBoard={this.selectBoard}
           onDeleteBoard={this.deleteBoard}
           onLoadWorkspace={() => ipcRenderer.send('workspace-new')}

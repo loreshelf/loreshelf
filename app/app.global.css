@@ -26,6 +26,11 @@ p {
   margin-bottom: 5px;
 }
 
+.bp3-dark a,
+.bp3-dark a:hover {
+  color: rgb(153, 207, 241);
+}
+
 #root {
   height: 100%;
 }

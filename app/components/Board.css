@@ -33,6 +33,13 @@
   max-width: 400px;
 }
 
+.card a::after {
+  font-weight: 900;
+  font-family: 'Font Awesome\ 5 Free', sans-serif;
+  display: inline-block;
+  content: ' \f35d';
+}
+
 .newCard {
   text-align: center;
   margin: 5px;

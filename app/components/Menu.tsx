@@ -8,13 +8,9 @@ import {
   ContextMenu,
   InputGroup,
   Menu as BJMenu,
-  Popover,
-  Tooltip,
   Intent,
-  AnchorButton,
   Dialog,
-  Icon,
-  PopoverPosition
+  Icon
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -23,21 +19,40 @@ import { Workspace, workspaceSelectProps } from './Workspaces';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 
+enum NewBoardType {
+  CREATE = 1,
+  DUPLICATE
+}
+
 class Menu extends Component {
   constructor(props) {
     super(props);
     this.state = {
       newBoardOpen: false,
       newBoardName: 'NewBoard.md',
+      newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE
     };
     this.newBoardOpen = this.newBoardOpen.bind(this);
+    this.duplicateBoardOpen = this.duplicateBoardOpen.bind(this);
     this.newBoardClose = this.newBoardClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
   }
 
   newBoardOpen() {
-    this.setState({ newBoardOpen: true, newBoardName: 'NewBoard.md' });
+    this.setState({
+      newBoardOpen: true,
+      newBoardName: 'NewBoard.md',
+      newBoardType: NewBoardType.CREATE
+    });
+  }
+
+  duplicateBoardOpen() {
+    this.setState({
+      newBoardOpen: true,
+      newBoardName: 'DuplicateBoard.md',
+      newBoardType: NewBoardType.DUPLICATE
+    });
   }
 
   newBoardClose() {
@@ -62,12 +77,18 @@ class Menu extends Component {
       workspace,
       boardData,
       onNewBoard,
+      onDuplicateBoard,
       onSelectBoard,
       onDeleteBoard,
       onLoadWorkspace,
       onSwitchWorkspace
     } = this.props;
-    const { newBoardOpen, newBoardName, newBoardIntent } = this.state;
+    const {
+      newBoardOpen,
+      newBoardName,
+      newBoardIntent,
+      newBoardType
+    } = this.state;
     const noResults = <MenuItem text="Open the first workspace" />;
     const workspaceName =
       workspace && workspace.name ? workspace.name : '(No selection)';
@@ -132,7 +153,7 @@ class Menu extends Component {
                 {},
                 React.createElement(MenuItem, {
                   onClick: () => {
-                    console.log('duplicate');
+                    this.duplicateBoardOpen();
                   },
                   icon: 'duplicate',
                   text: 'Duplicate'
@@ -189,15 +210,16 @@ class Menu extends Component {
             onClick={this.newBoardOpen}
           />
           {boards.map((boardMeta, id) => {
-            if (boardMeta.name !== selectedBoardName) {
-              return (
+            return (
+              <Button
                 // eslint-disable-next-line react/no-array-index-key
-                <Button key={id} onClick={() => onSelectBoard(id)}>
-                  {boardMeta.name}
-                </Button>
-              );
-            }
-            return undefined;
+                key={id}
+                disabled={boardMeta.name === selectedBoardName}
+                onClick={() => onSelectBoard(id)}
+              >
+                {boardMeta.name}
+              </Button>
+            );
           })}
         </ButtonGroup>
         <Dialog
@@ -205,7 +227,11 @@ class Menu extends Component {
           icon="control"
           onClose={this.newBoardClose}
           isOpen={newBoardOpen}
-          title="Create a new board"
+          title={
+            newBoardType === NewBoardType.CREATE
+              ? 'Create a new board'
+              : 'Duplicate the board'
+          }
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
@@ -230,7 +256,11 @@ class Menu extends Component {
                 intent={Intent.PRIMARY}
                 onClick={() => {
                   if (newBoardIntent === Intent.NONE) {
-                    onNewBoard(newBoardName);
+                    if (newBoardType === NewBoardType.CREATE) {
+                      onNewBoard(newBoardName);
+                    } else if (newBoardType === NewBoardType.DUPLICATE) {
+                      onDuplicateBoard(newBoardName);
+                    }
                     this.setState({ newBoardOpen: false });
                   }
                 }}
