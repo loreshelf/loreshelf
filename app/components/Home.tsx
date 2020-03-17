@@ -18,8 +18,6 @@ class Home extends Component {
     const saveTimer = undefined;
     const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
 
-    this.viewRef = React.createRef();
-
     this.state = {
       workspace,
       boardData,
@@ -325,10 +323,8 @@ class Home extends Component {
               onSwitchWorkspace={this.switchWorkspace}
             />
             <OverlayScrollbarsComponent
-              ref={this.viewRef}
               className="os-theme-light"
               style={{ width: 'auto' }}
-              options={{ textarea: { dynHeight: true } }}
             >
               <Board
                 boardData={boardData}

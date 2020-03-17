@@ -1,6 +1,7 @@
 .menu {
   text-align: right;
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
   padding-top: 10px;
   background-color: #30404d;
   box-shadow: 0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4),
