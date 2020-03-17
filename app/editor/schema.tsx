@@ -1,4 +1,5 @@
 import { Schema } from 'prosemirror-model';
+import nodes from './nodes';
 
 // ::Schema Document schema for the data model used by CommonMark.
 // eslint-disable-next-line import/prefer-default-export
@@ -196,7 +197,8 @@ export const schema = new Schema({
 
     link: {
       attrs: {
-        href: {}
+        href: {},
+        title: { default: null }
       },
       inclusive: false,
       parseDOM: [
