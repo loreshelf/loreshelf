@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
-import { Classes } from '@blueprintjs/core';
+import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Home.css';
 import Menu from './Menu';
@@ -50,7 +50,7 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    this.loadDirectory('/home/ibek/Temp');
+    // this.loadDirectory('/home/ibek/Temp');
     // this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
@@ -159,7 +159,7 @@ class Home extends Component {
     const newBoardPath = `${workspace.path}/${newBoardName}`;
     let addContent = content;
     if (!addContent) {
-      addContent = '# Edit Title...\n\n';
+      addContent = '';
     }
     fs.writeFileSync(newBoardPath, addContent);
     // This part might not be need when I add workspace watching..
@@ -169,10 +169,12 @@ class Home extends Component {
       name: this.boardPathToName(newBoardPath)
     });
     workspace.boards.sort((a, b) => {
-      if (a.name < b.name) {
+      const aname = a.name.toUpperCase();
+      const bname = b.name.toUpperCase();
+      if (aname < bname) {
         return -1;
       }
-      if (a.name > b.name) {
+      if (aname > bname) {
         return 1;
       }
       return 0;
@@ -296,36 +298,55 @@ class Home extends Component {
 
   render() {
     const { knownWorkspaces, workspace, boardData } = this.state;
+    const OpenWorkspace = (
+      <Button
+        intent={Intent.PRIMARY}
+        onClick={() => ipcRenderer.send('workspace-new')}
+      >
+        Open Workspace
+      </Button>
+    );
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
         data-tid="container"
       >
-        <Menu
-          knownWorkspaces={knownWorkspaces}
-          workspace={workspace}
-          boardData={boardData}
-          onNewBoard={this.newBoard}
-          onDuplicateBoard={this.duplicateBoard}
-          onSelectBoard={this.selectBoard}
-          onDeleteBoard={this.deleteBoard}
-          onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
-          onSwitchWorkspace={this.switchWorkspace}
-        />
-        <OverlayScrollbarsComponent
-          ref={this.viewRef}
-          className="os-theme-light"
-          style={{ width: 'auto' }}
-          options={{ textarea: { dynHeight: true } }}
-        >
-          <Board
-            boardData={boardData}
-            onEditTitle={this.editTitle}
-            onEditCard={this.editCard}
-            onNewCard={this.newCard}
-            onRemoveCard={this.removeCard}
+        {workspace && boardData ? (
+          <>
+            <Menu
+              knownWorkspaces={knownWorkspaces}
+              workspace={workspace}
+              boardData={boardData}
+              onNewBoard={this.newBoard}
+              onDuplicateBoard={this.duplicateBoard}
+              onSelectBoard={this.selectBoard}
+              onDeleteBoard={this.deleteBoard}
+              onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
+              onSwitchWorkspace={this.switchWorkspace}
+            />
+            <OverlayScrollbarsComponent
+              ref={this.viewRef}
+              className="os-theme-light"
+              style={{ width: 'auto' }}
+              options={{ textarea: { dynHeight: true } }}
+            >
+              <Board
+                boardData={boardData}
+                onEditTitle={this.editTitle}
+                onEditCard={this.editCard}
+                onNewCard={this.newCard}
+                onRemoveCard={this.removeCard}
+              />
+            </OverlayScrollbarsComponent>
+          </>
+        ) : (
+          <NonIdealState
+            icon="folder-open"
+            title="Empty Workspace"
+            description="Start with opening a folder as your first workspace. The workspace will be used to store boards as .md Markdown files."
+            action={OpenWorkspace}
           />
-        </OverlayScrollbarsComponent>
+        )}
       </div>
     );
   }
