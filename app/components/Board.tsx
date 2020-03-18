@@ -30,11 +30,12 @@ function Board(props) {
     >
       <h1 className={styles.title}>
         <EditableText
-          maxLength={30}
+          maxLength={23}
           placeholder="Edit title..."
           alwaysRenderInput
           value={titles[id]}
           onChange={e => onEditTitle(id, e)}
+          style={{ width: '100%' }}
         />
       </h1>
       <Editor

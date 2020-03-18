@@ -31,6 +31,14 @@ p {
   color: rgb(153, 207, 241);
 }
 
+.bp3-editable-text {
+  width: 100%;
+}
+
+.bp3-editable-text-input {
+  width: 100% !important;
+}
+
 #root {
   height: 100%;
 }

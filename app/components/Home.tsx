@@ -18,6 +18,8 @@ class Home extends Component {
     const saveTimer = undefined;
     const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
 
+    this.menuRef = React.createRef();
+
     this.state = {
       workspace,
       boardData,
@@ -49,8 +51,8 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    this.loadDirectory('/home/ibek/Temp');
-    this.loadDirectory('/home/ibek/Boards');
+    // this.loadDirectory('/home/ibek/Temp');
+    // this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
     }, 1000); */
@@ -296,7 +298,7 @@ class Home extends Component {
       knownWorkspaces[workspaceIndex].numBoards -= 1;
       fs.unlinkSync(path);
       if (boardIndex >= workspace.boards.length) {
-        if (workspace.boards.length >= 0) {
+        if (workspace.boards.length > 0) {
           boardIndex = 0;
         } else {
           boardIndex = -1;
@@ -333,14 +335,25 @@ class Home extends Component {
         Open Workspace
       </Button>
     );
+    const { menuRef } = this;
+    const CreateBoard = (
+      <Button
+        intent={Intent.PRIMARY}
+        onClick={() => menuRef.current.newBoardOpen()}
+      >
+        Create Board
+      </Button>
+    );
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
         data-tid="container"
       >
-        {workspace && boardData ? (
-          <>
+        {workspace ? (
+          [
             <Menu
+              key="menu"
+              ref={menuRef}
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}
               boardData={boardData}
@@ -351,24 +364,36 @@ class Home extends Component {
               onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
-            />
-            <OverlayScrollbarsComponent
-              className="os-theme-light"
-              style={{ width: 'auto' }}
-            >
-              <Board
-                boardData={boardData}
-                onEditTitle={this.editTitle}
-                onEditCard={this.editCard}
-                onNewCard={this.newCard}
-                onRemoveCard={this.removeCard}
+            />,
+            boardData ? (
+              <>
+                <OverlayScrollbarsComponent
+                  className="os-theme-light"
+                  style={{ width: 'auto' }}
+                >
+                  <Board
+                    boardData={boardData}
+                    onEditTitle={this.editTitle}
+                    onEditCard={this.editCard}
+                    onNewCard={this.newCard}
+                    onRemoveCard={this.removeCard}
+                  />
+                </OverlayScrollbarsComponent>
+              </>
+            ) : (
+              <NonIdealState
+                key="empty-workspace"
+                icon="grid-view"
+                title="Empty Workspace"
+                description="Start with creating a new board as a .md Markdown file."
+                action={CreateBoard}
               />
-            </OverlayScrollbarsComponent>
-          </>
+            )
+          ]
         ) : (
           <NonIdealState
             icon="folder-open"
-            title="Empty Workspace"
+            title="No Workspace"
             description="Start with opening a folder as your first workspace. The workspace will be used to store boards as .md Markdown files."
             action={OpenWorkspace}
           />

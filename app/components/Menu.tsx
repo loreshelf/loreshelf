@@ -97,7 +97,7 @@ class Menu extends Component {
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
     const selectedBoardName =
-      boardData && boardData.name ? boardData.name : 'No board selected';
+      boardData && boardData.name ? boardData.name : 'No boards';
     const boardStatus = boardData && boardData.status ? boardData.status : '';
     const boards = workspace && workspace.boards ? workspace.boards : [];
     return (
@@ -191,21 +191,23 @@ class Menu extends Component {
           >
             {selectedBoardName}
           </Button>
-          <div
-            style={{
-              fontSize: 'small',
-              paddingRight: '5px',
-              paddingTop: '10px',
-              paddingBottom: '10px'
-            }}
-          >
-            <Icon
-              icon="automatic-updates"
-              iconSize={Icon.SIZE_STANDARD}
-              style={{ marginLeft: '10px', float: 'left' }}
-            />
-            <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
-          </div>
+          {boardData && (
+            <div
+              style={{
+                fontSize: 'small',
+                paddingRight: '5px',
+                paddingTop: '10px',
+                paddingBottom: '10px'
+              }}
+            >
+              <Icon
+                icon="automatic-updates"
+                iconSize={Icon.SIZE_STANDARD}
+                style={{ marginLeft: '10px', float: 'left' }}
+              />
+              <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
+            </div>
+          )}
           <Button
             key="newBoard"
             title="Create a new board"
@@ -255,6 +257,7 @@ class Menu extends Component {
             </p>
             <InputGroup
               onChange={e => this.handleNameChange(e, workspacePath)}
+              maxLength="10"
               intent={newBoardIntent}
               placeholder="Enter new name..."
             />
