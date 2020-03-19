@@ -4,10 +4,11 @@ import { schema } from '../editor/schema';
 
 const markdownParser = new MarkdownParser(
   schema,
-  markdownit('commonmark', { html: false }),
+  markdownit('default', { html: false }),
   {
     blockquote: { block: 'blockquote' },
     paragraph: { block: 'paragraph' },
+    inline: { block: 'paragraph' },
     list_item: { block: 'list_item' },
     bullet_list: { block: 'bullet_list' },
     ordered_list: {
@@ -43,7 +44,13 @@ const markdownParser = new MarkdownParser(
         title: tok.attrGet('href') || null
       })
     },
-    code_inline: { mark: 'code' }
+    code_inline: { mark: 'code' },
+    table: { block: 'table' },
+    thead: { block: 'table_head' },
+    tr: { block: 'table_row' },
+    th: { block: 'table_header' },
+    tbody: { block: 'table_body' },
+    td: { block: 'table_cell' }
   }
 );
 

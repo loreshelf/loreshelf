@@ -3,6 +3,7 @@ import React from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
+import markdownit from 'markdown-it';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import style from './Editor.css';
@@ -13,6 +14,16 @@ import plugins from './plugins';
 class Editor extends React.Component {
   constructor(props) {
     super(props);
+
+    /** const a = markdownit('default', { html: false }).parse(
+      `
+Markdown | Less | Pretty
+--- | --- | ---
+Still | renders | nicely
+      `,
+      {}
+    );
+    console.log(a); */
 
     this.editorRef = React.createRef();
     this.linkRef = React.createRef();

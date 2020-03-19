@@ -1,5 +1,19 @@
 import { Schema } from 'prosemirror-model';
-import nodes from './nodes';
+
+function getCellAttrs(dom) {
+  const widthAttr = dom.getAttribute('data-colwidth');
+  const widths =
+    widthAttr && /^\d+(,\d+)*$/.test(widthAttr)
+      ? widthAttr.split(',').map(s => Number(s))
+      : null;
+  const colspan = Number(dom.getAttribute('colspan') || 1);
+  const result = {
+    colspan,
+    rowspan: Number(dom.getAttribute('rowspan') || 1),
+    colwidth: widths && widths.length === colspan ? widths : null
+  };
+  return result;
+}
 
 // ::Schema Document schema for the data model used by CommonMark.
 // eslint-disable-next-line import/prefer-default-export
@@ -165,6 +179,72 @@ export const schema = new Schema({
       parseDOM: [{ tag: 'br' }],
       toDOM() {
         return ['br'];
+      }
+    },
+
+    table: {
+      content: 'table_head table_body',
+      tableRole: 'table',
+      isolating: true,
+      group: 'block',
+      parseDOM: [{ tag: 'table' }],
+      toDOM() {
+        return ['table', 0];
+      }
+    },
+    table_head: {
+      content: 'table_row+',
+      parseDOM: [{ tag: 'thead' }],
+      toDOM() {
+        return ['thead', 0];
+      }
+    },
+    table_body: {
+      content: 'table_row+',
+      parseDOM: [{ tag: 'tbody' }],
+      toDOM() {
+        return ['tbody', 0];
+      }
+    },
+    table_row: {
+      content: '(table_cell | table_header)*',
+      tableRole: 'row',
+      parseDOM: [{ tag: 'tr' }],
+      toDOM() {
+        return ['tr', 0];
+      }
+    },
+    table_cell: {
+      content: 'text*',
+      attrs: {
+        colspan: { default: null },
+        rowspan: { default: null },
+        colwidth: { default: null }
+      },
+      tableRole: 'cell',
+      isolating: true,
+      parseDOM: [
+        {
+          tag: 'td',
+          getAttrs: dom => getCellAttrs(dom)
+        }
+      ],
+      toDOM(node) {
+        return ['td', node.attrs, 0];
+      }
+    },
+    table_header: {
+      content: 'text*',
+      attrs: {
+        colspan: { default: null },
+        rowspan: { default: null },
+        colwidth: { default: null }
+      },
+      tableRole: 'header_cell',
+      isolating: true,
+      parseDOM: [{ tag: 'th', getAttrs: dom => getCellAttrs(dom) }],
+      toDOM(node) {
+        return ['th', node.attrs, 0];
       }
     }
   },
