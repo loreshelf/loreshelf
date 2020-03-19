@@ -55,7 +55,8 @@ function Board(props) {
           {cards}
           <Card
             key="addNew"
-            elevation={Elevation.ZERO}
+            elevation={Elevation.TWO}
+            intent={Intent.SUCCESS}
             interactive
             className={styles.newCard}
             onClick={onNewCard}

@@ -90,6 +90,10 @@ const createWindow = async () => {
     }
   });
 
+  mainWindow.on('close', () => {
+    mainWindow.webContents.send('board-save');
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

@@ -365,15 +365,14 @@ class Home extends Component {
               onSwitchWorkspace={this.switchWorkspace}
             />,
             boardData ? (
-              <>
-                <Board
-                  boardData={boardData}
-                  onEditTitle={this.editTitle}
-                  onEditCard={this.editCard}
-                  onNewCard={this.newCard}
-                  onRemoveCard={this.removeCard}
-                />
-              </>
+              <Board
+                key="board"
+                boardData={boardData}
+                onEditTitle={this.editTitle}
+                onEditCard={this.editCard}
+                onNewCard={this.newCard}
+                onRemoveCard={this.removeCard}
+              />
             ) : (
               <NonIdealState
                 key="empty-workspace"
