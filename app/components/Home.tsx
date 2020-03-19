@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -367,18 +366,13 @@ class Home extends Component {
             />,
             boardData ? (
               <>
-                <OverlayScrollbarsComponent
-                  className="os-theme-light"
-                  style={{ width: 'auto' }}
-                >
-                  <Board
-                    boardData={boardData}
-                    onEditTitle={this.editTitle}
-                    onEditCard={this.editCard}
-                    onNewCard={this.newCard}
-                    onRemoveCard={this.removeCard}
-                  />
-                </OverlayScrollbarsComponent>
+                <Board
+                  boardData={boardData}
+                  onEditTitle={this.editTitle}
+                  onEditCard={this.editCard}
+                  onNewCard={this.newCard}
+                  onRemoveCard={this.removeCard}
+                />
               </>
             ) : (
               <NonIdealState

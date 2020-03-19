@@ -14,7 +14,6 @@ import {
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 
@@ -214,11 +213,14 @@ class Menu extends Component {
             icon="plus"
             onClick={this.newBoardOpen}
           />
-          <OverlayScrollbarsComponent
-            className="os-theme-light"
-            style={{ width: 'auto', height: '100%', overflowY: 'scroll' }}
-          >
-            <ButtonGroup vertical large minimal alignText="right">
+          <div style={{ height: '100%', overflowY: 'auto' }}>
+            <ButtonGroup
+              vertical
+              large
+              minimal
+              alignText="right"
+              style={{ width: '100%' }}
+            >
               {boards.map((boardMeta, id) => {
                 return (
                   <Button
@@ -232,7 +234,7 @@ class Menu extends Component {
                 );
               })}
             </ButtonGroup>
-          </OverlayScrollbarsComponent>
+          </div>
         </ButtonGroup>
         <Dialog
           className={Classes.DARK}
