@@ -10,7 +10,7 @@ import { schema } from './schema';
 
 const listActive = (type, attrs = {}) => state => {
   const { $from } = state.selection;
-  return $from.path[3].type === type;
+  return $from.path && $from.path.length > 3 && $from.path[3].type === type;
 };
 
 function MenuBar(props) {

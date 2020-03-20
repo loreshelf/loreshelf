@@ -8,7 +8,7 @@ const markdownParser = new MarkdownParser(
   {
     blockquote: { block: 'blockquote' },
     paragraph: { block: 'paragraph' },
-    inline: { block: 'paragraph' },
+    inline: { block: 'text' },
     list_item: { block: 'list_item' },
     bullet_list: { block: 'bullet_list' },
     ordered_list: {
@@ -142,6 +142,37 @@ const markdownSerializer = new MarkdownSerializer(
     },
     text(state, node) {
       state.text(node.text);
+    },
+    table(state, node) {
+      state.renderContent(node);
+      state.write(`\n`);
+    },
+    table_row(state, node) {
+      const cells = node.content.content;
+      state.write(`|`);
+      cells.forEach(c => {
+        state.write(` `);
+        state.renderContent(c);
+        state.write(` |`);
+      });
+      state.write(`\n`);
+    },
+    table_body(state, node) {
+      state.renderContent(node);
+    },
+    table_cell(state, node) {
+      state.renderContent(node);
+    },
+    table_head(state, node) {
+      const headers = node.content.content[0].content.content;
+      let heads = '|';
+      let divider = '|';
+      headers.forEach(h => {
+        const { text } = h.content.content[0];
+        heads += ` ${text} |`;
+        divider += ` ${'-'.repeat(text.length)} |`;
+      });
+      state.write(`${heads}\n${divider}\n`);
     }
   },
   {

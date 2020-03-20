@@ -41,6 +41,25 @@
   content: ' \f35d';
 }
 
+.card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.card th {
+  text-align: center;
+  font-weight: bold;
+  width: 50%;
+  background: hsl(207, 23%, 37%);
+  border: 5px solid #30404d;
+}
+
+.card td {
+  text-align: left;
+  border-top: 1px solid hsl(206, 24%, 64%);
+  padding: 5px;
+}
+
 .newCard {
   text-align: center;
   margin-left: 10px;

@@ -11,6 +11,21 @@ import {
   selectParentNode
 } from 'prosemirror-commands';
 import {
+  addColumnAfter,
+  addColumnBefore,
+  deleteColumn,
+  addRowAfter,
+  addRowBefore,
+  deleteRow,
+  mergeCells,
+  splitCell,
+  setCellAttr,
+  toggleHeaderRow,
+  toggleHeaderColumn,
+  toggleHeaderCell,
+  deleteTable
+} from 'prosemirror-tables';
+import {
   wrapInList,
   splitListItem,
   liftListItem,
@@ -83,6 +98,7 @@ export function buildKeymap(schema) {
   if ((type = schema.nodes.ordered_list))
     bind('Shift-Ctrl-9', wrapInList(type));
   if ((type = schema.nodes.blockquote)) bind('Ctrl->', wrapIn(type));
+  /** Causes problems in the table
   if ((type = schema.nodes.hard_break)) {
     const br = type;
     const cmd = chainCommands(exitCode, (state, dispatch) => {
@@ -92,7 +108,7 @@ export function buildKeymap(schema) {
     bind('Mod-Enter', cmd);
     bind('Shift-Enter', cmd);
     if (mac) bind('Ctrl-Enter', cmd);
-  }
+  } */
   if ((type = schema.nodes.list_item)) {
     bind('Enter', splitListItem(type));
     bind('Mod-[', liftListItem(type));

@@ -185,7 +185,6 @@ export const schema = new Schema({
     table: {
       content: 'table_head table_body',
       tableRole: 'table',
-      isolating: true,
       group: 'block',
       parseDOM: [{ tag: 'table' }],
       toDOM() {
@@ -195,6 +194,7 @@ export const schema = new Schema({
     table_head: {
       content: 'table_row+',
       parseDOM: [{ tag: 'thead' }],
+      allowGapCursor: false,
       toDOM() {
         return ['thead', 0];
       }
@@ -202,6 +202,7 @@ export const schema = new Schema({
     table_body: {
       content: 'table_row+',
       parseDOM: [{ tag: 'tbody' }],
+      allowGapCursor: false,
       toDOM() {
         return ['tbody', 0];
       }
@@ -209,6 +210,7 @@ export const schema = new Schema({
     table_row: {
       content: '(table_cell | table_header)*',
       tableRole: 'row',
+      allowGapCursor: false,
       parseDOM: [{ tag: 'tr' }],
       toDOM() {
         return ['tr', 0];
@@ -222,6 +224,7 @@ export const schema = new Schema({
         colwidth: { default: null }
       },
       tableRole: 'cell',
+      allowGapCursor: false,
       isolating: true,
       parseDOM: [
         {
@@ -230,7 +233,7 @@ export const schema = new Schema({
         }
       ],
       toDOM(node) {
-        return ['td', node.attrs, 0];
+        return ['td', node.attrs, ['p', 0]];
       }
     },
     table_header: {
@@ -241,6 +244,7 @@ export const schema = new Schema({
         colwidth: { default: null }
       },
       tableRole: 'header_cell',
+      allowGapCursor: false,
       isolating: true,
       parseDOM: [{ tag: 'th', getAttrs: dom => getCellAttrs(dom) }],
       toDOM(node) {
