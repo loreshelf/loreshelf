@@ -194,6 +194,7 @@ export const schema = new Schema({
     table_head: {
       content: 'table_row+',
       parseDOM: [{ tag: 'thead' }],
+      tableRole: 'table',
       allowGapCursor: false,
       toDOM() {
         return ['thead', 0];
@@ -202,6 +203,7 @@ export const schema = new Schema({
     table_body: {
       content: 'table_row+',
       parseDOM: [{ tag: 'tbody' }],
+      tableRole: 'table',
       allowGapCursor: false,
       toDOM() {
         return ['tbody', 0];
@@ -219,8 +221,8 @@ export const schema = new Schema({
     table_cell: {
       content: 'text*',
       attrs: {
-        colspan: { default: null },
-        rowspan: { default: null },
+        colspan: { default: 1 },
+        rowspan: { default: 1 },
         colwidth: { default: null }
       },
       tableRole: 'cell',
@@ -239,8 +241,8 @@ export const schema = new Schema({
     table_header: {
       content: 'text*',
       attrs: {
-        colspan: { default: null },
-        rowspan: { default: null },
+        colspan: { default: 1 },
+        rowspan: { default: 1 },
         colwidth: { default: null }
       },
       tableRole: 'header_cell',

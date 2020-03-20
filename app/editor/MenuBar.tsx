@@ -2,15 +2,23 @@
 import React from 'react';
 import { Button, ButtonGroup } from '@blueprintjs/core';
 import { redo, undo } from 'prosemirror-history';
-import { wrapInList } from 'prosemirror-schema-list';
 import { lift } from 'prosemirror-commands';
 import { ipcRenderer } from 'electron';
 import classes from './MenuBar.css';
 import { schema } from './schema';
 
-const listActive = (type, attrs = {}) => state => {
+const canInsert = type => state => {
   const { $from } = state.selection;
-  return $from.path && $from.path.length > 3 && $from.path[3].type === type;
+
+  for (let d = $from.depth; d >= 0; d -= 1) {
+    const index = $from.index(d);
+
+    if ($from.node(d).canReplaceWith(index, index, type)) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 function MenuBar(props) {
@@ -41,16 +49,37 @@ function MenuBar(props) {
         <Button
           onMouseDown={e => {
             e.preventDefault();
-            if (listActive(schema.nodes.bullet_list)(state)) {
-              lift(state, dispatch);
-            } else {
-              wrapInList(schema.nodes.bullet_list)(state, dispatch);
-            }
+            const headerCells = [];
+            const cells = [];
+            const pros = schema.text('Pros');
+            const cons = schema.text('Cons');
+            cells.push(schema.nodes.table_cell.createAndFill());
+            cells.push(schema.nodes.table_cell.createAndFill());
+            headerCells.push(
+              schema.nodes.table_header.createChecked(null, pros)
+            );
+            headerCells.push(
+              schema.nodes.table_header.createChecked(null, cons)
+            );
+            const headerRows = schema.nodes.table_row.createChecked(
+              null,
+              headerCells
+            );
+            const rows = schema.nodes.table_row.createChecked(null, cells);
+            const thead = schema.nodes.table_head.createChecked(
+              null,
+              headerRows
+            );
+            const tbody = schema.nodes.table_body.createChecked(null, rows);
+            const table = schema.nodes.table.createChecked(null, [
+              thead,
+              tbody
+            ]);
+            dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
           }}
-          active={listActive(schema.nodes.bullet_list)(state)}
-          // disabled={!wrapInList(schema.nodes.bullet_list)(state)}
-          title="Bullet list"
-          icon="properties"
+          disabled={!canInsert(schema.nodes.table)(state)}
+          title="Insert a table"
+          icon="list-columns"
         />
         <Button
           onMouseDown={e => {

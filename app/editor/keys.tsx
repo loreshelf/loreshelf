@@ -6,7 +6,15 @@ import {
   toggleMark,
   exitCode,
   joinUp,
+  newlineInCode,
+  splitBlock,
+  deleteSelection,
+  createParagraphNear,
+  joinForward,
+  selectNodeForward,
+  liftEmptyBlock,
   joinDown,
+  del,
   lift,
   selectParentNode
 } from 'prosemirror-commands';
@@ -109,6 +117,10 @@ export function buildKeymap(schema) {
     bind('Shift-Enter', cmd);
     if (mac) bind('Ctrl-Enter', cmd);
   } */
+  bind('Enter', (state, dispatch) => {
+    console.log('ahoj');
+    return true;
+  });
   if ((type = schema.nodes.list_item)) {
     bind('Enter', splitListItem(type));
     bind('Mod-[', liftListItem(type));
@@ -127,6 +139,48 @@ export function buildKeymap(schema) {
       return true;
     });
   }
+
+  return keys;
+}
+
+function deleteRowHere(state, dispatch) {
+  if (
+    state.selection &&
+    state.selection.isRowSelection &&
+    state.selection.isRowSelection()
+  ) {
+    deleteRow(state, dispatch);
+    return true;
+  }
+  return false;
+}
+
+export function buildTableKeymap(schema) {
+  const keys = {};
+  let type;
+  function bind(key, cmd) {
+    keys[key] = cmd;
+  }
+
+  bind(
+    'Enter',
+    chainCommands(
+      addRowAfter,
+      newlineInCode,
+      createParagraphNear,
+      liftEmptyBlock,
+      splitBlock
+    )
+  );
+  bind(
+    'Delete',
+    chainCommands(
+      deleteRowHere,
+      deleteSelection,
+      joinForward,
+      selectNodeForward
+    )
+  );
 
   return keys;
 }
