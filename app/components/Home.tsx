@@ -29,6 +29,7 @@ class Home extends Component {
     this.editTitle = this.editTitle.bind(this);
     this.editCard = this.editCard.bind(this);
     this.removeCard = this.removeCard.bind(this);
+    this.reorderCards = this.reorderCards.bind(this);
     this.newBoard = this.newBoard.bind(this);
     this.duplicateBoard = this.duplicateBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
@@ -50,7 +51,7 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    // this.loadDirectory('/home/ibek/Temp');
+    this.loadDirectory('/home/ibek/Temp');
     // this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
@@ -256,6 +257,25 @@ class Home extends Component {
     this.setState({ boardData });
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  reorderCards(from, to) {
+    console.log(`${from}=>${to}`);
+    const { boardData } = this.state;
+    const { items, titles } = boardData;
+    if (to >= items.length) {
+      let k = to - items.length + 1;
+      // eslint-disable-next-line no-plusplus
+      while (k--) {
+        items.push(undefined);
+        titles.push(undefined);
+      }
+    }
+    items.splice(to, 0, items.splice(from, 1)[0]);
+    titles.splice(to, 0, titles.splice(from, 1)[0]);
+    this.setState({ boardData });
+    this.autoSave();
+  }
+
   editTitle(cardId, newTitle) {
     const { boardData } = this.state;
     boardData.titles[cardId] = newTitle;
@@ -371,6 +391,7 @@ class Home extends Component {
                 onEditTitle={this.editTitle}
                 onEditCard={this.editCard}
                 onNewCard={this.newCard}
+                onReorderCards={this.reorderCards}
                 onRemoveCard={this.removeCard}
               />
             ) : (

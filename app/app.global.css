@@ -101,6 +101,11 @@ p {
   padding: 0;
 }
 
+.bp3-icon-drag-handle-vertical {
+  padding-top: 2px;
+  padding-right: 3px;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

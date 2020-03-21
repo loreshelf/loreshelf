@@ -1,5 +1,6 @@
 import { history } from 'prosemirror-history';
-import { dropCursor } from 'prosemirror-dropcursor';
+// TODO: drop cursor shouldn't react to dropping a card
+// import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { baseKeymap } from 'prosemirror-commands';
 import { tableEditing } from 'prosemirror-tables';
@@ -19,7 +20,6 @@ export default [
   keymap(buildKeymap(schema)),
   keymap(buildTableKeymap(schema)),
   keymap(baseKeymap),
-  dropCursor(),
   gapCursor(),
   history(),
   tableEditing()
