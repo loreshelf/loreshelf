@@ -415,7 +415,7 @@ class Home extends Component {
                 key="empty-workspace"
                 icon="grid-view"
                 title="Empty Workspace"
-                description="Start with creating a new board as a .md Markdown file."
+                description="Start with creating a new spool, the place where you will capture and analyze related information. For example 'Accounts', 'Insurances', 'Investments' in 'Finance' workspace. Every spool will be stored as a standalone .md Markdown file in the current workspace."
                 action={CreateBoard}
               />
             )
@@ -424,7 +424,7 @@ class Home extends Component {
           <NonIdealState
             icon="folder-open"
             title="No Workspace"
-            description="Start with opening a folder as your first workspace. The workspace will be used to store boards as .md Markdown files."
+            description="Start with opening or creating a new folder as your first workspace context. Name it according to where and when you may need to work with the stored information. For example 'Family', 'Job', 'Finance', 'Civil', 'Hobbies', 'Shopping', 'House Keeping', 'Ideas', 'Past'."
             action={OpenWorkspace}
           />
         )}

@@ -86,6 +86,7 @@ class Board extends Component {
               key="addNew"
               elevation={Elevation.TWO}
               intent={Intent.SUCCESS}
+              title="Add a new knot"
               interactive
               className={styles.newCard}
               onClick={onNewCard}
@@ -96,8 +97,8 @@ class Board extends Component {
         ) : (
           <NonIdealState
             icon="new-layer"
-            title="Empty Board"
-            description="Start with adding a new card."
+            title="Empty Spool"
+            description="Start with adding a new knot. Knots are key information that you want to remember next to the other related knots within the same spool."
             action={NewCard}
           />
         )}

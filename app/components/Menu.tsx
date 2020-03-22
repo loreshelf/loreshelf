@@ -96,7 +96,7 @@ class Menu extends Component {
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
     const selectedBoardName =
-      boardData && boardData.name ? boardData.name : 'No boards';
+      boardData && boardData.name ? boardData.name : 'No spools';
     const boardStatus = boardData && boardData.status ? boardData.status : '';
     const boards = workspace && workspace.boards ? workspace.boards : [];
     return (
@@ -209,7 +209,7 @@ class Menu extends Component {
           )}
           <Button
             key="newBoard"
-            title="Create a new board"
+            title="Create a new spool"
             icon="plus"
             onClick={this.newBoardOpen}
           />
@@ -243,8 +243,8 @@ class Menu extends Component {
           isOpen={newBoardOpen}
           title={
             newBoardType === NewBoardType.CREATE
-              ? 'Create a new board'
-              : 'Duplicate the board'
+              ? 'Create a new spool'
+              : 'Duplicate the spool'
           }
         >
           <div className={Classes.DIALOG_BODY}>
@@ -254,7 +254,7 @@ class Menu extends Component {
             </p>
             <p style={{ color: 'red' }}>
               {newBoardIntent === Intent.DANGER
-                ? 'A board with this name already exists.'
+                ? 'A spool with this name already exists.'
                 : ''}
             </p>
             <InputGroup
