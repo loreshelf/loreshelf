@@ -1,5 +1,3 @@
-# Jotspin
-
 [![Jotspin](resources/fulllogo.png)](https://jotspin.com/)
 
 Jotspin is the supervised information-spinning application for the highest productivity in working with information.
