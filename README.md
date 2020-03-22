@@ -1,6 +1,6 @@
-# Comboard
+# Jotspin
 
-Comboard is a supervisory tool for tracking purposeful records in card-board view.
+Jotspin is the supervised information-spinning application for the highest productivity in working with information.
 
 <br>
 
@@ -9,13 +9,13 @@ Comboard is a supervisory tool for tracking purposeful records in card-board vie
 First, clone the repo via git:
 
 ```bash
-git clone https://github.com/ibek/comboard.git
+git clone https://github.com/ibek/jotspin.git
 ```
 
 And then install the dependencies with yarn.
 
 ```bash
-$ cd comboard
+$ cd jotspin
 $ yarn
 ```
 

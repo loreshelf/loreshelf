@@ -128,10 +128,10 @@ export default class MenuBuilder {
 
   buildDarwinTemplate() {
     const subMenuAbout: MenuItemConstructorOptions = {
-      label: 'Comboard',
+      label: 'Jotspin',
       submenu: [
         {
-          label: 'About Comboard',
+          label: 'About Jotspin',
           // @ts-ignore
           selector: 'orderFrontStandardAboutPanel:'
         },
@@ -139,7 +139,7 @@ export default class MenuBuilder {
         { label: 'Services', submenu: [] },
         { type: 'separator' },
         {
-          label: 'Hide Comboard',
+          label: 'Hide Jotspin',
           accelerator: 'Command+H',
           selector: 'hide:'
         },

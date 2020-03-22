@@ -1,8 +1,8 @@
 {
-  "name": "comboard",
-  "productName": "Comboard",
+  "name": "jotspin",
+  "productName": "Jotspin",
   "version": "1.0.0",
-  "description": "Supervisory tool managing markdown text files in card-board view.",
+  "description": "Supervised information-spinning application for the highest productivity in working with information.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -51,8 +51,8 @@
     ]
   },
   "build": {
-    "productName": "Comboard",
-    "appId": "com.yefec.Comboard",
+    "productName": "Jotspin",
+    "appId": "com.jotspin",
     "files": [
       "dist/",
       "node_modules/",
@@ -96,27 +96,27 @@
     "publish": {
       "provider": "github",
       "owner": "ibek",
-      "repo": "comboard",
+      "repo": "jotspin",
       "private": false
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ibek/comboard.git"
+    "url": "git+https://github.com/ibek/jotspin.git"
   },
   "author": {
     "name": "Ivo Bek",
     "email": "bekivo@gmail.com",
-    "url": "https://yefec.com"
+    "url": "https://jotspin.com"
   },
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ibek/comboard.git/issues"
+    "url": "https://github.com/ibek/jotspin.git/issues"
   },
   "keywords": [
     "markdown"
   ],
-  "homepage": "https://github.com/ibek/comboard.git#readme",
+  "homepage": "https://github.com/ibek/jotspin.git#readme",
   "jest": {
     "testURL": "http://localhost/",
     "moduleNameMapper": {
