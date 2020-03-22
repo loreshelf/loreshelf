@@ -9,7 +9,7 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, shell, BrowserWindow } from 'electron';
+import { app, shell, BrowserWindow, globalShortcut } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
@@ -92,6 +92,7 @@ const createWindow = async () => {
 
   mainWindow.on('close', () => {
     mainWindow.webContents.send('board-save');
+    globalShortcut.unregisterAll();
   });
 
   mainWindow.on('closed', () => {
@@ -100,6 +101,10 @@ const createWindow = async () => {
 
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
+
+  globalShortcut.register('Insert', () => {
+    mainWindow.webContents.send('new-card');
+  });
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line

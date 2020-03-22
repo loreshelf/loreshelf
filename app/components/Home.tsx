@@ -18,6 +18,7 @@ class Home extends Component {
     const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
 
     this.menuRef = React.createRef();
+    this.boardRef = React.createRef();
 
     this.state = {
       workspace,
@@ -47,6 +48,9 @@ class Home extends Component {
     });
     ipcRenderer.on('board-save', () => {
       self.saveBoard();
+    });
+    ipcRenderer.on('new-card', () => {
+      self.newCard();
     });
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
@@ -249,17 +253,25 @@ class Home extends Component {
 
   newCard() {
     const { boardData } = this.state;
-    const { items, titles } = boardData;
-    const doc = parseMarkdown('');
-    items.push(doc);
-    titles.push('Edit Title...');
-    this.autoSave();
-    this.setState({ boardData });
+    if (boardData) {
+      const { items, titles } = boardData;
+      const doc = parseMarkdown('');
+      items.push(doc);
+      titles.push('Edit Title...');
+      this.autoSave();
+      this.setState({ boardData });
+
+      // This part very much depends on Board component structure!
+      this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
+      const n = this.boardRef.boardRef.current.childNodes;
+      const title =
+        n[n.length - 2].firstChild.firstChild.lastChild.firstElementChild;
+      title.focus();
+      title.select();
+    }
   }
 
-  // eslint-disable-next-line class-methods-use-this
   reorderCards(from, to) {
-    console.log(`${from}=>${to}`);
     const { boardData } = this.state;
     const { items, titles } = boardData;
     if (to >= items.length) {
@@ -387,6 +399,10 @@ class Home extends Component {
             boardData ? (
               <Board
                 key="board"
+                // eslint-disable-next-line no-return-assign
+                ref={el => {
+                  this.boardRef = el;
+                }}
                 boardData={boardData}
                 onEditTitle={this.editTitle}
                 onEditCard={this.editCard}

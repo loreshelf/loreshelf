@@ -16,6 +16,7 @@ class Board extends Component {
   constructor(props) {
     super(props);
 
+    this.boardRef = React.createRef();
     this.state = { dividerIndex: -1 };
     this.updateDivider = this.updateDivider.bind(this);
   }
@@ -42,10 +43,14 @@ class Board extends Component {
       </Button>
     );
     const moveCard = (sourceIndex, left) => {
-      if (left) {
+      if (left && sourceIndex > dividerIndex) {
         onReorderCards(sourceIndex, dividerIndex);
-      } else {
+      } else if (left) {
         onReorderCards(sourceIndex, dividerIndex - 1);
+      } else if (sourceIndex < dividerIndex) {
+        onReorderCards(sourceIndex, dividerIndex - 1);
+      } else {
+        onReorderCards(sourceIndex, dividerIndex);
       }
     };
     const hoverDivider = (index, left) => {
@@ -73,7 +78,7 @@ class Board extends Component {
       />
     ));
     return (
-      <div className={styles.board}>
+      <div className={styles.board} ref={this.boardRef}>
         {items.length > 0 ? (
           <>
             {cards}

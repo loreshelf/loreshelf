@@ -111,6 +111,9 @@ const Card: React.FC<CardProps> = ({
 
   const [{ isDragging }, drag, preview] = useDrag({
     item: { type: DragItemTypes.CARD, index },
+    end: () => {
+      resetDivider();
+    },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging()
     })
@@ -151,16 +154,16 @@ const Card: React.FC<CardProps> = ({
               placeholder="Edit title..."
               alwaysRenderInput
               value={title}
-              onChange={e => onEditTitle(id, e)}
+              onChange={e => onEditTitle(index, e)}
               style={{ width: '100%' }}
             />
           </h1>
           <Editor
             doc={data}
             onChange={doc => {
-              onEditCard(id, doc);
+              onEditCard(index, doc);
             }}
-            onRemoveCard={() => onRemoveCard(id)}
+            onRemoveCard={() => onRemoveCard(index)}
             className={styles.editor}
           />
         </BlueCard>

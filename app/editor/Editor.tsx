@@ -37,8 +37,6 @@ Still | renders | nicely
       })
     );
 
-    console.log(doc);
-
     this.view = new EditorView(null, {
       state: EditorState.create({
         doc,
