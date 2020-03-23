@@ -1,7 +1,7 @@
 {
   "name": "jotspin",
   "productName": "Jotspin",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "Supervised information-spinning application for the highest productivity in working with information.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
@@ -82,12 +82,12 @@
       ]
     },
     "linux": {
+      "icon": "icon.icns",
       "target": [
-        "deb",
-        "rpm",
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
-      "category": "Development"
+      "category": "Office"
     },
     "directories": {
       "buildResources": "resources",
@@ -97,7 +97,7 @@
       "provider": "github",
       "owner": "ibek",
       "repo": "jotspin",
-      "private": false
+      "private": true
     }
   },
   "repository": {

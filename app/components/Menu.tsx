@@ -29,7 +29,7 @@ class Menu extends Component {
     super(props);
     this.state = {
       newBoardOpen: false,
-      newBoardName: 'NewBoard.md',
+      newBoardName: 'NewSpool.md',
       newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE
     };
@@ -42,7 +42,7 @@ class Menu extends Component {
   newBoardOpen() {
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'NewBoard.md',
+      newBoardName: 'NewSpool.md',
       newBoardType: NewBoardType.CREATE
     });
   }
@@ -50,7 +50,7 @@ class Menu extends Component {
   duplicateBoardOpen() {
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'DuplicateBoard.md',
+      newBoardName: 'DuplicateSpool.md',
       newBoardType: NewBoardType.DUPLICATE
     });
   }
@@ -249,7 +249,7 @@ class Menu extends Component {
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
-              The new board will be stored at
+              The new spool will be stored at
               <strong>{` ${workspacePath}/${newBoardName}`}</strong>
             </p>
             <p style={{ color: 'red' }}>
@@ -259,7 +259,7 @@ class Menu extends Component {
             </p>
             <InputGroup
               onChange={e => this.handleNameChange(e, workspacePath)}
-              maxLength="10"
+              maxLength="11"
               intent={newBoardIntent}
               placeholder="Enter new name..."
             />

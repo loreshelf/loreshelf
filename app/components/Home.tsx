@@ -55,7 +55,7 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    this.loadDirectory('/home/ibek/Temp');
+    // this.loadDirectory('/home/ibek/Temp');
     // this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
@@ -262,12 +262,14 @@ class Home extends Component {
       this.setState({ boardData });
 
       // This part very much depends on Board component structure!
-      this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
-      const n = this.boardRef.boardRef.current.childNodes;
-      const title =
-        n[n.length - 2].firstChild.firstChild.lastChild.firstElementChild;
-      title.focus();
-      title.select();
+      setTimeout(() => {
+        this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
+        const n = this.boardRef.boardRef.current.childNodes;
+        const title =
+          n[n.length - 2].firstChild.firstChild.lastChild.firstElementChild;
+        title.focus();
+        title.select();
+      }, 500);
     }
   }
 
@@ -372,7 +374,7 @@ class Home extends Component {
         intent={Intent.PRIMARY}
         onClick={() => menuRef.current.newBoardOpen()}
       >
-        Create Board
+        Create Spool
       </Button>
     );
     return (

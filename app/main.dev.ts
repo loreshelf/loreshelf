@@ -12,6 +12,7 @@ import path from 'path';
 import { app, shell, BrowserWindow, globalShortcut } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import sourceMapSupport from 'source-map-support';
 import MenuBuilder from './menu';
 
 export default class AppUpdater {
@@ -25,7 +26,6 @@ export default class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
-  const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
 }
 
@@ -55,17 +55,15 @@ const createWindow = async () => {
   }
 
   mainWindow = new BrowserWindow({
+    title: 'Jotspin',
     show: false,
+    darkTheme: true,
     width: 1366,
     height: 768,
-    webPreferences:
-      process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
-        ? {
-            nodeIntegration: true
-          }
-        : {
-            preload: path.join(__dirname, 'dist/renderer.prod.js')
-          }
+    icon: path.join(__dirname, '/resources/icon.png'),
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
@@ -108,7 +106,7 @@ const createWindow = async () => {
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
-  new AppUpdater();
+  // new AppUpdater();
 };
 
 /**
