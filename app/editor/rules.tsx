@@ -75,7 +75,7 @@ export function buildInputRules(schema) {
     `(/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,}) ?$`
   );
   const imageUrlRegexp = new RegExp(
-    `((?:https?:\/\/|www\.)[^\s]+\.(?:png|jpg)) ?$`
+    `((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg)) ?$`
   );
   const localImageRegexp = new RegExp(
     `![[](.*)\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] ?$`
