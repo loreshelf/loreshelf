@@ -35,6 +35,7 @@ class Home extends Component {
     this.duplicateBoard = this.duplicateBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
+    this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
@@ -55,17 +56,18 @@ class Home extends Component {
     ipcRenderer.on('workspace-load', (event, workspacePath) => {
       self.loadDirectory(workspacePath);
     });
-    // this.loadDirectory('/home/ibek/Temp');
+    this.loadDirectory('/home/ibek/Temp');
     // this.loadDirectory('/home/ibek/Boards');
     /** setTimeout(() => {
       this.loadDirectory('/home/ibek/Temp');
     }, 1000); */
   }
 
-  getCurrentBoardMd() {
+  getCurrentBoardMd(data?) {
     const { boardData } = this.state;
-    const items = boardData.items.map(
-      (i, k) => `# ${boardData.titles[k]}\n\n${serializeMarkdown(i).trim()}`
+    const bd = data || boardData;
+    const items = bd.items.map(
+      (i, k) => `# ${bd.titles[k]}\n\n${serializeMarkdown(i).trim()}`
     );
     return items.join('\n\n');
   }
@@ -118,7 +120,7 @@ class Home extends Component {
     );
   }
 
-  loadBoard(boardMetaIndex) {
+  loadBoard(boardMetaIndex, inBackground? = false) {
     const { workspace } = this.state;
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
@@ -149,10 +151,13 @@ class Home extends Component {
       status,
       name: boardMeta.name
     };
-    this.setState({
-      boardData,
-      workspace
-    });
+    if (!inBackground) {
+      this.setState({
+        boardData,
+        workspace
+      });
+    }
+    return boardData;
   }
 
   newBoard(newBoardName, content?) {
@@ -241,13 +246,19 @@ class Home extends Component {
     this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
   }
 
-  saveBoard() {
+  saveBoard(backgroundBoardData?) {
     const { boardData, saveTimer } = this.state;
-    if (saveTimer) {
-      const { path } = boardData;
-      fs.writeFileSync(path, this.getCurrentBoardMd(), 'utf8');
-      boardData.status = 'All changes saved';
-      this.setState({ boardData, saveTimer: undefined });
+    let data = boardData;
+    if (backgroundBoardData) {
+      data = backgroundBoardData;
+    }
+    if (saveTimer || backgroundBoardData) {
+      const { path } = data;
+      fs.writeFileSync(path, this.getCurrentBoardMd(data), 'utf8');
+      data.status = 'All changes saved';
+      if (!backgroundBoardData) {
+        this.setState({ boardData: data, saveTimer: undefined });
+      }
     }
   }
 
@@ -269,7 +280,7 @@ class Home extends Component {
           n[n.length - 2].firstChild.firstChild.lastChild.firstElementChild;
         title.focus();
         title.select();
-      }, 500);
+      }, 100);
     }
   }
 
@@ -286,6 +297,20 @@ class Home extends Component {
     }
     items.splice(to, 0, items.splice(from, 1)[0]);
     titles.splice(to, 0, titles.splice(from, 1)[0]);
+    this.setState({ boardData });
+    this.autoSave();
+  }
+
+  moveCardToBoard(cardIndex, boardId) {
+    const { boardData } = this.state;
+    const item = boardData.items[cardIndex];
+    const title = boardData.titles[cardIndex];
+    boardData.items.splice(cardIndex, 1);
+    boardData.titles.splice(cardIndex, 1);
+    const targetBoardData = this.loadBoard(boardId, true);
+    targetBoardData.items.push(item);
+    targetBoardData.titles.push(title);
+    this.saveBoard(targetBoardData);
     this.setState({ boardData });
     this.autoSave();
   }
@@ -394,6 +419,7 @@ class Home extends Component {
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
+              onMoveCardToBoard={this.moveCardToBoard}
               onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}

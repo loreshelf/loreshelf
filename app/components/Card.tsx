@@ -44,6 +44,7 @@ const Card: React.FC<CardProps> = ({
   onEditTitle
 }) => {
   const ref = useRef<BlueCard>(null);
+  const titleRef = useRef<EditableText>(null);
   const [, drop] = useDrop({
     accept: DragItemTypes.CARD,
     drop: (props, monitor) => {
@@ -150,9 +151,18 @@ const Card: React.FC<CardProps> = ({
               <Icon icon="drag-handle-vertical" style={{ cursor: 'grab' }} />
             </div>
             <EditableText
+              ref={titleRef}
               maxLength={23}
               placeholder="Edit title..."
               alwaysRenderInput
+              confirmOnEnterKey
+              onConfirm={() => {
+                titleRef.current.inputElement.blur();
+                // console.log(titleRef.current);
+                setTimeout(() => {
+                  titleRef.current.inputElement.parentElement.parentElement.nextSibling.firstChild.focus();
+                }, 100);
+              }}
               value={title}
               onChange={e => onEditTitle(index, e)}
               style={{ width: '100%' }}

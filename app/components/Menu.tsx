@@ -16,6 +16,7 @@ import { Select } from '@blueprintjs/select';
 import fs from 'fs';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
+import BoardItem from './MenuItem';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 
@@ -80,6 +81,7 @@ class Menu extends Component {
       onDuplicateBoard,
       onSelectBoard,
       onDeleteBoard,
+      onMoveCardToBoard,
       onLoadWorkspace,
       onCloseWorkspace,
       onSwitchWorkspace
@@ -223,14 +225,15 @@ class Menu extends Component {
             >
               {boards.map((boardMeta, id) => {
                 return (
-                  <Button
+                  <BoardItem
                     // eslint-disable-next-line react/no-array-index-key
                     key={id}
                     disabled={boardMeta.name === selectedBoardName}
                     onClick={() => onSelectBoard(id)}
+                    moveCard={cardIndex => onMoveCardToBoard(cardIndex, id)}
                   >
                     {boardMeta.name}
-                  </Button>
+                  </BoardItem>
                 );
               })}
             </ButtonGroup>
@@ -259,7 +262,6 @@ class Menu extends Component {
             </p>
             <InputGroup
               onChange={e => this.handleNameChange(e, workspacePath)}
-              maxLength="11"
               intent={newBoardIntent}
               placeholder="Enter new name..."
             />

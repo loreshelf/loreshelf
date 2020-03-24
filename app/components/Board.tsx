@@ -39,7 +39,7 @@ class Board extends Component {
     const titles = boardData && boardData.titles ? boardData.titles : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
-        Add new card
+        Add new knot
       </Button>
     );
     const moveCard = (sourceIndex, left) => {
