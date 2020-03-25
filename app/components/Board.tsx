@@ -35,8 +35,7 @@ class Board extends Component {
       onEditTitle
     } = this.props;
     const { dividerIndex } = this.state;
-    const items = boardData && boardData.items ? boardData.items : [];
-    const titles = boardData && boardData.titles ? boardData.titles : [];
+    const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
         Add new knot
@@ -60,11 +59,10 @@ class Board extends Component {
         this.updateDivider(index + 1);
       }
     };
-    const cards = items.map((item, id) => (
+    const cards = cardData.map((c, id) => (
       <Card
         key={id}
-        data={item}
-        title={titles[id]}
+        card={c}
         index={id}
         dividerIndex={dividerIndex}
         resetDivider={() => {
@@ -79,7 +77,7 @@ class Board extends Component {
     ));
     return (
       <div className={styles.board} ref={this.boardRef}>
-        {items.length > 0 ? (
+        {cardData.length > 0 ? (
           <>
             {cards}
             <BlueCard

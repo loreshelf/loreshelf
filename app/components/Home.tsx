@@ -13,7 +13,7 @@ class Home extends Component {
     super();
 
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
-    const boardData = undefined; // {items, titles, path, name, status}
+    const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status}
     const saveTimer = undefined;
     const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
 
@@ -66,10 +66,10 @@ class Home extends Component {
   getCurrentBoardMd(data?) {
     const { boardData } = this.state;
     const bd = data || boardData;
-    const items = bd.items.map(
-      (i, k) => `# ${bd.titles[k]}\n\n${serializeMarkdown(i).trim()}`
+    const cards = bd.cards.map(
+      c => `# ${c.title}\n\n${serializeMarkdown(c.doc).trim()}`
     );
-    return items.join('\n\n');
+    return cards.join('\n\n');
   }
 
   loadDirectory(directory) {
@@ -125,29 +125,26 @@ class Home extends Component {
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
     const text = fs.readFileSync(boardMeta.path, 'utf8');
-    const mdItems = text.split(/^(?=# )/gm);
-    const items = [];
-    const titles = [];
-    mdItems.forEach(md => {
+    const mdCards = text.split(/^(?=# )/gm);
+    const cards = [];
+    mdCards.forEach(md => {
       let title = md.match(/# (.*)\n/);
       if (title) {
         // eslint-disable-next-line prefer-destructuring
         title = title[1];
-        titles.push(title);
         let src = '';
         const notEmpty = md.indexOf('\n\n');
         if (notEmpty) {
           src = md.substring(notEmpty + 2);
         }
-        items.push(parseMarkdown(src));
+        cards.push({ title, doc: parseMarkdown(src) });
       }
     });
     const stats = fs.statSync(boardMeta.path);
     const status = timeSince(stats.mtime);
     const boardData = {
       path: boardMeta.path,
-      items,
-      titles,
+      cards,
       status,
       name: boardMeta.name
     };
@@ -265,10 +262,9 @@ class Home extends Component {
   newCard() {
     const { boardData } = this.state;
     if (boardData) {
-      const { items, titles } = boardData;
+      const { cards } = boardData;
       const doc = parseMarkdown('');
-      items.push(doc);
-      titles.push('Edit Title...');
+      cards.push({ doc, title: 'Edit Title...' });
       this.autoSave();
       this.setState({ boardData });
 
@@ -286,30 +282,25 @@ class Home extends Component {
 
   reorderCards(from, to) {
     const { boardData } = this.state;
-    const { items, titles } = boardData;
-    if (to >= items.length) {
-      let k = to - items.length + 1;
+    const { cards } = boardData;
+    if (to >= cards.length) {
+      let k = to - cards.length + 1;
       // eslint-disable-next-line no-plusplus
       while (k--) {
-        items.push(undefined);
-        titles.push(undefined);
+        cards.push(undefined);
       }
     }
-    items.splice(to, 0, items.splice(from, 1)[0]);
-    titles.splice(to, 0, titles.splice(from, 1)[0]);
+    cards.splice(to, 0, cards.splice(from, 1)[0]);
     this.setState({ boardData });
     this.autoSave();
   }
 
   moveCardToBoard(cardIndex, boardId) {
     const { boardData } = this.state;
-    const item = boardData.items[cardIndex];
-    const title = boardData.titles[cardIndex];
-    boardData.items.splice(cardIndex, 1);
-    boardData.titles.splice(cardIndex, 1);
+    const card = boardData.cards[cardIndex];
+    boardData.cards.splice(cardIndex, 1);
     const targetBoardData = this.loadBoard(boardId, true);
-    targetBoardData.items.push(item);
-    targetBoardData.titles.push(title);
+    targetBoardData.cards.push(card);
     this.saveBoard(targetBoardData);
     this.setState({ boardData });
     this.autoSave();
@@ -317,22 +308,21 @@ class Home extends Component {
 
   editTitle(cardId, newTitle) {
     const { boardData } = this.state;
-    boardData.titles[cardId] = newTitle;
+    boardData.cards[cardId].title = newTitle;
     this.autoSave();
     this.setState({ boardData });
   }
 
   editCard(cardId, doc) {
     const { boardData } = this.state;
-    boardData.items[cardId] = doc;
+    boardData.cards[cardId].doc = doc;
     this.autoSave();
     this.setState({ boardData });
   }
 
   removeCard(cardId) {
     const { boardData } = this.state;
-    boardData.items.splice(cardId, 1);
-    boardData.titles.splice(cardId, 1);
+    boardData.cards.splice(cardId, 1);
     this.autoSave();
     this.setState({ boardData });
   }

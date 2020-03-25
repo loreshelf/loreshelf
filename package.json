@@ -2,7 +2,7 @@
   "name": "jotspin",
   "productName": "Jotspin",
   "version": "0.9.0",
-  "description": "Supervised information-spinning application for the highest productivity in working with information.",
+  "description": "Jotspin is an application for taking and organizing crucial and often tangled information that should be quickly accessible.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -83,6 +83,7 @@
     },
     "linux": {
       "icon": "icon.icns",
+      "synopsis": "Take and organize crucial and often tangled information",
       "target": [
         "AppImage",
         "deb"

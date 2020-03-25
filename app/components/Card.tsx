@@ -11,6 +11,10 @@ import {
   Card as BlueCard,
   Elevation,
   Icon,
+  Intent,
+  Menu,
+  MenuItem,
+  Callout,
   EditableText
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
@@ -32,8 +36,7 @@ interface DragItem {
 }
 
 const Card: React.FC<CardProps> = ({
-  data,
-  title,
+  card,
   dividerIndex,
   index,
   moveCard,
@@ -163,13 +166,32 @@ const Card: React.FC<CardProps> = ({
                   titleRef.current.inputElement.parentElement.parentElement.nextSibling.firstChild.focus();
                 }, 100);
               }}
-              value={title}
+              value={card.title}
               onChange={e => onEditTitle(index, e)}
               style={{ width: '100%' }}
             />
           </h1>
+          {card.spooling && (
+            <Callout intent={Intent.WARNING} icon="exchange">
+              Spooling Účty
+            </Callout>
+          )}
+          <Menu
+            style={{
+              position: 'absolute',
+              left: '295px',
+              top: '75px',
+              padding: '0px',
+              boxShadow:
+                '0 0 0 1px hsl(207, 23%, 37%), 0 0 0 hsl(207, 23%, 37%), 0 1px 1px hsl(207, 23%, 37%)'
+            }}
+          >
+            <MenuItem text="Investice" />
+            <MenuItem text="Pojisteni" />
+            <MenuItem text="Ucty" />
+          </Menu>
           <Editor
-            doc={data}
+            doc={card.doc}
             onChange={doc => {
               onEditCard(index, doc);
             }}

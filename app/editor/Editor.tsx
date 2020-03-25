@@ -3,7 +3,6 @@ import React from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
-import markdownit from 'markdown-it';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import style from './Editor.css';
