@@ -1,0 +1,6 @@
+.suggestions {
+  position: absolute;
+  padding: 0;
+  box-shadow: 0 0 0 1px hsl(207, 23%, 37%), 0 0 0 hsl(207, 23%, 37%),
+    0 1px 1px hsl(207, 23%, 37%);
+}

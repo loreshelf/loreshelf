@@ -1,5 +1,9 @@
+/* eslint-disable react/no-array-index-key */
+/* eslint-disable react/no-unused-state */
+/* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import React from 'react';
+import { Menu, MenuItem } from '@blueprintjs/core';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
@@ -9,6 +13,8 @@ import style from './Editor.css';
 import MenuBar from './MenuBar';
 import LinkPopup from './LinkPopup';
 import plugins from './plugins';
+import SuggestionsPopup from './SuggestionsPopup';
+import { schema } from './schema';
 
 class Editor extends React.Component {
   constructor(props) {
@@ -26,9 +32,20 @@ Still | renders | nicely
 
     this.editorRef = React.createRef();
     this.linkRef = React.createRef();
-    const { attributes, nodeViews, doc } = this.props;
+    const {
+      attributes,
+      nodeViews,
+      doc,
+      onRequestBoardsAsync,
+      onStartSpooling
+    } = this.props;
 
-    this.state = { activeSuggestion: false, suggestionPos: -1 };
+    this.state = {
+      suggestionPos: -1,
+      suggestions: [],
+      suggestionPhase: 1,
+      selectedSuggestion: {}
+    };
 
     plugins.push(
       keymap({
@@ -47,14 +64,12 @@ Still | renders | nicely
         const { state, transactions } = this.view.state.applyTransaction(
           transaction
         );
-        const { activeSuggestion, suggestionPos } = this.state;
+        const { suggestionPos } = this.state;
 
         this.view.updateState(state);
 
         const currentCursor = state.selection.from;
         let suggestionText = '';
-        console.log(`current: ${currentCursor}`);
-        console.log(`suggestion: ${suggestionPos}`);
 
         if (transactions.some(tr => tr.docChanged)) {
           const { onChange } = this.props;
@@ -62,7 +77,7 @@ Still | renders | nicely
 
           const step = transaction.steps[0];
           if (
-            !activeSuggestion &&
+            suggestionPos < 0 &&
             step.from === step.to &&
             step.slice.content.content[0].text === '@'
           ) {
@@ -70,11 +85,20 @@ Still | renders | nicely
             const isSuggestion = this.isTextSuggestion(transaction);
             if (isSuggestion) {
               this.setState({
-                activeSuggestion: true,
-                suggestionPos: selection.from
+                suggestionPos: selection.from,
+                suggestionPhase: 1,
+                suggestions: [],
+                selectedSuggestion: {}
               });
+              onRequestBoardsAsync()
+                .then(newBoards => {
+                  this.setState({ suggestions: newBoards });
+                })
+                .catch(error => {
+                  console.log(error);
+                });
             }
-          } else if (activeSuggestion) {
+          } else if (suggestionPos >= 0) {
             const cursor = transaction.curSelection.$anchor.parentOffset;
             const paragraph =
               transaction.curSelection.$anchor.path[3].content.content[0].text;
@@ -87,32 +111,47 @@ Still | renders | nicely
             }
             suggestionText =
               where >= 0 ? paragraph.substring(where, cursor) : '';
-            console.log(paragraph);
-            console.log(suggestionText);
             onChange(state.doc);
           } else {
             onChange(state.doc);
           }
         }
 
-        if (activeSuggestion) {
+        if (suggestionPos >= 0) {
           const diff = currentCursor - suggestionPos;
-          console.log(`diff: ${diff}`);
           if (diff < 0 || diff > suggestionText.length) {
             this.setState({
-              activeSuggestion: false,
-              suggestionPos: -1
+              suggestionPos: -1,
+              suggestions: [],
+              suggestionPhase: 1,
+              selectedSuggestion: {}
             });
           }
         }
 
-        this.forceUpdate();
+        const linkElement = this.view.domAtPos(currentCursor).node
+          .parentElement;
+        if (linkElement.classList.contains('cardLink')) {
+          const url = linkElement.href;
+          const separatorSpooling = url.lastIndexOf('@');
+          const separatorIndex = url.lastIndexOf('/');
+          const boardPath = url.substring(
+            separatorSpooling + 1,
+            separatorIndex
+          );
+          const cardName = url.substring(separatorIndex + 1);
+          console.log(boardPath);
+          onStartSpooling(boardPath, cardName);
+        }
+
+        // this.forceUpdate();
       },
       attributes,
       nodeViews
     });
 
     this.setLink = this.setLink.bind(this);
+    this.selectSuggestion = this.selectSuggestion.bind(this);
 
     // console.log(this.view.state.doc);
   }
@@ -166,20 +205,86 @@ Still | renders | nicely
     return where >= 0 && where === onlyTheFirst;
   }
 
+  selectSuggestion(suggestion) {
+    const { suggestionPhase, suggestionPos, selectedSuggestion } = this.state;
+    const { onRequestBoardDataAsync } = this.props;
+    const { state, dispatch } = this.view;
+    if (suggestionPhase === 1) {
+      dispatch(state.tr.insertText(`${suggestion.name}/`, suggestionPos));
+      this.setState({
+        suggestionPhase: 2,
+        suggestions: [],
+        selectedSuggestion: { board: suggestion }
+      });
+      onRequestBoardDataAsync(suggestion)
+        .then(boardData => {
+          this.setState({ suggestions: boardData.cards });
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else {
+      // replace with link
+      // [board.name/card](@board.name/card "board.name/card")
+      const boardName = selectedSuggestion.board.name;
+      const boardPath = selectedSuggestion.board.path;
+      const cardName = suggestion.title;
+      const linkName = `${boardName}/${cardName}`;
+      const cursor = this.view.state.selection.from;
+      dispatch(
+        state.tr.insertText(linkName, suggestionPos - 1, cursor).addMark(
+          suggestionPos - 1,
+          suggestionPos + linkName.length,
+          schema.marks.link.create({
+            href: `@${boardPath}/${cardName}`,
+            title: `Open '${cardName}' knot from '${boardName}' spool`
+          })
+        )
+      );
+    }
+  }
+
   render() {
-    const { onRemoveCard } = this.props;
+    const { onRemoveCard, onStartSpooling } = this.props;
     const { state } = this.view;
+    const { suggestions, suggestionPos, suggestionPhase } = this.state;
     const { from } = state.selection;
     // TODO: improve performance?
-    const url = this.view.domAtPos(from).node.parentElement.href;
+    const linkElement = this.view.domAtPos(from).node.parentElement;
+    const url = linkElement.href;
+
+    const isSuggestion = suggestionPos >= 0;
+    let position;
+    if (url || isSuggestion) {
+      position = this.view.coordsAtPos(from);
+    }
+    let textProperty;
+    if (isSuggestion) {
+      if (suggestionPhase === 1) {
+        textProperty = 'name'; // boardMeta.name
+      } else if (suggestionPhase === 2) {
+        textProperty = 'title'; // boardData.cards.title
+      }
+    }
     return (
       <div ref={this.editorRef} className={style.editor}>
-        <MenuBar
-          view={this.view}
-          onRemoveCard={onRemoveCard}
-          onSetLink={this.setLink}
-        />
-        <LinkPopup ref={this.linkRef} url={url} view={this.view} />
+        <MenuBar view={this.view} onRemoveCard={onRemoveCard} />
+        {url && (
+          <LinkPopup
+            ref={this.linkRef}
+            url={url}
+            view={this.view}
+            position={position}
+          />
+        )}
+        {isSuggestion && (
+          <SuggestionsPopup
+            suggestions={suggestions}
+            position={position}
+            textProperty={textProperty}
+            onSelectSuggestion={this.selectSuggestion}
+          />
+        )}
       </div>
     );
   }

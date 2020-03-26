@@ -4,7 +4,6 @@ import {
   setBlockType,
   chainCommands,
   toggleMark,
-  exitCode,
   joinUp,
   newlineInCode,
   splitBlock,
@@ -14,25 +13,9 @@ import {
   selectNodeForward,
   liftEmptyBlock,
   joinDown,
-  del,
-  lift,
-  selectParentNode
+  lift
 } from 'prosemirror-commands';
-import {
-  addColumnAfter,
-  addColumnBefore,
-  deleteColumn,
-  addRowAfter,
-  addRowBefore,
-  deleteRow,
-  mergeCells,
-  splitCell,
-  setCellAttr,
-  toggleHeaderRow,
-  toggleHeaderColumn,
-  toggleHeaderCell,
-  deleteTable
-} from 'prosemirror-tables';
+import { addRowAfter, deleteRow } from 'prosemirror-tables';
 import {
   wrapInList,
   splitListItem,
@@ -117,10 +100,6 @@ export function buildKeymap(schema) {
     bind('Shift-Enter', cmd);
     if (mac) bind('Ctrl-Enter', cmd);
   } */
-  bind('Enter', (state, dispatch) => {
-    console.log('ahoj');
-    return true;
-  });
   if ((type = schema.nodes.list_item)) {
     bind('Enter', splitListItem(type));
     bind('Mod-[', liftListItem(type));

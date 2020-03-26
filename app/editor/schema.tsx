@@ -298,7 +298,15 @@ export const schema = new Schema({
         }
       ],
       toDOM(node) {
-        return ['a', node.attrs];
+        return [
+          'a',
+          {
+            ...node.attrs,
+            ...{
+              class: node.attrs.href.startsWith('@') ? 'cardLink' : 'regular'
+            }
+          }
+        ];
       }
     },
 

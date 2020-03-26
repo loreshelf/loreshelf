@@ -39,6 +39,9 @@ class Home extends Component {
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
+    this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
+    this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
+    this.startSpooling = this.startSpooling.bind(this);
   }
 
   componentDidMount() {
@@ -120,10 +123,8 @@ class Home extends Component {
     );
   }
 
-  loadBoard(boardMetaIndex, inBackground? = false) {
-    const { workspace } = this.state;
-    workspace.selectedBoard = boardMetaIndex;
-    const boardMeta = workspace.boards[boardMetaIndex];
+  // eslint-disable-next-line class-methods-use-this
+  loadBoardDataInBackground(boardMeta) {
     const text = fs.readFileSync(boardMeta.path, 'utf8');
     const mdCards = text.split(/^(?=# )/gm);
     const cards = [];
@@ -148,6 +149,14 @@ class Home extends Component {
       status,
       name: boardMeta.name
     };
+    return boardData;
+  }
+
+  loadBoard(boardMetaIndex, inBackground? = false) {
+    const { workspace } = this.state;
+    workspace.selectedBoard = boardMetaIndex;
+    const boardMeta = workspace.boards[boardMetaIndex];
+    const boardData = this.loadBoardDataInBackground(boardMeta);
     if (!inBackground) {
       this.setState({
         boardData,
@@ -243,6 +252,14 @@ class Home extends Component {
     this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
   }
 
+  saveBoardDataInBackground(boardData) {
+    const data = boardData;
+    const { path } = data;
+    fs.writeFileSync(path, this.getCurrentBoardMd(data), 'utf8');
+    data.status = 'All changes saved';
+    return data;
+  }
+
   saveBoard(backgroundBoardData?) {
     const { boardData, saveTimer } = this.state;
     let data = boardData;
@@ -250,9 +267,7 @@ class Home extends Component {
       data = backgroundBoardData;
     }
     if (saveTimer || backgroundBoardData) {
-      const { path } = data;
-      fs.writeFileSync(path, this.getCurrentBoardMd(data), 'utf8');
-      data.status = 'All changes saved';
+      data = this.saveBoardDataInBackground(data);
       if (!backgroundBoardData) {
         this.setState({ boardData: data, saveTimer: undefined });
       }
@@ -315,8 +330,17 @@ class Home extends Component {
 
   editCard(cardId, doc) {
     const { boardData } = this.state;
-    boardData.cards[cardId].doc = doc;
-    this.autoSave();
+    const card = boardData.cards[cardId];
+    const { spooling } = card;
+    if (spooling) {
+      const spoolingBoardData = spooling.boardData;
+      spoolingBoardData.cards[spooling.cardIndex].doc = doc;
+      spooling.boardData = this.saveBoardDataInBackground(spoolingBoardData);
+      console.log(spoolingBoardData);
+    } else {
+      card.doc = doc;
+      this.autoSave();
+    }
     this.setState({ boardData });
   }
 
@@ -357,6 +381,42 @@ class Home extends Component {
       if (boardIndex >= 0) {
         this.selectBoard(boardIndex);
       }
+    }
+  }
+
+  requestBoardsAsync(filter?) {
+    return new Promise((resolve, reject) => {
+      // get boards from the current workspace
+      if (!filter) {
+        const { workspace } = this.state;
+        resolve(workspace.boards);
+      }
+    });
+  }
+
+  requestBoardDataAsync(boardMeta) {
+    return new Promise((resolve, reject) => {
+      const boardData = this.loadBoardDataInBackground(boardMeta);
+      resolve(boardData);
+    });
+  }
+
+  startSpooling(boardPath, cardName, spoolingCardIndex) {
+    const { boardData } = this.state;
+    const spoolingBoardMeta = {
+      path: boardPath,
+      name: this.boardPathToName(boardPath)
+    };
+    const spoolingBoardData = this.loadBoardDataInBackground(spoolingBoardMeta);
+    const cardIndex = spoolingBoardData.cards.findIndex(card => {
+      return card.title === cardName;
+    });
+    if (spoolingCardIndex >= 0) {
+      boardData.cards[spoolingCardIndex].spooling = {
+        boardData: spoolingBoardData,
+        cardIndex
+      };
+      this.setState({ boardData });
     }
   }
 
@@ -427,6 +487,9 @@ class Home extends Component {
                 onNewCard={this.newCard}
                 onReorderCards={this.reorderCards}
                 onRemoveCard={this.removeCard}
+                onRequestBoardsAsync={this.requestBoardsAsync}
+                onRequestBoardDataAsync={this.requestBoardDataAsync}
+                onStartSpooling={this.startSpooling}
               />
             ) : (
               <NonIdealState

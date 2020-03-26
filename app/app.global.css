@@ -110,6 +110,20 @@ p {
   padding-right: 3px;
 }
 
+.regular::after {
+  font-weight: 900;
+  font-family: 'Font Awesome\ 5 Free', sans-serif;
+  display: inline-block;
+  content: ' \f35d';
+}
+
+.cardLink::after {
+  font-weight: 900;
+  font-family: 'Font Awesome\ 5 Free', sans-serif;
+  display: inline-block;
+  content: ' \f45f';
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

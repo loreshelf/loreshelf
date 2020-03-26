@@ -11,23 +11,10 @@ class LinkPopup extends Component {
   }
 
   render() {
-    const { view, url } = this.props;
+    const { view, url, position } = this.props;
     const { state, dispatch } = view;
-    const { from, to } = state.selection;
-    // These are in screen coordinates
-    const start = view.coordsAtPos(from);
-    const end = view.coordsAtPos(to);
-    // The box in which the tooltip is positioned, to use as base
-    const box =
-      this.linkRef.current && this.linkRef.current.offsetParent
-        ? this.linkRef.current.offsetParent.getBoundingClientRect()
-        : undefined;
-    // Find a center-ish x position from the selection endpoints (when
-    // crossing lines, end may be more to the left)
-    const left = Math.max((start.left + end.left) / 2, start.left + 3);
-    const leftPos = box && url ? `${left - box.left - 60}px` : '-1000px';
-    const bottomPos =
-      box && url ? `${box.bottom - start.top - 50}px` : '-1000px';
+    const leftPos = position.left - 50;
+    const topPos = position.top + 20;
 
     return (
       <div
@@ -36,7 +23,7 @@ class LinkPopup extends Component {
           position: 'absolute',
           background: 'black',
           left: leftPos,
-          bottom: bottomPos,
+          top: topPos,
           maxWidth: '165px',
           minHeight: '30px',
           height: '30px',

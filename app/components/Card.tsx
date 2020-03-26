@@ -12,8 +12,6 @@ import {
   Elevation,
   Icon,
   Intent,
-  Menu,
-  MenuItem,
   Callout,
   EditableText
 } from '@blueprintjs/core';
@@ -44,10 +42,19 @@ const Card: React.FC<CardProps> = ({
   resetDivider,
   onEditCard,
   onRemoveCard,
-  onEditTitle
+  onEditTitle,
+  onRequestBoardsAsync,
+  onRequestBoardDataAsync,
+  onStartSpooling
 }) => {
   const ref = useRef<BlueCard>(null);
   const titleRef = useRef<EditableText>(null);
+
+  let cardData = card;
+  if (card.spooling) {
+    cardData = card.spooling.boardData.cards[card.spooling.cardIndex];
+  }
+
   const [, drop] = useDrop({
     accept: DragItemTypes.CARD,
     drop: (props, monitor) => {
@@ -157,7 +164,8 @@ const Card: React.FC<CardProps> = ({
               ref={titleRef}
               maxLength={23}
               placeholder="Edit title..."
-              alwaysRenderInput
+              alwaysRenderInput={!card.spooling}
+              disabled={card.spooling}
               confirmOnEnterKey
               onConfirm={() => {
                 titleRef.current.inputElement.blur();
@@ -166,36 +174,27 @@ const Card: React.FC<CardProps> = ({
                   titleRef.current.inputElement.parentElement.parentElement.nextSibling.firstChild.focus();
                 }, 100);
               }}
-              value={card.title}
+              value={cardData.title}
               onChange={e => onEditTitle(index, e)}
               style={{ width: '100%' }}
             />
           </h1>
           {card.spooling && (
             <Callout intent={Intent.WARNING} icon="exchange">
-              Spooling Účty
+              {`Spooling ${card.spooling.boardData.name}`}
             </Callout>
           )}
-          <Menu
-            style={{
-              position: 'absolute',
-              left: '295px',
-              top: '75px',
-              padding: '0px',
-              boxShadow:
-                '0 0 0 1px hsl(207, 23%, 37%), 0 0 0 hsl(207, 23%, 37%), 0 1px 1px hsl(207, 23%, 37%)'
-            }}
-          >
-            <MenuItem text="Investice" />
-            <MenuItem text="Pojisteni" />
-            <MenuItem text="Ucty" />
-          </Menu>
           <Editor
-            doc={card.doc}
+            doc={cardData.doc}
             onChange={doc => {
               onEditCard(index, doc);
             }}
             onRemoveCard={() => onRemoveCard(index)}
+            onRequestBoardsAsync={onRequestBoardsAsync}
+            onRequestBoardDataAsync={onRequestBoardDataAsync}
+            onStartSpooling={(boardPath, cardName) => {
+              onStartSpooling(boardPath, cardName, index);
+            }}
             className={styles.editor}
           />
         </BlueCard>

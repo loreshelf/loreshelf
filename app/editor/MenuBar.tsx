@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button, ButtonGroup } from '@blueprintjs/core';
 import { redo, undo } from 'prosemirror-history';
-import { lift } from 'prosemirror-commands';
 import { ipcRenderer } from 'electron';
 import classes from './MenuBar.css';
 import { schema } from './schema';
