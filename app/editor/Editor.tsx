@@ -28,6 +28,8 @@ Still | renders | nicely
     this.linkRef = React.createRef();
     const { attributes, nodeViews, doc } = this.props;
 
+    this.state = { activeSuggestion: false, suggestionPos: -1 };
+
     plugins.push(
       keymap({
         Escape: () => {
@@ -45,12 +47,63 @@ Still | renders | nicely
         const { state, transactions } = this.view.state.applyTransaction(
           transaction
         );
+        const { activeSuggestion, suggestionPos } = this.state;
 
         this.view.updateState(state);
 
+        const currentCursor = state.selection.from;
+        let suggestionText = '';
+        console.log(`current: ${currentCursor}`);
+        console.log(`suggestion: ${suggestionPos}`);
+
         if (transactions.some(tr => tr.docChanged)) {
           const { onChange } = this.props;
-          onChange(state.doc);
+          const { selection } = state;
+
+          const step = transaction.steps[0];
+          if (
+            !activeSuggestion &&
+            step.from === step.to &&
+            step.slice.content.content[0].text === '@'
+          ) {
+            onChange(state.doc);
+            const isSuggestion = this.isTextSuggestion(transaction);
+            if (isSuggestion) {
+              this.setState({
+                activeSuggestion: true,
+                suggestionPos: selection.from
+              });
+            }
+          } else if (activeSuggestion) {
+            const cursor = transaction.curSelection.$anchor.parentOffset;
+            const paragraph =
+              transaction.curSelection.$anchor.path[3].content.content[0].text;
+            let where = paragraph.lastIndexOf(' @', cursor) + 1;
+            if (where < 1) {
+              where = paragraph.lastIndexOf('@', cursor);
+              if (where !== 0) {
+                where = -1;
+              }
+            }
+            suggestionText =
+              where >= 0 ? paragraph.substring(where, cursor) : '';
+            console.log(paragraph);
+            console.log(suggestionText);
+            onChange(state.doc);
+          } else {
+            onChange(state.doc);
+          }
+        }
+
+        if (activeSuggestion) {
+          const diff = currentCursor - suggestionPos;
+          console.log(`diff: ${diff}`);
+          if (diff < 0 || diff > suggestionText.length) {
+            this.setState({
+              activeSuggestion: false,
+              suggestionPos: -1
+            });
+          }
         }
 
         this.forceUpdate();
@@ -95,6 +148,22 @@ Still | renders | nicely
 
   setLink() {
     this.linkRef.current.setLink();
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  isTextSuggestion(transaction) {
+    const cursor = transaction.curSelection.$anchor.parentOffset;
+    const paragraph =
+      transaction.curSelection.$anchor.path[3].content.content[0].text;
+    let where = paragraph.lastIndexOf(' @', cursor) + 1;
+    const onlyTheFirst = paragraph.lastIndexOf('@', cursor);
+    if (where < 1) {
+      where = onlyTheFirst;
+      if (where !== 0) {
+        where = -1;
+      }
+    }
+    return where >= 0 && where === onlyTheFirst;
   }
 
   render() {
