@@ -13,7 +13,8 @@ import {
   Icon,
   Intent,
   Callout,
-  EditableText
+  EditableText,
+  Button
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
 import Editor from '../editor/Editor';
@@ -45,7 +46,8 @@ const Card: React.FC<CardProps> = ({
   onEditTitle,
   onRequestBoardsAsync,
   onRequestBoardDataAsync,
-  onStartSpooling
+  onStartSpooling,
+  onStopSpooling
 }) => {
   const ref = useRef<BlueCard>(null);
   const titleRef = useRef<EditableText>(null);
@@ -157,9 +159,21 @@ const Card: React.FC<CardProps> = ({
           elevation={Elevation.TWO}
         >
           <h1 className={styles.title}>
-            <div ref={drag}>
-              <Icon icon="drag-handle-vertical" style={{ cursor: 'grab' }} />
-            </div>
+            {card.spooling ? (
+              <Button
+                icon="chevron-left"
+                minimal
+                style={{ padding: '0px', minWidth: '20px', minHeight: '20px' }}
+                onClick={() => onStopSpooling(index)}
+              />
+            ) : (
+              <div ref={drag}>
+                <Icon
+                  icon="drag-handle-vertical"
+                  style={{ cursor: 'grab', minWidth: '20px' }}
+                />
+              </div>
+            )}
             <EditableText
               ref={titleRef}
               maxLength={23}
@@ -174,14 +188,25 @@ const Card: React.FC<CardProps> = ({
                   titleRef.current.inputElement.parentElement.parentElement.nextSibling.firstChild.focus();
                 }, 100);
               }}
-              value={cardData.title}
+              value={card.title}
               onChange={e => onEditTitle(index, e)}
               style={{ width: '100%' }}
             />
           </h1>
           {card.spooling && (
             <Callout intent={Intent.WARNING} icon="exchange">
-              {`Spooling ${card.spooling.boardData.name}`}
+              {`Spooling '${cardData.title}' from '${card.spooling.boardData.name}'`}
+              <Button
+                icon="cross"
+                minimal
+                style={{
+                  padding: '0px',
+                  minWidth: '20px',
+                  minHeight: '20px',
+                  float: 'right'
+                }}
+                onClick={() => onStopSpooling(index)}
+              />
             </Callout>
           )}
           <Editor

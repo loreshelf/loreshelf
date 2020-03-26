@@ -42,6 +42,7 @@ class Home extends Component {
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
     this.startSpooling = this.startSpooling.bind(this);
+    this.stopSpooling = this.stopSpooling.bind(this);
   }
 
   componentDidMount() {
@@ -420,6 +421,12 @@ class Home extends Component {
     }
   }
 
+  stopSpooling(spoolingCardIndex) {
+    const { boardData } = this.state;
+    boardData.cards[spoolingCardIndex].spooling = undefined;
+    this.setState({ boardData });
+  }
+
   autoSave() {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
@@ -490,6 +497,7 @@ class Home extends Component {
                 onRequestBoardsAsync={this.requestBoardsAsync}
                 onRequestBoardDataAsync={this.requestBoardDataAsync}
                 onStartSpooling={this.startSpooling}
+                onStopSpooling={this.stopSpooling}
               />
             ) : (
               <NonIdealState
