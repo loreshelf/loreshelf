@@ -69,16 +69,16 @@ export function buildInputRules(schema) {
   if ((type = schema.nodes.code_block)) rules.push(codeBlockRule(type));
   if ((type = schema.nodes.heading)) rules.push(headingRule(type, 2));
   const linkRegexp = new RegExp(
-    `(https?://(?:www.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9].[^\\s]{2,}|www.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9].[^\\s]{2,}|https?://(?:www.|(?!www))[a-zA-Z0-9]+.[^\\s]{2,}|www.[a-zA-Z0-9]+.[^\\s]{2,}) ?$`
+    `([-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?) $`
   );
   const fileRegexp = new RegExp(
-    `(/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,}) ?$`
+    `(/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,}) $`
   );
   const imageUrlRegexp = new RegExp(
-    `((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg)) ?$`
+    `((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg)) $`
   );
   const localImageRegexp = new RegExp(
-    `![[](.*)\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] ?$`
+    `![[](.*)\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] $`
   );
   const propertyRegexp = new RegExp(`^([\.]) $`);
   /** const str =

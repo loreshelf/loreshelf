@@ -105,6 +105,17 @@ class Home extends Component {
         knownWorkspaces.push(workspace);
       }
       workspace.numBoards = numBoards;
+      boards.sort((a, b) => {
+        const aname = a.name.toUpperCase();
+        const bname = b.name.toUpperCase();
+        if (aname < bname) {
+          return -1;
+        }
+        if (aname > bname) {
+          return 1;
+        }
+        return 0;
+      });
       workspace.boards = boards;
       this.setState({
         knownWorkspaces,
@@ -337,7 +348,6 @@ class Home extends Component {
       const spoolingBoardData = spooling.boardData;
       spoolingBoardData.cards[spooling.cardIndex].doc = doc;
       spooling.boardData = this.saveBoardDataInBackground(spoolingBoardData);
-      console.log(spoolingBoardData);
     } else {
       card.doc = doc;
       this.autoSave();

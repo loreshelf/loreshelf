@@ -44,7 +44,8 @@ Still | renders | nicely
       suggestionPos: -1,
       suggestions: [],
       suggestionPhase: 1,
-      selectedSuggestion: {}
+      selectedSuggestion: {},
+      cursor: undefined
     };
 
     plugins.push(
@@ -145,6 +146,7 @@ Still | renders | nicely
         }
 
         // this.forceUpdate();
+        this.setState({ cursor: currentCursor });
       },
       attributes,
       nodeViews
@@ -206,7 +208,12 @@ Still | renders | nicely
   }
 
   selectSuggestion(suggestion) {
-    const { suggestionPhase, suggestionPos, selectedSuggestion } = this.state;
+    const {
+      suggestionPhase,
+      suggestionPos,
+      selectedSuggestion,
+      cursor
+    } = this.state;
     const { onRequestBoardDataAsync } = this.props;
     const { state, dispatch } = this.view;
     if (suggestionPhase === 1) {
@@ -230,9 +237,12 @@ Still | renders | nicely
       const boardPath = selectedSuggestion.board.path;
       const cardName = suggestion.title;
       const linkName = `${boardName}/${cardName}`;
-      const cursor = this.view.state.selection.from;
+      let from = cursor;
+      if (!from) {
+        from = state.selection.from;
+      }
       dispatch(
-        state.tr.insertText(linkName, suggestionPos - 1, cursor).addMark(
+        state.tr.insertText(linkName, suggestionPos - 1, from).addMark(
           suggestionPos - 1,
           suggestionPos + linkName.length,
           schema.marks.link.create({
@@ -247,9 +257,12 @@ Still | renders | nicely
   render() {
     const { onRemoveCard, onStartSpooling } = this.props;
     const { state } = this.view;
-    const { suggestions, suggestionPos, suggestionPhase } = this.state;
-    const { from } = state.selection;
+    const { suggestions, suggestionPos, suggestionPhase, cursor } = this.state;
     // TODO: improve performance?
+    let from = cursor;
+    if (!from) {
+      from = state.selection.from;
+    }
     const linkElement = this.view.domAtPos(from).node.parentElement;
     const url = linkElement.href;
 
