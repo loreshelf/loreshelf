@@ -14,8 +14,10 @@ class Home extends Component {
 
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status}
-    const saveTimer = undefined;
     const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
+
+    const saveTimer = undefined;
+    const spoolingTimer = undefined;
 
     this.menuRef = React.createRef();
     this.boardRef = React.createRef();
@@ -24,6 +26,7 @@ class Home extends Component {
       workspace,
       boardData,
       saveTimer,
+      spoolingTimer,
       knownWorkspaces
     };
     this.newCard = this.newCard.bind(this);
@@ -347,7 +350,7 @@ class Home extends Component {
     if (spooling) {
       const spoolingBoardData = spooling.boardData;
       spoolingBoardData.cards[spooling.cardIndex].doc = doc;
-      spooling.boardData = this.saveBoardDataInBackground(spoolingBoardData);
+      this.autoSaveSpooling(cardId);
     } else {
       card.doc = doc;
       this.autoSave();
@@ -432,7 +435,13 @@ class Home extends Component {
   }
 
   stopSpooling(spoolingCardIndex) {
-    const { boardData } = this.state;
+    const { boardData, spoolingTimer } = this.state;
+    if (spoolingTimer) {
+      const spoolingBoardData =
+        boardData.cards[spoolingCardIndex].spooling.boardData;
+      this.saveBoardDataInBackground(spoolingBoardData);
+      clearTimeout(spoolingTimer);
+    }
     boardData.cards[spoolingCardIndex].spooling = undefined;
     this.setState({ boardData });
   }
@@ -448,6 +457,26 @@ class Home extends Component {
       this.saveBoard(); // save board 3s after the last change
     }, 3000);
     this.setState({ boardData, saveTimer });
+  }
+
+  autoSaveSpooling(spoolingCardIndex) {
+    const { boardData } = this.state;
+    let { spoolingTimer } = this.state;
+    if (spoolingTimer) {
+      clearTimeout(spoolingTimer);
+    }
+    const spoolingBoardData =
+      boardData.cards[spoolingCardIndex].spooling.boardData;
+    spoolingBoardData.status = 'Saving...';
+    spoolingTimer = setTimeout(() => {
+      const updatedBoardData = this.saveBoardDataInBackground(
+        spoolingBoardData
+      ); // save board 3s after the last change
+      console.log(updatedBoardData);
+      boardData.cards[spoolingCardIndex].spooling.boardData = updatedBoardData;
+      this.setState({ boardData });
+    }, 1500);
+    this.setState({ boardData, spoolingTimer });
   }
 
   render() {

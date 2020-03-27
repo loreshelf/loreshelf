@@ -195,7 +195,7 @@ const markdownSerializer = new MarkdownSerializer(
       close(state, mark, parent, index) {
         return isPlainURL(mark, parent, index, -1)
           ? '>'
-          : `](${state.esc(mark.attrs.href)}${
+          : `](${encodeURI(state.esc(mark.attrs.href))}${
               mark.attrs.title ? ` ${state.quote(mark.attrs.title)}` : ''
             })`;
       }

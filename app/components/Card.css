@@ -34,3 +34,37 @@
   border-top: 1px solid hsl(206, 24%, 64%);
   padding: 5px;
 }
+
+@keyframes up-right {
+  0% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale (1, 5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+}
+
+.spoolingStatus {
+  border-radius: 50%;
+  float: left;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  margin-right: 5px;
+  background-color: #3dcc91;
+}
+
+.active {
+  background-color: #ffb366;
+  opacity: 0.25;
+  -webkit-animation: up-right 1s infinite;
+  -moz-animation: up-right 1s infinite;
+  -o-animation: up-right 1s infinite;
+  animation: up-right 1s infinite;
+}

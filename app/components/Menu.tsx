@@ -197,15 +197,10 @@ class Menu extends Component {
               style={{
                 fontSize: 'small',
                 paddingRight: '5px',
-                paddingTop: '10px',
-                paddingBottom: '10px'
+                paddingTop: '5px',
+                paddingBottom: '5px'
               }}
             >
-              <Icon
-                icon="automatic-updates"
-                iconSize={Icon.SIZE_STANDARD}
-                style={{ marginLeft: '10px', float: 'left' }}
-              />
               <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
             </div>
           )}

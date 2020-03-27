@@ -53,8 +53,11 @@ const Card: React.FC<CardProps> = ({
   const titleRef = useRef<EditableText>(null);
 
   let cardData = card;
+  let spoolingActive = '';
   if (card.spooling) {
     cardData = card.spooling.boardData.cards[card.spooling.cardIndex];
+    spoolingActive =
+      card.spooling.boardData.status === 'Saving...' ? styles.active : '';
   }
 
   const [, drop] = useDrop({
@@ -195,6 +198,7 @@ const Card: React.FC<CardProps> = ({
           </h1>
           {card.spooling && (
             <Callout intent={Intent.WARNING} icon="exchange">
+              <span className={`${styles.spoolingStatus} ${spoolingActive}`} />
               {`Spooling '${cardData.title}' from '${card.spooling.boardData.name}'`}
               <Button
                 icon="cross"
