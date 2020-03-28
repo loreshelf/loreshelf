@@ -17,7 +17,10 @@ const CONFIG_SCHEMA = {
     }
   },
   homeWorkspace: {
-    type: 'array'
+    type: 'string'
+  },
+  homeBoard: {
+    type: 'string'
   }
 };
 
@@ -26,7 +29,8 @@ const CONFIG_STORE = new Store(CONFIG_SCHEMA);
 
 enum CONFIG {
   WORKSPACES = 'workspaces',
-  HOMEWORKSPACE = 'homeWorkspace'
+  HOMEWORKSPACE = 'homeWorkspace',
+  HOMEBOARD = 'homeBoard'
 }
 
 class Home extends Component {
@@ -36,6 +40,9 @@ class Home extends Component {
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status}
     const knownWorkspaces = []; // [workspace1, workspace2]
+
+    const homeWorkspace = undefined; // = workspacePath
+    const homeBoard = undefined; // = boardPath
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
@@ -48,7 +55,8 @@ class Home extends Component {
       boardData,
       saveTimer,
       spoolingTimer,
-      knownWorkspaces
+      knownWorkspaces,
+      homeBoard
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -58,8 +66,11 @@ class Home extends Component {
     this.newBoard = this.newBoard.bind(this);
     this.duplicateBoard = this.duplicateBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
+    this.selectBoardWithPath = this.selectBoardWithPath.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.renameBoard = this.renameBoard.bind(this);
+    this.openHomeBoard = this.openHomeBoard.bind(this);
+    this.setHome = this.setHome.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.addWorkspace = this.addWorkspace.bind(this);
@@ -89,8 +100,9 @@ class Home extends Component {
 
     const workspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
     const homeWorkspace = CONFIG_STORE.get(CONFIG.HOMEWORKSPACE);
-    if (homeWorkspace) {
-      this.loadWorkspace(homeWorkspace, true);
+    const homeBoard = CONFIG_STORE.get(CONFIG.HOMEBOARD);
+    if (homeWorkspace && homeBoard) {
+      this.loadWorkspace(homeWorkspace, true, homeBoard);
     }
     if (workspaces) {
       let shouldSetFirst = !homeWorkspace;
@@ -101,6 +113,7 @@ class Home extends Component {
         }
       });
     }
+    this.setState({ homeWorkspace, homeBoard });
   }
 
   getCurrentBoardMd(data?) {
@@ -110,6 +123,13 @@ class Home extends Component {
       c => `# ${c.title}\n\n${serializeMarkdown(c.doc).trim()}`
     );
     return cards.join('\n\n');
+  }
+
+  setHome() {
+    const { boardData, workspace } = this.state;
+    CONFIG_STORE.set(CONFIG.HOMEBOARD, boardData.path);
+    CONFIG_STORE.set(CONFIG.HOMEWORKSPACE, workspace.path);
+    this.setState({ homeBoard: boardData.path, homeWorkspace: workspace.path });
   }
 
   updateWorkspace(workspacePath, knownWorkspaces, files) {
@@ -149,7 +169,7 @@ class Home extends Component {
     return workspace;
   }
 
-  loadWorkspace(workspacePath, shouldSetWorkspace) {
+  loadWorkspace(workspacePath, shouldSetWorkspace, openBoardPath?) {
     const { knownWorkspaces } = this.state;
     fs.readdir(workspacePath, (err, files) => {
       const workspace = this.updateWorkspace(
@@ -163,7 +183,11 @@ class Home extends Component {
           workspace
         });
         if (workspace.numBoards > 0) {
-          this.selectBoard(0);
+          if (!openBoardPath) {
+            this.selectBoard(0);
+          } else {
+            this.selectBoardWithPath(openBoardPath);
+          }
         }
       } else {
         this.setState({
@@ -292,16 +316,26 @@ class Home extends Component {
     this.loadBoard(boardMetaIndex);
   }
 
-  switchWorkspace(workspace) {
-    this.loadDirectory(workspace.path);
+  selectBoardWithPath(boardPath) {
+    const { workspace } = this.state;
+    const boardIndex = workspace.boards.findIndex(board => {
+      return board.path === boardPath;
+    });
+    if (boardIndex >= 0) {
+      this.selectBoard(boardIndex);
+    }
   }
 
-  closeWorkspace() {
+  switchWorkspace(workspace) {
+    this.loadWorkspace(workspace.path, true);
+  }
+
+  closeWorkspace(workspacePath) {
     const { knownWorkspaces, workspace } = this.state;
     // save board for unsaved changes
     this.autoSave(true);
     const workspaceIndex = knownWorkspaces.findIndex(w => {
-      return w.path === workspace.path;
+      return w.path === workspacePath;
     });
     knownWorkspaces.splice(workspaceIndex, 1);
     let newWorkspaceIndex = workspaceIndex;
@@ -319,7 +353,9 @@ class Home extends Component {
       }
     }
     this.setState({ knownWorkspaces });
-    this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
+    if (workspace === workspacePath) {
+      this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
+    }
     this.storeConfiguration();
   }
 
@@ -482,6 +518,11 @@ class Home extends Component {
     this.setState({ boardData, workspace });
   }
 
+  openHomeBoard() {
+    const { homeWorkspace, homeBoard } = this.state;
+    this.loadWorkspace(homeWorkspace, true, homeBoard);
+  }
+
   requestBoardsAsync(filter?) {
     return new Promise((resolve, reject) => {
       // get boards from the current workspace
@@ -582,7 +623,7 @@ class Home extends Component {
   }
 
   render() {
-    const { knownWorkspaces, workspace, boardData } = this.state;
+    const { knownWorkspaces, workspace, boardData, homeBoard } = this.state;
     const OpenWorkspace = (
       <Button
         intent={Intent.PRIMARY}
@@ -613,6 +654,7 @@ class Home extends Component {
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}
               boardData={boardData}
+              homeBoard={homeBoard}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
@@ -622,6 +664,8 @@ class Home extends Component {
               onAddWorkspace={() => ipcRenderer.send('workspace-new')}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
+              onOpenHomeBoard={this.openHomeBoard}
+              onSetHome={this.setHome}
             />,
             boardData ? (
               <Board

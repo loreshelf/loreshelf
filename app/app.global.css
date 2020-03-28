@@ -105,6 +105,10 @@ p {
   padding: 0;
 }
 
+.bp3-menu {
+  padding: 0;
+}
+
 .bp3-icon-drag-handle-vertical {
   padding-top: 2px;
   padding-right: 3px;

@@ -94,7 +94,10 @@ class Menu extends Component {
       onMoveCardToBoard,
       onAddWorkspace,
       onCloseWorkspace,
-      onSwitchWorkspace
+      onSwitchWorkspace,
+      onOpenHomeBoard,
+      onSetHome,
+      homeBoard
     } = this.props;
     const {
       newBoardOpen,
@@ -102,7 +105,7 @@ class Menu extends Component {
       newBoardIntent,
       newBoardType
     } = this.state;
-    const noResults = <MenuItem text="Open the first workspace" />;
+    const noResults = <MenuItem text="No matching workspaces found" />;
     const workspaceName =
       workspace && workspace.name ? workspace.name : '(No selection)';
     const workspacePath =
@@ -136,25 +139,45 @@ class Menu extends Component {
         >
           <ButtonGroup>
             <Button
+              key="homeBoard"
+              title={
+                homeBoard
+                  ? 'Open the home spool'
+                  : 'Set home spool in the context menu of your current spool'
+              }
+              onClick={onOpenHomeBoard}
+              disabled={!homeBoard}
+              icon="home"
+              style={{
+                maxWidth: '75px',
+                boxShadow: homeBoard.endsWith(`${selectedBoardName}.md`)
+                  ? '0px 17px 0px -15px white'
+                  : 'none'
+              }}
+            />
+            <Button
               key="openWorkspace"
               title="Add and open new workspace"
               onClick={onAddWorkspace}
               icon="folder-open"
               style={{ maxWidth: '75px' }}
             />
-            <Button
-              key="closeWorkspace"
-              title="Close the current workspace"
-              onClick={onCloseWorkspace}
-              icon="cross"
-              style={{ maxWidth: '75px' }}
-            />
           </ButtonGroup>
           <WorkspaceSelect
             items={knownWorkspaces}
             noResults={noResults}
+            itemPredicate={workspaceSelectProps.itemPredicate}
             itemRenderer={workspaceSelectProps.itemRenderer}
-            onItemSelect={onSwitchWorkspace}
+            onItemSelect={(selectedWorkspace, actionMeta) => {
+              if (actionMeta && actionMeta.action === 'close') {
+                onCloseWorkspace(actionMeta.workspacePath);
+              } else {
+                onSwitchWorkspace(selectedWorkspace);
+              }
+            }}
+            resetOnClose
+            resetOnSelect
+            popoverProps={{ minimal: true }}
           >
             <Button
               rightIcon="caret-down"
@@ -188,6 +211,13 @@ class Menu extends Component {
                   },
                   icon: 'edit',
                   text: 'Rename'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    onSetHome();
+                  },
+                  icon: 'home',
+                  text: 'Set Home'
                 }),
                 React.createElement(MenuItem, {
                   onClick: () => {
