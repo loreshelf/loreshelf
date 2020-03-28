@@ -104,10 +104,6 @@ const createWindow = async () => {
     mainWindow.webContents.send('new-card');
   });
 
-  globalShortcut.register('CommandOrControl+S', () => {
-    mainWindow.webContents.send('board-save');
-  });
-
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   // new AppUpdater();

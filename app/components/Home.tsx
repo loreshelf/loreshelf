@@ -185,7 +185,7 @@ class Home extends Component {
   newBoard(newBoardName, content?) {
     const { workspace } = this.state;
     // save board for unsaved changes
-    this.autoSave(true, true);
+    this.autoSave(true);
     const newBoardPath = `${workspace.path}/${newBoardName}`;
     let addContent = content;
     if (!addContent) {
@@ -217,17 +217,13 @@ class Home extends Component {
   }
 
   duplicateBoard(newBoardName) {
-    const { saveTimer } = this.state;
-    if (saveTimer) {
-      // save board for unsaved changes
-      this.saveBoard();
-    }
+    this.autoSave(true);
     this.newBoard(newBoardName, this.getCurrentBoardMd());
   }
 
   selectBoard(boardMetaIndex) {
     // save board for unsaved changes
-    this.autoSave(true, true);
+    this.autoSave(true);
     this.loadBoard(boardMetaIndex);
   }
 
@@ -238,7 +234,7 @@ class Home extends Component {
   closeWorkspace() {
     const { knownWorkspaces, workspace } = this.state;
     // save board for unsaved changes
-    this.autoSave(true, true);
+    this.autoSave(true);
     const workspaceIndex = knownWorkspaces.findIndex(w => {
       return w.path === workspace.path;
     });
@@ -458,22 +454,21 @@ class Home extends Component {
 
   stopSpooling(spoolingCardIndex) {
     const { boardData } = this.state;
-    this.autoSaveSpooling(spoolingCardIndex, true, true);
+    this.autoSaveSpooling(spoolingCardIndex, true);
     boardData.cards[spoolingCardIndex].spooling = undefined;
     this.setState({ boardData });
   }
 
-  autoSave(immediately?, whenNeeded?) {
+  autoSave(immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
-    const shouldSave =
-      (whenNeeded && saveTimer && immediately) || (!whenNeeded && immediately);
+    const shouldSave = immediatelyWhenNeeded && saveTimer;
     if (saveTimer) {
       clearTimeout(saveTimer);
     }
     if (shouldSave) {
       this.saveBoard();
-    } else if (!whenNeeded) {
+    } else if (!immediatelyWhenNeeded) {
       boardData.status = 'Saving...';
       saveTimer = setTimeout(() => {
         this.saveBoard(); // save board 3s after the last change
@@ -482,12 +477,10 @@ class Home extends Component {
     this.setState({ boardData, saveTimer });
   }
 
-  autoSaveSpooling(spoolingCardIndex, immediately?, whenNeeded?) {
+  autoSaveSpooling(spoolingCardIndex, immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { spoolingTimer } = this.state;
-    const shouldSave =
-      (whenNeeded && spoolingTimer && immediately) ||
-      (!whenNeeded && immediately);
+    const shouldSave = immediatelyWhenNeeded && spoolingTimer;
     if (spoolingTimer) {
       clearTimeout(spoolingTimer);
     }
@@ -498,7 +491,7 @@ class Home extends Component {
         spoolingBoardData
       ); // save board 3s after the last change
       boardData.cards[spoolingCardIndex].spooling.boardData = updatedBoardData;
-    } else if (!whenNeeded) {
+    } else if (!immediatelyWhenNeeded) {
       spoolingBoardData.status = 'Saving...';
       spoolingTimer = setTimeout(() => {
         const updatedBoardData = this.saveBoardDataInBackground(
@@ -508,7 +501,7 @@ class Home extends Component {
           spoolingCardIndex
         ].spooling.boardData = updatedBoardData;
         this.setState({ boardData });
-      }, 1500);
+      }, 1000);
     }
     this.setState({ boardData, spoolingTimer });
   }
