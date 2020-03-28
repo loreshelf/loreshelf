@@ -155,9 +155,8 @@ Still | renders | nicely
           const url = linkElement.href;
           const separatorSpooling = url.lastIndexOf('@');
           const separatorIndex = url.lastIndexOf('/');
-          const boardPath = url.substring(
-            separatorSpooling + 1,
-            separatorIndex
+          const boardPath = decodeURI(
+            url.substring(separatorSpooling + 1, separatorIndex)
           );
           const cardName = decodeURI(url.substring(separatorIndex + 1));
           console.log(boardPath);
