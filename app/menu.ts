@@ -75,7 +75,7 @@ export default class MenuBuilder {
       if (data.canceled) {
         console.log('No file selected');
       } else {
-        event.reply('workspace-load', data.filePaths[0]);
+        event.reply('workspace-add', data.filePaths[0]);
       }
     });
   }

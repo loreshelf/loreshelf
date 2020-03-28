@@ -92,7 +92,7 @@ class Menu extends Component {
       onDeleteBoard,
       onRenameBoard,
       onMoveCardToBoard,
-      onLoadWorkspace,
+      onAddWorkspace,
       onCloseWorkspace,
       onSwitchWorkspace
     } = this.props;
@@ -138,7 +138,7 @@ class Menu extends Component {
             <Button
               key="openWorkspace"
               title="Add and open new workspace"
-              onClick={onLoadWorkspace}
+              onClick={onAddWorkspace}
               icon="folder-open"
               style={{ maxWidth: '75px' }}
             />

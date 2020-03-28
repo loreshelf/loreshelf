@@ -2,11 +2,32 @@ import React, { Component } from 'react';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
+import Store from 'electron-store';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
 import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
+
+const CONFIG_SCHEMA = {
+  workspaces: {
+    type: 'array',
+    items: {
+      type: 'string'
+    }
+  },
+  homeWorkspace: {
+    type: 'array'
+  }
+};
+
+// workspaces=[path1, path2], homeWorkspace, homeBoard
+const CONFIG_STORE = new Store(CONFIG_SCHEMA);
+
+enum CONFIG {
+  WORKSPACES = 'workspaces',
+  HOMEWORKSPACE = 'homeWorkspace'
+}
 
 class Home extends Component {
   constructor() {
@@ -14,7 +35,7 @@ class Home extends Component {
 
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status}
-    const knownWorkspaces = []; // [{selectedBoard: -1, name, path: directory }]
+    const knownWorkspaces = []; // [workspace1, workspace2]
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
@@ -41,6 +62,7 @@ class Home extends Component {
     this.renameBoard = this.renameBoard.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
+    this.addWorkspace = this.addWorkspace.bind(this);
     this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
@@ -61,14 +83,24 @@ class Home extends Component {
     ipcRenderer.on('new-card', () => {
       self.newCard();
     });
-    ipcRenderer.on('workspace-load', (event, workspacePath) => {
-      self.loadDirectory(workspacePath);
+    ipcRenderer.on('workspace-add', (event, workspacePath) => {
+      self.addWorkspace(workspacePath);
     });
-    this.loadDirectory('/home/ibek/Temp');
-    // this.loadDirectory('/home/ibek/Boards');
-    /** setTimeout(() => {
-      this.loadDirectory('/home/ibek/Temp');
-    }, 1000); */
+
+    const workspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
+    const homeWorkspace = CONFIG_STORE.get(CONFIG.HOMEWORKSPACE);
+    if (homeWorkspace) {
+      this.loadWorkspace(homeWorkspace, true);
+    }
+    if (workspaces) {
+      let shouldSetFirst = !homeWorkspace;
+      workspaces.forEach(workspacePath => {
+        if (workspacePath !== homeWorkspace) {
+          this.loadWorkspace(workspacePath, shouldSetFirst);
+          shouldSetFirst = false;
+        }
+      });
+    }
   }
 
   getCurrentBoardMd(data?) {
@@ -80,52 +112,85 @@ class Home extends Component {
     return cards.join('\n\n');
   }
 
-  loadDirectory(directory) {
+  updateWorkspace(workspacePath, knownWorkspaces, files) {
+    let numBoards = 0;
+    const boards = [];
+    files.forEach(file => {
+      if (file.endsWith('.md')) {
+        const boardPath = `${workspacePath}/${file}`;
+        boards.push({
+          path: boardPath,
+          name: this.boardPathToName(boardPath)
+        });
+        numBoards += 1;
+      }
+    });
+    let workspace = knownWorkspaces.find(w => {
+      return workspacePath === w.path;
+    });
+    if (!workspace) {
+      const name = workspacePath.substring(workspacePath.lastIndexOf('/') + 1);
+      workspace = { selectedBoard: -1, name, path: workspacePath };
+      knownWorkspaces.push(workspace);
+    }
+    workspace.numBoards = numBoards;
+    boards.sort((a, b) => {
+      const aname = a.name.toUpperCase();
+      const bname = b.name.toUpperCase();
+      if (aname < bname) {
+        return -1;
+      }
+      if (aname > bname) {
+        return 1;
+      }
+      return 0;
+    });
+    workspace.boards = boards;
+    return workspace;
+  }
+
+  loadWorkspace(workspacePath, shouldSetWorkspace) {
+    const { knownWorkspaces } = this.state;
+    fs.readdir(workspacePath, (err, files) => {
+      const workspace = this.updateWorkspace(
+        workspacePath,
+        knownWorkspaces,
+        files
+      );
+      if (shouldSetWorkspace) {
+        this.setState({
+          knownWorkspaces,
+          workspace
+        });
+        if (workspace.numBoards > 0) {
+          this.selectBoard(0);
+        }
+      } else {
+        this.setState({
+          knownWorkspaces
+        });
+      }
+    });
+  }
+
+  addWorkspace(workspacePath) {
     const { knownWorkspaces } = this.state;
     this.setState({
       boardData: undefined
     });
-    let workspace = knownWorkspaces.find(w => {
-      return directory === w.path;
-    });
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
-    fs.readdir(directory, (err, files) => {
-      let numBoards = 0;
-      const boards = [];
-      files.forEach(file => {
-        if (file.endsWith('.md')) {
-          const boardPath = `${directory}/${file}`;
-          boards.push({
-            path: boardPath,
-            name: self.boardPathToName(boardPath)
-          });
-          numBoards += 1;
-        }
-      });
-      if (!workspace) {
-        const name = directory.substring(directory.lastIndexOf('/') + 1);
-        workspace = { selectedBoard: -1, name, path: directory };
-        knownWorkspaces.push(workspace);
-      }
-      workspace.numBoards = numBoards;
-      boards.sort((a, b) => {
-        const aname = a.name.toUpperCase();
-        const bname = b.name.toUpperCase();
-        if (aname < bname) {
-          return -1;
-        }
-        if (aname > bname) {
-          return 1;
-        }
-        return 0;
-      });
-      workspace.boards = boards;
+    console.log(workspacePath);
+    fs.readdir(workspacePath, (err, files) => {
+      const workspace = this.updateWorkspace(
+        workspacePath,
+        knownWorkspaces,
+        files
+      );
       this.setState({
         knownWorkspaces,
         workspace
       });
-      if (numBoards > 0) {
+      this.storeConfiguration();
+      if (workspace.numBoards > 0) {
         this.selectBoard(0);
       }
     });
@@ -255,6 +320,7 @@ class Home extends Component {
     }
     this.setState({ knownWorkspaces });
     this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
+    this.storeConfiguration();
   }
 
   saveBoardDataInBackground(boardData) {
@@ -506,6 +572,15 @@ class Home extends Component {
     this.setState({ boardData, spoolingTimer });
   }
 
+  storeConfiguration() {
+    const { knownWorkspaces } = this.state;
+    const workspaces = [];
+    knownWorkspaces.forEach(workspace => {
+      workspaces.push(workspace.path);
+    });
+    CONFIG_STORE.set(CONFIG.WORKSPACES, workspaces);
+  }
+
   render() {
     const { knownWorkspaces, workspace, boardData } = this.state;
     const OpenWorkspace = (
@@ -544,7 +619,7 @@ class Home extends Component {
               onDeleteBoard={this.deleteBoard}
               onRenameBoard={this.renameBoard}
               onMoveCardToBoard={this.moveCardToBoard}
-              onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
+              onAddWorkspace={() => ipcRenderer.send('workspace-new')}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
             />,
