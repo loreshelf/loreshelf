@@ -8,9 +8,9 @@ import {
   ContextMenu,
   InputGroup,
   Menu as BJMenu,
+  MenuDivider,
   Intent,
-  Dialog,
-  Icon
+  Dialog
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -22,7 +22,8 @@ const WorkspaceSelect = Select.ofType<Workspace>();
 
 enum NewBoardType {
   CREATE = 1,
-  DUPLICATE
+  DUPLICATE,
+  RENAME
 }
 
 class Menu extends Component {
@@ -56,6 +57,14 @@ class Menu extends Component {
     });
   }
 
+  renameBoardOpen() {
+    this.setState({
+      newBoardOpen: true,
+      newBoardName: 'RenamedSpool.md',
+      newBoardType: NewBoardType.RENAME
+    });
+  }
+
   newBoardClose() {
     this.setState({ newBoardOpen: false });
   }
@@ -81,6 +90,7 @@ class Menu extends Component {
       onDuplicateBoard,
       onSelectBoard,
       onDeleteBoard,
+      onRenameBoard,
       onMoveCardToBoard,
       onLoadWorkspace,
       onCloseWorkspace,
@@ -101,6 +111,16 @@ class Menu extends Component {
       boardData && boardData.name ? boardData.name : 'No spools';
     const boardStatus = boardData && boardData.status ? boardData.status : '';
     const boards = workspace && workspace.boards ? workspace.boards : [];
+
+    let dialogTitle;
+    if (newBoardType === NewBoardType.CREATE) {
+      dialogTitle = 'Create a new spool';
+    } else if (newBoardType === NewBoardType.DUPLICATE) {
+      dialogTitle = 'Duplicate the spool';
+    } else if (newBoardType === NewBoardType.RENAME) {
+      dialogTitle = 'Rename the spool';
+    }
+
     return (
       <div className={styles.menu}>
         <ButtonGroup
@@ -164,11 +184,19 @@ class Menu extends Component {
                 }),
                 React.createElement(MenuItem, {
                   onClick: () => {
+                    this.renameBoardOpen();
+                  },
+                  icon: 'edit',
+                  text: 'Rename'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
                     console.log('export');
                   },
                   icon: 'export',
                   text: 'Export'
                 }),
+                React.createElement(MenuDivider),
                 React.createElement(MenuItem, {
                   onClick: onDeleteBoard,
                   icon: 'trash',
@@ -239,11 +267,7 @@ class Menu extends Component {
           icon="control"
           onClose={this.newBoardClose}
           isOpen={newBoardOpen}
-          title={
-            newBoardType === NewBoardType.CREATE
-              ? 'Create a new spool'
-              : 'Duplicate the spool'
-          }
+          title={dialogTitle}
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
@@ -272,12 +296,14 @@ class Menu extends Component {
                       onNewBoard(newBoardName);
                     } else if (newBoardType === NewBoardType.DUPLICATE) {
                       onDuplicateBoard(newBoardName);
+                    } else if (newBoardType === NewBoardType.RENAME) {
+                      onRenameBoard(newBoardName);
                     }
                     this.setState({ newBoardOpen: false });
                   }
                 }}
               >
-                Create
+                Confirm
               </Button>
             </div>
           </div>

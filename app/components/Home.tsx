@@ -38,6 +38,7 @@ class Home extends Component {
     this.duplicateBoard = this.duplicateBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
+    this.renameBoard = this.renameBoard.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.closeWorkspace = this.closeWorkspace.bind(this);
@@ -398,6 +399,34 @@ class Home extends Component {
     }
   }
 
+  renameBoard(newBoardName) {
+    const { boardData, workspace } = this.state;
+    const oldBoardPath = boardData.path;
+    const newBoardPath = `${workspace.path}/${newBoardName}`;
+    fs.renameSync(oldBoardPath, newBoardPath);
+    const boardName = this.boardPathToName(newBoardPath);
+    boardData.path = newBoardPath;
+    boardData.name = boardName;
+    const boardIndex = workspace.boards.findIndex(board => {
+      return board.path === oldBoardPath;
+    });
+    const boardMeta = workspace.boards[boardIndex];
+    boardMeta.path = newBoardPath;
+    boardMeta.name = boardName;
+    workspace.boards.sort((a, b) => {
+      const aname = a.name.toUpperCase();
+      const bname = b.name.toUpperCase();
+      if (aname < bname) {
+        return -1;
+      }
+      if (aname > bname) {
+        return 1;
+      }
+      return 0;
+    });
+    this.setState({ boardData, workspace });
+  }
+
   requestBoardsAsync(filter?) {
     return new Promise((resolve, reject) => {
       // get boards from the current workspace
@@ -515,6 +544,7 @@ class Home extends Component {
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
+              onRenameBoard={this.renameBoard}
               onMoveCardToBoard={this.moveCardToBoard}
               onLoadWorkspace={() => ipcRenderer.send('workspace-new')}
               onCloseWorkspace={this.closeWorkspace}
