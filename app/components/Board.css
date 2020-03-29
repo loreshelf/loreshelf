@@ -7,7 +7,7 @@
   box-sizing: border-box;
   flex-wrap: wrap;
   padding: 0;
-  padding-right: 10px;
+  padding-right: 20px;
   padding-left: 30px;
   margin-top: 10px;
   overflow-y: auto;
@@ -18,15 +18,17 @@
 }
 
 .newCard {
-  text-align: center;
-  margin-left: 10px;
-  min-width: 100px;
-  width: 100px;
-  max-width: 100px;
-  min-height: 100px;
-  max-height: 100px;
-  line-height: 100px;
-  border-radius: 50px !important;
-  border: 1px solid transparent;
-  align-self: center;
+  position: absolute;
+  top: 40%;
+  right: 0;
+  text-align: left;
+  padding-left: 10px;
+  min-width: 40px;
+  width: 40px;
+  max-width: 40px;
+  min-height: 50px;
+  max-height: 50px;
+  line-height: 50px;
+  height: 50px;
+  border-radius: 50px 0 0 50px;
 }

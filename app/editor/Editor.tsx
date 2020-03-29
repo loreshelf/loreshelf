@@ -34,13 +34,7 @@ Still | renders | nicely
 
     this.editorRef = React.createRef();
     this.linkRef = React.createRef();
-    const {
-      attributes,
-      nodeViews,
-      doc,
-      onRequestBoardsAsync,
-      onStartSpooling
-    } = this.props;
+    const { attributes, nodeViews, doc, onStartSpooling } = this.props;
 
     this.state = {
       suggestionPos: -1,
