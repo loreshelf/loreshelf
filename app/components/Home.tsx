@@ -353,7 +353,7 @@ class Home extends Component {
       }
     }
     this.setState({ knownWorkspaces });
-    if (workspace === workspacePath) {
+    if (workspace.path === workspacePath) {
       this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
     }
     this.storeConfiguration();

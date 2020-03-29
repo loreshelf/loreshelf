@@ -150,9 +150,10 @@ class Menu extends Component {
               icon="home"
               style={{
                 maxWidth: '75px',
-                boxShadow: homeBoard.endsWith(`${selectedBoardName}.md`)
-                  ? '0px 17px 0px -15px white'
-                  : 'none'
+                boxShadow:
+                  homeBoard && homeBoard.endsWith(`${selectedBoardName}.md`)
+                    ? '0px 17px 0px -15px white'
+                    : 'none'
               }}
             />
             <Button
