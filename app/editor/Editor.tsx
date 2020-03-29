@@ -3,8 +3,7 @@
 /* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { Menu, MenuItem } from '@blueprintjs/core';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, Selection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
@@ -17,6 +16,46 @@ import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 
 const MAX_SUGGESTIONS = 5;
+
+const COMMANDS = [
+  {
+    name: 'header',
+    onSelect: (start, end, state, dispatch, cursor) => {
+      const insert = schema.nodes.heading.createAndFill({ level: 2 });
+      const tr = state.tr.replaceWith(start - 1, end + 1, insert);
+      tr.setSelection(Selection.near(tr.doc.resolve(cursor - 1)));
+      dispatch(tr);
+    }
+  },
+  {
+    name: 'today',
+    onSelect: (start, end, state, dispatch, cursor) => {
+      const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      };
+      const today = new Date().toLocaleDateString(undefined, options);
+      const tr = state.tr.insertText(today, start, cursor);
+      tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
+      dispatch(tr);
+    }
+  },
+  {
+    name: 'now',
+    onSelect: (start, end, state, dispatch, cursor) => {
+      const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      };
+      const today = new Date().toLocaleTimeString(undefined, options);
+      const tr = state.tr.insertText(today, start, cursor);
+      tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
+      dispatch(tr);
+    }
+  }
+];
 
 class Editor extends React.Component {
   constructor(props) {
@@ -41,6 +80,7 @@ Still | renders | nicely
       suggestions: [],
       filteredSuggestions: [],
       suggestionPhase: 1,
+      suggestionChar: undefined,
       selectedSuggestion: {},
       cursor: undefined
     };
@@ -66,7 +106,8 @@ Still | renders | nicely
           suggestionPos,
           suggestions,
           selectedSuggestion,
-          suggestionPhase
+          suggestionPhase,
+          suggestionChar
         } = this.state;
 
         this.view.updateState(state);
@@ -85,10 +126,24 @@ Still | renders | nicely
             step.from === step.to &&
             step.slice.content.content[0].text === '@'
           ) {
+            // Start @ card link suggestion
             onChange(state.doc);
-            const isSuggestion = this.isTextSuggestion(transaction);
+            const isSuggestion = this.isTextSuggestion(transaction, '@');
             if (isSuggestion) {
               this.requestSuggestionPhase1(selection.from);
+            }
+          } else if (
+            suggestionPos < 0 &&
+            step.from === step.to &&
+            step.slice.content.content[0].text === '/'
+          ) {
+            // Start @ card link suggestion
+            onChange(state.doc);
+            const isSuggestion = this.isTextSuggestion(transaction, '/');
+            if (isSuggestion) {
+              filteredSuggestions = this.requestCommandSuggestion(
+                selection.from
+              );
             }
           } else if (suggestionPos >= 0) {
             const { $anchor } = transaction.curSelection;
@@ -102,13 +157,11 @@ Still | renders | nicely
 
             if (content) {
               const paragraph = content.text;
-              let where = paragraph.lastIndexOf(' @', cursor) + 1;
-              if (where < 1) {
-                where = paragraph.lastIndexOf('@', cursor);
-                if (where !== 0) {
-                  where = -1;
-                }
-              }
+              const where = this.getSuggestionCharacterPos(
+                paragraph,
+                cursor,
+                suggestionChar
+              );
               suggestionText =
                 where >= 0 ? paragraph.substring(where + 1, cursor) : '';
               let filterText;
@@ -122,9 +175,9 @@ Still | renders | nicely
                 filterText = suggestionText;
               }
               filteredSuggestions = suggestions
-                .filter(s =>
-                  s[this.getSuggestionProperty()].includes(filterText)
-                )
+                .filter(s => {
+                  return s[this.getSuggestionProperty()].includes(filterText);
+                })
                 .slice(0, MAX_SUGGESTIONS);
             }
             onChange(state.doc);
@@ -143,6 +196,7 @@ Still | renders | nicely
           }
         }
 
+        // Click on a card link to start spooling
         const linkElement = this.view.domAtPos(currentCursor).node
           .parentElement;
         if (linkElement.classList.contains('cardLink')) {
@@ -153,11 +207,9 @@ Still | renders | nicely
             url.substring(separatorSpooling + 1, separatorIndex)
           );
           const cardName = decodeURI(url.substring(separatorIndex + 1));
-          console.log(boardPath);
           onStartSpooling(boardPath, cardName);
         }
 
-        // this.forceUpdate();
         this.setState({
           cursor: currentCursor,
           filteredSuggestions
@@ -169,8 +221,6 @@ Still | renders | nicely
 
     this.setLink = this.setLink.bind(this);
     this.selectSuggestion = this.selectSuggestion.bind(this);
-
-    // console.log(this.view.state.doc);
   }
 
   componentDidMount() {
@@ -207,30 +257,43 @@ Still | renders | nicely
   }
 
   getSuggestionProperty() {
-    const { suggestionPhase } = this.state;
+    const { suggestionPhase, suggestionChar } = this.state;
     let textProperty;
-    if (suggestionPhase === 1) {
-      textProperty = 'name'; // boardMeta.name
-    } else if (suggestionPhase === 2) {
-      textProperty = 'title'; // boardData.cards.title
+    if (suggestionChar === '@') {
+      if (suggestionPhase === 1) {
+        textProperty = 'name'; // boardMeta.name
+      } else if (suggestionPhase === 2) {
+        textProperty = 'title'; // boardData.cards.title
+      }
+    } else {
+      // slash command
+      textProperty = 'name';
     }
     return textProperty;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  isTextSuggestion(transaction) {
-    const cursor = transaction.curSelection.$anchor.parentOffset;
-    const paragraph =
-      transaction.curSelection.$anchor.path[3].content.content[0].text;
-    let where = paragraph.lastIndexOf(' @', cursor) + 1;
-    const onlyTheFirst = paragraph.lastIndexOf('@', cursor);
+  getSuggestionCharacterPos(paragraph, cursor, suggestionChar) {
+    let where = paragraph.lastIndexOf(` ${suggestionChar}`, cursor) + 1;
     if (where < 1) {
-      where = onlyTheFirst;
+      where = paragraph.lastIndexOf(suggestionChar, cursor);
       if (where !== 0) {
         where = -1;
       }
     }
-    return where >= 0 && where === onlyTheFirst;
+    return where;
+  }
+
+  isTextSuggestion(transaction, suggestionChar) {
+    const cursor = transaction.curSelection.$anchor.parentOffset;
+    const paragraph =
+      transaction.curSelection.$anchor.path[3].content.content[0].text;
+    const where = this.getSuggestionCharacterPos(
+      paragraph,
+      cursor,
+      suggestionChar
+    );
+    return where >= 0;
   }
 
   requestSuggestionPhase1(cursor) {
@@ -240,6 +303,7 @@ Still | renders | nicely
       .then(newBoards => {
         this.setState({
           suggestions: newBoards,
+          suggestionChar: '@',
           filteredSuggestions: newBoards.slice(0, MAX_SUGGESTIONS)
         });
       })
@@ -248,12 +312,24 @@ Still | renders | nicely
       });
   }
 
+  requestCommandSuggestion(cursor) {
+    this.resetSuggestions(cursor);
+    const filteredSuggestions = COMMANDS.slice(0, MAX_SUGGESTIONS);
+    this.setState({
+      suggestions: COMMANDS,
+      suggestionChar: '/',
+      filteredSuggestions
+    });
+    return filteredSuggestions;
+  }
+
   resetSuggestions(suggestionPos?) {
     this.setState({
       suggestionPos: suggestionPos || -1,
       suggestions: [],
       filteredSuggestions: [],
       suggestionPhase: 1,
+      suggestionChar: undefined,
       selectedSuggestion: {}
     });
   }
@@ -263,6 +339,7 @@ Still | renders | nicely
       suggestionPhase,
       suggestionPos,
       selectedSuggestion,
+      suggestionChar,
       cursor
     } = this.state;
     const { onRequestBoardDataAsync } = this.props;
@@ -273,41 +350,48 @@ Still | renders | nicely
       from = state.selection.from;
     }
 
-    if (suggestionPhase === 1) {
-      dispatch(state.tr.insertText(`${suggestion.name}/`, suggestionPos, from));
-      this.setState({
-        suggestionPhase: 2,
-        suggestions: [],
-        filteredSuggestions: [],
-        selectedSuggestion: { board: suggestion }
-      });
-      onRequestBoardDataAsync(suggestion)
-        .then(boardData => {
-          this.setState({
-            suggestions: boardData.cards,
-            filteredSuggestions: boardData.cards.slice(0, MAX_SUGGESTIONS)
-          });
-        })
-        .catch(error => {
-          console.log(error);
+    if (suggestionChar === '@') {
+      if (suggestionPhase === 1) {
+        dispatch(
+          state.tr.insertText(`${suggestion.name}/`, suggestionPos, from)
+        );
+        this.setState({
+          suggestionPhase: 2,
+          suggestions: [],
+          filteredSuggestions: [],
+          selectedSuggestion: { board: suggestion }
         });
-    } else {
-      // replace with link
-      // [board.name/card](@board.name/card "board.name/card")
-      const boardName = selectedSuggestion.board.name;
-      const boardPath = selectedSuggestion.board.path;
-      const cardName = suggestion.title;
-      const linkName = `${boardName}/${cardName}`;
-      dispatch(
-        state.tr.insertText(linkName, suggestionPos - 1, from).addMark(
-          suggestionPos - 1,
-          suggestionPos + linkName.length,
-          schema.marks.link.create({
-            href: `@${boardPath}/${cardName}`,
-            title: `Open '${cardName}' knot from '${boardName}' spool`
+        onRequestBoardDataAsync(suggestion)
+          .then(boardData => {
+            this.setState({
+              suggestions: boardData.cards,
+              filteredSuggestions: boardData.cards.slice(0, MAX_SUGGESTIONS)
+            });
           })
-        )
-      );
+          .catch(error => {
+            console.log(error);
+          });
+      } else {
+        // replace with link
+        // [board.name/card](@board.name/card "board.name/card")
+        const boardName = selectedSuggestion.board.name;
+        const boardPath = selectedSuggestion.board.path;
+        const cardName = suggestion.title;
+        const linkName = `${boardName}/${cardName}`;
+        dispatch(
+          state.tr.insertText(linkName, suggestionPos - 1, from).addMark(
+            suggestionPos - 1,
+            suggestionPos + linkName.length,
+            schema.marks.link.create({
+              href: `@${boardPath}/${cardName}`,
+              title: `Open '${cardName}' knot from '${boardName}' spool`
+            })
+          )
+        );
+      }
+    } else {
+      // slash command
+      suggestion.onSelect(suggestionPos - 1, from, state, dispatch, from);
     }
   }
 

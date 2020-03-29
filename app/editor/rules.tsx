@@ -80,7 +80,6 @@ export function buildInputRules(schema) {
   const localImageRegexp = new RegExp(
     `![[](.*)\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] $`
   );
-  const propertyRegexp = new RegExp(`^([\.]) $`);
   /** const str =
     '![Photo](/home/ibek/Pictures/Screenshot from 2019-11-19 17-30-40.png) ';
   const res = localImageRegexp.exec(str);
@@ -150,12 +149,6 @@ export function buildInputRules(schema) {
         const src = encodeURI(match[2]);
         const insert = schema.nodes.image.create({ src, alt, title: alt });
         return state.tr.replaceWith(start, end, insert);
-      })
-    );
-    rules.push(
-      new InputRule(propertyRegexp, (state, match, start, end) => {
-        const insert = schema.nodes.heading.createAndFill({ level: 2 });
-        return state.tr.replaceWith(start - 1, end + 1, insert);
       })
     );
   }
