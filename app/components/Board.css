@@ -22,7 +22,7 @@
   top: 40%;
   right: 0;
   text-align: left;
-  padding-left: 10px;
+  padding-left: 10px !important;
   min-width: 40px;
   width: 40px;
   max-width: 40px;

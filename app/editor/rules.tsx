@@ -68,18 +68,11 @@ export function buildInputRules(schema) {
   if ((type = schema.nodes.bullet_list)) rules.push(bulletListRule(type));
   if ((type = schema.nodes.code_block)) rules.push(codeBlockRule(type));
   if ((type = schema.nodes.heading)) rules.push(headingRule(type, 2));
-  const linkRegexp = new RegExp(
-    `([-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?) $`
-  );
-  const fileRegexp = new RegExp(
-    `(/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,}) $`
-  );
-  const imageUrlRegexp = new RegExp(
-    `((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif)) $`
-  );
-  const localImageRegexp = new RegExp(
-    `![[](.*)\][(](/[a-zA-Z0-9][a-zA-Z0-9-/ ]+[a-zA-Z0-9].[a-z]{2,})[)] $`
-  );
+  const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+) $/;
+  const fileRegexp = /(\/[a-zA-Z0-9][a-zA-Z0-9-\/ ]+[a-zA-Z0-9]\.[a-z]{2,}) $/;
+  const imageUrlRegexp = /((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif)) $/;
+  const localImageRegexp = /![[](.*)\][(](\/[a-zA-Z0-9][a-zA-Z0-9-\/ ]+[a-zA-Z0-9].[a-z]{2,})[)] $/;
+
   /** const str =
     '![Photo](/home/ibek/Pictures/Screenshot from 2019-11-19 17-30-40.png) ';
   const res = localImageRegexp.exec(str);
