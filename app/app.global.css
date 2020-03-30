@@ -61,6 +61,7 @@ p {
   border: 1px solid transparent;
   padding: 5px;
   white-space: pre-wrap;
+  word-wrap: break-word;
   width: 100%;
 }
 
