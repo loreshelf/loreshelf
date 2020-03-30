@@ -17,9 +17,14 @@ import { schema } from './schema';
 
 const MAX_SUGGESTIONS = 5;
 
+const isNotInline = state => {
+  return state.tr.selection.$cursor.parent.type !== schema.nodes.paragraph;
+};
+
 const COMMANDS = [
   {
     name: 'header',
+    disabled: isNotInline,
     onSelect: (start, end, state, dispatch, cursor) => {
       const insert = schema.nodes.heading.createAndFill({ level: 2 });
       const tr = state.tr.replaceWith(start - 1, end + 1, insert);
@@ -142,21 +147,22 @@ Still | renders | nicely
             const isSuggestion = this.isTextSuggestion(transaction, '/');
             if (isSuggestion) {
               filteredSuggestions = this.requestCommandSuggestion(
+                state,
                 selection.from
               );
             }
           } else if (suggestionPos >= 0) {
-            const { $anchor } = transaction.curSelection;
-            const cursor = $anchor.parentOffset;
-            const content = $anchor.path[3].content.content[0];
+            const { $cursor } = transaction.selection;
+            const cursor = $cursor.parentOffset;
+            const node = $cursor.nodeBefore;
+            const paragraph = node ? node.text : '';
             const backToPhase1 =
               suggestionPhase === 2 &&
-              content &&
-              content.text &&
-              !content.text.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
+              node &&
+              paragraph &&
+              !paragraph.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
 
-            if (content) {
-              const paragraph = content.text;
+            if (node) {
               const where = this.getSuggestionCharacterPos(
                 paragraph,
                 cursor,
@@ -285,9 +291,10 @@ Still | renders | nicely
   }
 
   isTextSuggestion(transaction, suggestionChar) {
-    const cursor = transaction.curSelection.$anchor.parentOffset;
-    const paragraph =
-      transaction.curSelection.$anchor.path[3].content.content[0].text;
+    const { $cursor } = transaction.selection;
+    const cursor = $cursor.parentOffset;
+    const node = $cursor.nodeBefore;
+    const paragraph = node.text;
     const where = this.getSuggestionCharacterPos(
       paragraph,
       cursor,
@@ -312,11 +319,13 @@ Still | renders | nicely
       });
   }
 
-  requestCommandSuggestion(cursor) {
+  requestCommandSuggestion(state, cursor) {
     this.resetSuggestions(cursor);
-    const filteredSuggestions = COMMANDS.slice(0, MAX_SUGGESTIONS);
+    const filteredSuggestions = COMMANDS.filter(
+      c => !c.disabled || !c.disabled(state)
+    ).slice(0, MAX_SUGGESTIONS);
     this.setState({
-      suggestions: COMMANDS,
+      suggestions: filteredSuggestions,
       suggestionChar: '/',
       filteredSuggestions
     });
