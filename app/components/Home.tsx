@@ -41,7 +41,6 @@ class Home extends Component {
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status}
     const knownWorkspaces = []; // [workspace1, workspace2]
 
-    const homeWorkspace = undefined; // = workspacePath
     const homeBoard = undefined; // = boardPath
 
     const saveTimer = undefined;
@@ -97,7 +96,11 @@ class Home extends Component {
     ipcRenderer.on('workspace-add', (event, workspacePath) => {
       self.addWorkspace(workspacePath);
     });
-
+    document.addEventListener('keyup', e => {
+      if (e.code === 'Insert') {
+        this.newCard();
+      }
+    });
     const workspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
     const homeWorkspace = CONFIG_STORE.get(CONFIG.HOMEWORKSPACE);
     const homeBoard = CONFIG_STORE.get(CONFIG.HOMEBOARD);

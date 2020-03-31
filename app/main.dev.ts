@@ -90,7 +90,6 @@ const createWindow = async () => {
 
   mainWindow.on('close', () => {
     mainWindow.webContents.send('board-save');
-    globalShortcut.unregisterAll();
   });
 
   mainWindow.on('closed', () => {
@@ -99,10 +98,6 @@ const createWindow = async () => {
 
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
-
-  globalShortcut.register('Insert', () => {
-    mainWindow.webContents.send('new-card');
-  });
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
