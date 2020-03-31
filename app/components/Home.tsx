@@ -97,7 +97,18 @@ class Home extends Component {
       self.addWorkspace(workspacePath);
     });
     document.addEventListener('keyup', e => {
+      if (e.ctrlKey || e.metaKey) {
+        // eslint-disable-next-line default-case
+        switch (String.fromCharCode(e.which).toLowerCase()) {
+          // CTRL + S
+          case 's':
+            e.preventDefault();
+            this.autoSave(true);
+            break;
+        }
+      }
       if (e.code === 'Insert') {
+        e.preventDefault();
         this.newCard();
       }
     });
