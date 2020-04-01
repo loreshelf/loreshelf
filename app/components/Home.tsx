@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import Store from 'electron-store';
@@ -72,7 +71,6 @@ class Home extends Component {
     this.setHome = this.setHome.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
-    this.addWorkspace = this.addWorkspace.bind(this);
     this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
@@ -84,18 +82,46 @@ class Home extends Component {
   componentDidMount() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    ipcRenderer.on('board-load', (event, boardPath) => {
-      self.loadBoard(boardPath);
+
+    ipcRenderer.on('workspace-add-callback', (event, workspacePath, files) => {
+      self.addWorkspaceCallback(workspacePath, files);
     });
-    ipcRenderer.on('board-save', () => {
-      self.autoSave(true);
+
+    ipcRenderer.on(
+      'workspace-load-callback',
+      (event, workspacePath, files, shouldSetWorkspace, openBoardPath) => {
+        self.loadWorkspaceCallback(
+          workspacePath,
+          files,
+          shouldSetWorkspace,
+          openBoardPath
+        );
+      }
+    );
+
+    ipcRenderer.on('board-read-callback', (event, boardMeta, text, stats) => {
+      self.loadBoardCallback(boardMeta, text, stats);
     });
-    ipcRenderer.on('new-card', () => {
-      self.newCard();
+
+    ipcRenderer.on('board-save-callback', () => {
+      self.saveBoardCallback();
     });
-    ipcRenderer.on('workspace-add', (event, workspacePath) => {
-      self.addWorkspace(workspacePath);
+
+    ipcRenderer.on('board-new-callback', newBoardPath => {
+      self.newBoardCallback(newBoardPath);
     });
+
+    ipcRenderer.on('board-delete-callback', (event, removedBoardPath) => {
+      self.deleteBoardCallback(removedBoardPath);
+    });
+
+    ipcRenderer.on(
+      'board-rename-callback',
+      (event, oldBoardPath, newBoardPath) => {
+        self.renameBoardCallback(oldBoardPath, newBoardPath);
+      }
+    );
+
     document.addEventListener('keyup', e => {
       if (e.ctrlKey || e.metaKey) {
         // eslint-disable-next-line default-case
@@ -183,55 +209,66 @@ class Home extends Component {
     return workspace;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   loadWorkspace(workspacePath, shouldSetWorkspace, openBoardPath?) {
-    const { knownWorkspaces } = this.state;
-    fs.readdir(workspacePath, (err, files) => {
-      const workspace = this.updateWorkspace(
-        workspacePath,
-        knownWorkspaces,
-        files
-      );
-      if (shouldSetWorkspace) {
-        this.setState({
-          knownWorkspaces,
-          workspace
-        });
-        if (workspace.numBoards > 0) {
-          if (!openBoardPath) {
-            this.selectBoard(0);
-          } else {
-            this.selectBoardWithPath(openBoardPath);
-          }
-        }
-      } else {
-        this.setState({
-          knownWorkspaces
-        });
-      }
-    });
+    ipcRenderer.send(
+      'workspace-load',
+      workspacePath,
+      shouldSetWorkspace,
+      openBoardPath
+    );
   }
 
-  addWorkspace(workspacePath) {
+  loadWorkspaceCallback(
+    workspacePath,
+    files,
+    shouldSetWorkspace,
+    openBoardPath?
+  ) {
     const { knownWorkspaces } = this.state;
-    this.setState({
-      boardData: undefined
-    });
-    console.log(workspacePath);
-    fs.readdir(workspacePath, (err, files) => {
-      const workspace = this.updateWorkspace(
-        workspacePath,
-        knownWorkspaces,
-        files
-      );
+    const workspace = this.updateWorkspace(
+      workspacePath,
+      knownWorkspaces,
+      files
+    );
+    if (shouldSetWorkspace) {
       this.setState({
         knownWorkspaces,
         workspace
       });
-      this.storeConfiguration();
       if (workspace.numBoards > 0) {
-        this.selectBoard(0);
+        if (!openBoardPath) {
+          console.log('select');
+          this.selectBoard(0);
+        } else {
+          this.selectBoardWithPath(openBoardPath);
+        }
       }
+    } else {
+      this.setState({
+        knownWorkspaces
+      });
+    }
+  }
+
+  addWorkspaceCallback(workspacePath, files) {
+    const { knownWorkspaces } = this.state;
+    this.setState({
+      boardData: undefined
     });
+    const workspace = this.updateWorkspace(
+      workspacePath,
+      knownWorkspaces,
+      files
+    );
+    this.setState({
+      knownWorkspaces,
+      workspace
+    });
+    this.storeConfiguration();
+    if (workspace.numBoards > 0) {
+      this.selectBoard(0);
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -243,8 +280,7 @@ class Home extends Component {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  loadBoardDataInBackground(boardMeta) {
-    const text = fs.readFileSync(boardMeta.path, 'utf8');
+  loadBoardCallback(boardMeta, text, stats) {
     const mdCards = text.split(/^(?=# )/gm);
     const cards = [];
     mdCards.forEach(md => {
@@ -260,29 +296,23 @@ class Home extends Component {
         cards.push({ title, doc: parseMarkdown(src) });
       }
     });
-    const stats = fs.statSync(boardMeta.path);
-    const status = timeSince(stats.mtime);
+    const status = timeSince(stats.mtimeMs);
     const boardData = {
       path: boardMeta.path,
       cards,
       status,
       name: boardMeta.name
     };
-    return boardData;
+    this.setState({
+      boardData
+    });
   }
 
-  loadBoard(boardMetaIndex, inBackground? = false) {
+  loadBoard(boardMetaIndex) {
     const { workspace } = this.state;
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
-    const boardData = this.loadBoardDataInBackground(boardMeta);
-    if (!inBackground) {
-      this.setState({
-        boardData,
-        workspace
-      });
-    }
-    return boardData;
+    ipcRenderer.send('board-read', boardMeta);
   }
 
   newBoard(newBoardName, content?) {
@@ -294,7 +324,11 @@ class Home extends Component {
     if (!addContent) {
       addContent = '';
     }
-    fs.writeFileSync(newBoardPath, addContent);
+    ipcRenderer.send('board-save', newBoardPath, addContent);
+  }
+
+  newBoardCallback(newBoardPath) {
+    const { workspace } = this.state;
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
     workspace.boards.push({
@@ -373,12 +407,12 @@ class Home extends Component {
     this.storeConfiguration();
   }
 
-  saveBoardDataInBackground(boardData) {
-    const data = boardData;
-    const { path } = data;
-    fs.writeFileSync(path, this.getCurrentBoardMd(data), 'utf8');
-    data.status = 'All changes saved';
-    return data;
+  // eslint-disable-next-line class-methods-use-this
+  saveBoardCallback() {
+    const { boardData } = this.state;
+    // eslint-disable-next-line no-param-reassign
+    boardData.status = 'All changes saved';
+    this.setState({ boardData });
   }
 
   saveBoard(backgroundBoardData?) {
@@ -388,10 +422,16 @@ class Home extends Component {
       data = backgroundBoardData;
     }
     if (saveTimer || backgroundBoardData) {
-      data = this.saveBoardDataInBackground(data);
-      if (!backgroundBoardData) {
-        this.setState({ boardData: data, saveTimer: undefined });
-      }
+      const boardPath = data.path;
+      const boardContent = this.getCurrentBoardMd(data);
+      ipcRenderer.send(
+        'board-save',
+        boardPath,
+        boardContent,
+        false,
+        backgroundBoardData !== undefined
+      );
+      this.setState({ saveTimer: undefined });
     }
   }
 
@@ -432,14 +472,16 @@ class Home extends Component {
   }
 
   moveCardToBoard(cardIndex, boardId) {
-    const { boardData } = this.state;
+    const { workspace, boardData } = this.state;
     const card = boardData.cards[cardIndex];
     boardData.cards.splice(cardIndex, 1);
-    const targetBoardData = this.loadBoard(boardId, true);
-    targetBoardData.cards.push(card);
-    this.saveBoard(targetBoardData);
+    const boardMeta = workspace.boards[boardId];
     this.setState({ boardData });
     this.autoSave();
+
+    const cardContent = serializeMarkdown(card.doc);
+    const boardPath = boardMeta.path;
+    ipcRenderer.send('board-move-card', boardPath, card.title, cardContent);
   }
 
   editTitle(cardId, newTitle) {
@@ -472,7 +514,7 @@ class Home extends Component {
   }
 
   deleteBoard() {
-    const { boardData, workspace, knownWorkspaces } = this.state;
+    const { boardData } = this.state;
     const { path } = boardData;
     if (boardData) {
       const { saveTimer } = this.state;
@@ -480,27 +522,31 @@ class Home extends Component {
         clearTimeout(saveTimer);
         this.setState({ saveTimer: undefined });
       }
-      let boardIndex = workspace.boards.findIndex(board => {
-        return board.path === boardData.path;
-      });
-      workspace.boards.splice(boardIndex, 1);
-      const workspaceIndex = knownWorkspaces.findIndex(w => {
-        return w.path === workspace.path;
-      });
-      knownWorkspaces[workspaceIndex].numBoards -= 1;
-      fs.unlinkSync(path);
-      if (boardIndex >= workspace.boards.length) {
-        if (workspace.boards.length > 0) {
-          boardIndex = 0;
-        } else {
-          boardIndex = -1;
-        }
+      ipcRenderer.send('board-delete', path);
+    }
+  }
+
+  deleteBoardCallback(removedBoardPath) {
+    const { workspace, knownWorkspaces } = this.state;
+    let boardIndex = workspace.boards.findIndex(board => {
+      return board.path === removedBoardPath;
+    });
+    workspace.boards.splice(boardIndex, 1);
+    const workspaceIndex = knownWorkspaces.findIndex(w => {
+      return w.path === workspace.path;
+    });
+    knownWorkspaces[workspaceIndex].numBoards -= 1;
+    if (boardIndex >= workspace.boards.length) {
+      if (workspace.boards.length > 0) {
+        boardIndex = 0;
+      } else {
+        boardIndex = -1;
       }
-      this.setState({ workspace, knownWorkspaces, boardData: undefined });
-      // select next board
-      if (boardIndex >= 0) {
-        this.selectBoard(boardIndex);
-      }
+    }
+    this.setState({ workspace, knownWorkspaces, boardData: undefined });
+    // select next board
+    if (boardIndex >= 0) {
+      this.selectBoard(boardIndex);
     }
   }
 
@@ -508,7 +554,11 @@ class Home extends Component {
     const { boardData, workspace } = this.state;
     const oldBoardPath = boardData.path;
     const newBoardPath = `${workspace.path}/${newBoardName}`;
-    fs.renameSync(oldBoardPath, newBoardPath);
+    ipcRenderer.send('board-rename', oldBoardPath, newBoardPath);
+  }
+
+  renameBoardCallback(oldBoardPath, newBoardPath) {
+    const { boardData, workspace } = this.state;
     const boardName = this.boardPathToName(newBoardPath);
     boardData.path = newBoardPath;
     boardData.name = boardName;
@@ -549,8 +599,9 @@ class Home extends Component {
 
   requestBoardDataAsync(boardMeta) {
     return new Promise((resolve, reject) => {
-      const boardData = this.loadBoardDataInBackground(boardMeta);
-      resolve(boardData);
+      this.loadBoardDataInBackground(boardMeta, boardData => {
+        resolve(boardData);
+      });
     });
   }
 
@@ -560,17 +611,18 @@ class Home extends Component {
       path: boardPath,
       name: this.boardPathToName(boardPath)
     };
-    const spoolingBoardData = this.loadBoardDataInBackground(spoolingBoardMeta);
-    const cardIndex = spoolingBoardData.cards.findIndex(card => {
-      return card.title === cardName;
+    this.loadBoardDataInBackground(spoolingBoardMeta, spoolingBoardData => {
+      const cardIndex = spoolingBoardData.cards.findIndex(card => {
+        return card.title === cardName;
+      });
+      if (spoolingCardIndex >= 0) {
+        boardData.cards[spoolingCardIndex].spooling = {
+          boardData: spoolingBoardData,
+          cardIndex
+        };
+        this.setState({ boardData });
+      }
     });
-    if (spoolingCardIndex >= 0) {
-      boardData.cards[spoolingCardIndex].spooling = {
-        boardData: spoolingBoardData,
-        cardIndex
-      };
-      this.setState({ boardData });
-    }
   }
 
   stopSpooling(spoolingCardIndex) {
@@ -641,7 +693,7 @@ class Home extends Component {
     const OpenWorkspace = (
       <Button
         intent={Intent.PRIMARY}
-        onClick={() => ipcRenderer.send('workspace-new')}
+        onClick={() => ipcRenderer.send('workspace-add')}
       >
         Open Workspace
       </Button>
@@ -675,7 +727,7 @@ class Home extends Component {
               onDeleteBoard={this.deleteBoard}
               onRenameBoard={this.renameBoard}
               onMoveCardToBoard={this.moveCardToBoard}
-              onAddWorkspace={() => ipcRenderer.send('workspace-new')}
+              onAddWorkspace={() => ipcRenderer.send('workspace-add')}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
               onOpenHomeBoard={this.openHomeBoard}

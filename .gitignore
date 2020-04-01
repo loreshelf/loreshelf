@@ -1,6 +1,7 @@
 # Logs
 logs
 *.log
+GPUCache
 
 # Runtime data
 pids

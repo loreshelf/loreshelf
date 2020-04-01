@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint global-require: off, no-console: off */
 
 /**
@@ -9,9 +10,10 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, shell, BrowserWindow, globalShortcut } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import fs from 'fs';
 import sourceMapSupport from 'source-map-support';
 import MenuBuilder from './menu';
 
@@ -86,6 +88,96 @@ const createWindow = async () => {
       mainWindow.show();
       mainWindow.focus();
     }
+  });
+
+  ipcMain.on('workspace-add', event => {
+    const options = {
+      title: 'Add and open a workspace',
+      buttonLabel: 'Open workspace',
+      properties: ['openDirectory']
+    };
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showOpenDialog(mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+      } else {
+        const workspacePath = data.filePaths[0];
+        fs.readdir(workspacePath, (err, files) => {
+          event.reply('workspace-add-callback', workspacePath, files);
+        });
+      }
+    });
+  });
+
+  ipcMain.on(
+    'workspace-load',
+    (event, workspacePath, shouldSetWorkspace, openBoardPath) => {
+      fs.readdir(workspacePath, (err, files) => {
+        event.reply(
+          'workspace-load-callback',
+          workspacePath,
+          files,
+          shouldSetWorkspace,
+          openBoardPath
+        );
+      });
+    }
+  );
+
+  ipcMain.on('board-read', (event, boardMeta) => {
+    const text = fs.readFileSync(boardMeta.path, 'utf8');
+    const stats = fs.statSync(boardMeta.path);
+    event.reply('board-read-callback', boardMeta, text, stats);
+  });
+
+  ipcMain.on(
+    'board-save',
+    (event, boardPath, boardContent, isNew?, isInBackground?) => {
+      fs.writeFileSync(boardPath, boardContent, 'utf8');
+      if (isNew) {
+        event.reply('board-new-callback', boardPath);
+      } else if (!isInBackground) {
+        event.reply('board-save-callback');
+      }
+    }
+  );
+
+  ipcMain.on('board-delete', (event, boardPath) => {
+    fs.unlinkSync(boardPath);
+    event.reply('board-delete-callback', boardPath);
+  });
+
+  ipcMain.on('board-move-card', (event, boardPath, title, cardContent) => {
+    const text = fs.readFileSync(boardPath, 'utf8');
+    const newBoardContent = `${text}\n\n# ${title}\n\n${cardContent.trim()}`;
+    fs.writeFileSync(boardPath, newBoardContent, 'utf8');
+  });
+
+  ipcMain.on('board-rename', (event, oldBoardPath, newBoardPath) => {
+    fs.renameSync(oldBoardPath, newBoardPath);
+    event.reply('board-rename-callback', oldBoardPath, newBoardPath);
+  });
+
+  ipcMain.on('file-link', event => {
+    const options = {
+      title: 'Add file link',
+      buttonLabel: 'Add file link',
+      properties: ['openFile']
+    };
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showOpenDialog(this.mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+        // eslint-disable-next-line no-restricted-globals
+        event.returnValue = undefined;
+      } else {
+        // eslint-disable-next-line no-restricted-globals
+        // eslint-disable-next-line prefer-destructuring
+        event.returnValue = data.filePaths[0];
+      }
+    });
   });
 
   mainWindow.on('close', () => {
