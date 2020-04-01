@@ -34,8 +34,6 @@ class Board extends Component {
       onReorderCards,
       onEditTitle,
       onRequestBoardsAsync,
-      onRequestBoardDataAsync,
-      onStartSpooling,
       onStopSpooling
     } = this.props;
     const { dividerIndex } = this.state;
@@ -78,8 +76,6 @@ class Board extends Component {
         onRemoveCard={onRemoveCard}
         onEditTitle={onEditTitle}
         onRequestBoardsAsync={onRequestBoardsAsync}
-        onRequestBoardDataAsync={onRequestBoardDataAsync}
-        onStartSpooling={onStartSpooling}
         onStopSpooling={onStopSpooling}
       />
     ));

@@ -159,6 +159,22 @@ const createWindow = async () => {
     event.reply('board-rename-callback', oldBoardPath, newBoardPath);
   });
 
+  ipcMain.on(
+    'board-spooling-load',
+    (event, boardPath, spoolingCardIndex?, cardName?) => {
+      const boardContent = fs.readFileSync(boardPath, 'utf8');
+      const stats = fs.statSync(boardPath);
+      event.reply(
+        'board-spooling-data',
+        boardPath,
+        boardContent,
+        stats,
+        spoolingCardIndex,
+        cardName
+      );
+    }
+  );
+
   ipcMain.on('file-link', event => {
     const options = {
       title: 'Add file link',

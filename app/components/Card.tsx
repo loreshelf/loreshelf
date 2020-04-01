@@ -17,6 +17,7 @@ import {
   Button
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
+import { ipcRenderer } from 'electron';
 import Editor from '../editor/Editor';
 import DragItemTypes from '../utils/DragItemTypes';
 import styles from './Card.css';
@@ -220,9 +221,13 @@ const Card: React.FC<CardProps> = ({
             }}
             onRemoveCard={() => onRemoveCard(index)}
             onRequestBoardsAsync={onRequestBoardsAsync}
-            onRequestBoardDataAsync={onRequestBoardDataAsync}
             onStartSpooling={(boardPath, cardName) => {
-              onStartSpooling(boardPath, cardName, index);
+              ipcRenderer.send(
+                'board-spooling-load',
+                boardPath,
+                index,
+                cardName
+              );
             }}
             className={styles.editor}
           />

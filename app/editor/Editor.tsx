@@ -5,6 +5,7 @@
 import React from 'react';
 import { EditorState, Selection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { ipcRenderer } from 'electron';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
@@ -236,6 +237,16 @@ Still | renders | nicely
     );
     const { autoFocus } = this.props;
 
+    ipcRenderer.on(
+      'board-spooling-data-callback',
+      (event, spoolingBoardData) => {
+        this.setState({
+          suggestions: spoolingBoardData.cards,
+          filteredSuggestions: spoolingBoardData.cards.slice(0, MAX_SUGGESTIONS)
+        });
+      }
+    );
+
     if (autoFocus) {
       this.view.focus();
     }
@@ -351,7 +362,6 @@ Still | renders | nicely
       suggestionChar,
       cursor
     } = this.state;
-    const { onRequestBoardDataAsync } = this.props;
     const { state, dispatch } = this.view;
 
     let from = cursor;
@@ -370,16 +380,7 @@ Still | renders | nicely
           filteredSuggestions: [],
           selectedSuggestion: { board: suggestion }
         });
-        onRequestBoardDataAsync(suggestion)
-          .then(boardData => {
-            this.setState({
-              suggestions: boardData.cards,
-              filteredSuggestions: boardData.cards.slice(0, MAX_SUGGESTIONS)
-            });
-          })
-          .catch(error => {
-            console.log(error);
-          });
+        ipcRenderer.send('board-spooling-load', suggestion.path);
       } else {
         // replace with link
         // [board.name/card](@board.name/card "board.name/card")

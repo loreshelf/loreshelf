@@ -74,8 +74,6 @@ class Home extends Component {
     this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
-    this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
-    this.startSpooling = this.startSpooling.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
   }
 
@@ -119,6 +117,19 @@ class Home extends Component {
       'board-rename-callback',
       (event, oldBoardPath, newBoardPath) => {
         self.renameBoardCallback(oldBoardPath, newBoardPath);
+      }
+    );
+
+    ipcRenderer.on(
+      'board-spooling-data',
+      (event, boardPath, boardContent, stats, spoolingCardIndex, cardName) => {
+        self.processSpoolingData(
+          boardPath,
+          boardContent,
+          stats,
+          spoolingCardIndex,
+          cardName
+        );
       }
     );
 
@@ -238,7 +249,6 @@ class Home extends Component {
       });
       if (workspace.numBoards > 0) {
         if (!openBoardPath) {
-          console.log('select');
           this.selectBoard(0);
         } else {
           this.selectBoardWithPath(openBoardPath);
@@ -280,7 +290,7 @@ class Home extends Component {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  loadBoardCallback(boardMeta, text, stats) {
+  toBoardData(boardMeta, text, stats) {
     const mdCards = text.split(/^(?=# )/gm);
     const cards = [];
     mdCards.forEach(md => {
@@ -303,6 +313,12 @@ class Home extends Component {
       status,
       name: boardMeta.name
     };
+    return boardData;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  loadBoardCallback(boardMeta, boardContent, stats) {
+    const boardData = this.toBoardData(boardMeta, boardContent, stats);
     this.setState({
       boardData
     });
@@ -587,40 +603,47 @@ class Home extends Component {
     this.loadWorkspace(homeWorkspace, true, homeBoard);
   }
 
+  processSpoolingData(
+    boardPath,
+    boardContent,
+    stats,
+    spoolingCardIndex?,
+    cardName?
+  ) {
+    const spoolingBoardMeta = {
+      path: boardPath,
+      name: this.boardPathToName(boardPath)
+    };
+    const spoolingBoardData = this.toBoardData(
+      spoolingBoardMeta,
+      boardContent,
+      stats
+    );
+    if (spoolingCardIndex !== undefined) {
+      // Start spooling
+      const cardIndex = spoolingBoardData.cards.findIndex(card => {
+        return card.title === cardName;
+      });
+      if (spoolingCardIndex >= 0) {
+        const { boardData } = this.state;
+        boardData.cards[spoolingCardIndex].spooling = {
+          boardData: spoolingBoardData,
+          cardIndex
+        };
+        this.setState({ boardData });
+      }
+    } else {
+      // Pass spooling board to the editor
+      ipcRenderer.send('board-spooling-data-callback', spoolingBoardData);
+    }
+  }
+
   requestBoardsAsync(filter?) {
     return new Promise((resolve, reject) => {
       // get boards from the current workspace
       if (!filter) {
         const { workspace } = this.state;
         resolve(workspace.boards);
-      }
-    });
-  }
-
-  requestBoardDataAsync(boardMeta) {
-    return new Promise((resolve, reject) => {
-      this.loadBoardDataInBackground(boardMeta, boardData => {
-        resolve(boardData);
-      });
-    });
-  }
-
-  startSpooling(boardPath, cardName, spoolingCardIndex) {
-    const { boardData } = this.state;
-    const spoolingBoardMeta = {
-      path: boardPath,
-      name: this.boardPathToName(boardPath)
-    };
-    this.loadBoardDataInBackground(spoolingBoardMeta, spoolingBoardData => {
-      const cardIndex = spoolingBoardData.cards.findIndex(card => {
-        return card.title === cardName;
-      });
-      if (spoolingCardIndex >= 0) {
-        boardData.cards[spoolingCardIndex].spooling = {
-          boardData: spoolingBoardData,
-          cardIndex
-        };
-        this.setState({ boardData });
       }
     });
   }
@@ -660,19 +683,16 @@ class Home extends Component {
     const spoolingBoardData =
       boardData.cards[spoolingCardIndex].spooling.boardData;
     if (shouldSave) {
-      const updatedBoardData = this.saveBoardDataInBackground(
-        spoolingBoardData
-      ); // save board 3s after the last change
-      boardData.cards[spoolingCardIndex].spooling.boardData = updatedBoardData;
+      this.saveBoard(spoolingBoardData);
+      spoolingBoardData.status = 'All changes saved';
     } else if (!immediatelyWhenNeeded) {
       spoolingBoardData.status = 'Saving...';
       spoolingTimer = setTimeout(() => {
-        const updatedBoardData = this.saveBoardDataInBackground(
-          spoolingBoardData
-        ); // save board 3s after the last change
+        this.saveBoard(spoolingBoardData);
+        spoolingBoardData.status = 'All changes saved';
         boardData.cards[
           spoolingCardIndex
-        ].spooling.boardData = updatedBoardData;
+        ].spooling.boardData = spoolingBoardData;
         this.setState({ boardData });
       }, 1000);
     }
@@ -747,8 +767,6 @@ class Home extends Component {
                 onReorderCards={this.reorderCards}
                 onRemoveCard={this.removeCard}
                 onRequestBoardsAsync={this.requestBoardsAsync}
-                onRequestBoardDataAsync={this.requestBoardDataAsync}
-                onStartSpooling={this.startSpooling}
                 onStopSpooling={this.stopSpooling}
               />
             ) : (
