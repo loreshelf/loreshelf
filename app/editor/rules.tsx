@@ -68,10 +68,8 @@ export function buildInputRules(schema) {
   if ((type = schema.nodes.bullet_list)) rules.push(bulletListRule(type));
   if ((type = schema.nodes.code_block)) rules.push(codeBlockRule(type));
   if ((type = schema.nodes.heading)) rules.push(headingRule(type, 2));
-  const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+) $/;
-  const fileRegexp = /(\/[a-zA-Z0-9][a-zA-Z0-9-\/ ]+[a-zA-Z0-9]\.[a-z]{2,}) $/;
-  const imageUrlRegexp = /((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif)) $/;
-  const localImageRegexp = /![[](.*)\][(](\/[a-zA-Z0-9][a-zA-Z0-9-\/ ]+[a-zA-Z0-9].[a-z]{2,})[)] $/;
+  const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+ )$/;
+  const imageUrlRegexp = /((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif) )$/;
 
   /** const str =
     '![Photo](/home/ibek/Pictures/Screenshot from 2019-11-19 17-30-40.png) ';
@@ -80,7 +78,7 @@ export function buildInputRules(schema) {
   if ((type = schema.marks.link)) {
     rules.push(
       new InputRule(imageUrlRegexp, (state, match, start, end) => {
-        const src = encodeURI(match[1]);
+        const src = encodeURI(match[1]).trim();
         const insert = schema.nodes.image.create({
           src,
           alt: 'WebImage'
@@ -107,41 +105,9 @@ export function buildInputRules(schema) {
           .insertText(insert, newStart, end)
           .addMark(
             newStart,
-            newStart + insert.length + 1,
-            schema.marks.link.create({ href: url })
+            newStart + insert.length,
+            schema.marks.link.create({ href: url.trim() })
           );
-      })
-    );
-    rules.push(
-      new InputRule(fileRegexp, (state, match, start, end) => {
-        let insert = 'Local file';
-        let newStart = start;
-        const url = match[0];
-        if (match[1]) {
-          const offset = match[0].lastIndexOf(match[1]);
-          insert += match[0].slice(offset + match[1].length);
-          newStart += offset;
-          const cutOff = newStart - end;
-          if (cutOff > 0) {
-            insert = match[0].slice(offset - cutOff, offset) + insert;
-            newStart = end;
-          }
-        }
-        return state.tr
-          .insertText(insert, newStart, end)
-          .addMark(
-            newStart,
-            newStart + insert.length + 1,
-            schema.marks.link.create({ href: url })
-          );
-      })
-    );
-    rules.push(
-      new InputRule(localImageRegexp, (state, match, start, end) => {
-        const alt = match[1];
-        const src = encodeURI(match[2]);
-        const insert = schema.nodes.image.create({ src, alt, title: alt });
-        return state.tr.replaceWith(start, end, insert);
       })
     );
   }

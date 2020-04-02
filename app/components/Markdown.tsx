@@ -128,7 +128,7 @@ const markdownSerializer = new MarkdownSerializer(
 
     image(state, node) {
       state.write(
-        `![${state.esc(node.attrs.alt || '')}](${state.esc(node.attrs.src)}${
+        `![${state.esc(node.attrs.alt || '')}](${encodeURI(node.attrs.src)}${
           node.attrs.title ? ` ${state.quote(node.attrs.title)}` : ''
         })`
       );

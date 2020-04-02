@@ -320,6 +320,11 @@ class Home extends Component {
   // eslint-disable-next-line class-methods-use-this
   loadBoardCallback(boardMeta, boardContent, stats) {
     const boardData = this.toBoardData(boardMeta, boardContent, stats);
+    const baseURI = document.getElementById('baseURI');
+    baseURI.href = boardData.path.substring(
+      0,
+      boardData.path.lastIndexOf('/') + 1
+    );
     this.setState({
       boardData
     });

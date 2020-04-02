@@ -183,23 +183,24 @@ const createWindow = async () => {
     }
   );
 
-  ipcMain.on('file-link', event => {
+  ipcMain.on('file-link', (event, baseHref) => {
     const options = {
       title: 'Add file link',
       buttonLabel: 'Add file link',
       properties: ['openFile']
     };
     // eslint-disable-next-line promise/catch-or-return
-    dialog.showOpenDialog(this.mainWindow, options).then(data => {
+    dialog.showOpenDialog(mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return
       if (data.canceled) {
         console.log('No file selected');
-        // eslint-disable-next-line no-restricted-globals
         event.returnValue = undefined;
       } else {
-        // eslint-disable-next-line no-restricted-globals
-        // eslint-disable-next-line prefer-destructuring
-        event.returnValue = data.filePaths[0];
+        const relativePath = path.relative(
+          baseHref,
+          `file://${data.filePaths[0]}`
+        );
+        event.returnValue = relativePath;
       }
     });
   });

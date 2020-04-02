@@ -84,9 +84,18 @@ function MenuBar(props) {
           onMouseDown={e => {
             e.preventDefault();
             setTimeout(() => {
-              const filePath = ipcRenderer.sendSync('file-link');
+              const baseURI = document.getElementById('baseURI');
+              const filePath = ipcRenderer.sendSync('file-link', baseURI.href);
               if (filePath) {
-                dispatch(state.tr.insertText(filePath));
+                const label = 'Local file';
+                const cursorPos = state.selection.from;
+                let tr = state.tr.insertText(label);
+                tr = tr.addMark(
+                  cursorPos,
+                  cursorPos + label.length + 1,
+                  schema.marks.link.create({ href: filePath })
+                );
+                dispatch(tr);
               }
             }, 200);
           }}
@@ -97,9 +106,16 @@ function MenuBar(props) {
           onMouseDown={e => {
             e.preventDefault();
             setTimeout(() => {
-              const filePath = ipcRenderer.sendSync('file-link');
+              const baseURI = document.getElementById('baseURI');
+              const filePath = ipcRenderer.sendSync('file-link', baseURI.href);
               if (filePath) {
-                dispatch(state.tr.insertText(`![Photo](${filePath})`));
+                const insert = schema.nodes.image.create({
+                  src: filePath,
+                  title: filePath,
+                  alt: filePath
+                });
+                const tr = state.tr.replaceSelectionWith(insert);
+                dispatch(tr);
               }
             }, 200);
           }}
