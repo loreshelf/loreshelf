@@ -5,7 +5,13 @@ import { Menu, MenuItem } from '@blueprintjs/core';
 import classes from './SuggestionsPopup.css';
 
 function SuggestionsPopup(props) {
-  const { position, suggestions, onSelectSuggestion, textProperty } = props;
+  const {
+    position,
+    suggestions,
+    onSelectSuggestion,
+    textProperty,
+    suggestionIndex
+  } = props;
   const topPos = position.top + 20;
 
   return (
@@ -21,6 +27,7 @@ function SuggestionsPopup(props) {
           return (
             <MenuItem
               key={id}
+              active={id === suggestionIndex}
               text={suggestion[textProperty]}
               onMouseDown={e => {
                 e.preventDefault();

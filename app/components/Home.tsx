@@ -655,11 +655,12 @@ class Home extends Component {
   }
 
   requestBoardsAsync(filter?) {
+    const { boardData } = this.state;
     return new Promise((resolve, reject) => {
       // get boards from the current workspace
       if (!filter) {
         const { workspace } = this.state;
-        resolve(workspace.boards);
+        resolve(workspace.boards.filter(b => b.path !== boardData.path));
       }
     });
   }

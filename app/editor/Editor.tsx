@@ -5,7 +5,6 @@
 import React from 'react';
 import { EditorState, Selection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { ipcRenderer } from 'electron';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
@@ -88,13 +87,73 @@ Still | renders | nicely
       suggestionPhase: 1,
       suggestionChar: undefined,
       selectedSuggestion: {},
+      suggestionIndex: 0,
       cursor: undefined
     };
 
-    plugins.push(
+    plugins.unshift(
       keymap({
         Escape: () => {
           this.view.root.activeElement.blur();
+        },
+        ArrowUp: () => {
+          const {
+            suggestionPos,
+            suggestionIndex,
+            filteredSuggestions
+          } = this.state;
+          if (suggestionPos >= 0) {
+            this.cancelTransaction = true;
+            let selectedIndex = suggestionIndex - 1;
+            if (selectedIndex < 0) {
+              selectedIndex = filteredSuggestions.length - 1;
+            }
+            this.setState({ suggestionIndex: selectedIndex });
+          }
+        },
+        ArrowDown: () => {
+          const {
+            suggestionPos,
+            suggestionIndex,
+            filteredSuggestions
+          } = this.state;
+          if (suggestionPos >= 0) {
+            this.cancelTransaction = true;
+            let selectedIndex = suggestionIndex + 1;
+            if (selectedIndex >= filteredSuggestions.length) {
+              selectedIndex = 0;
+            }
+            this.setState({ suggestionIndex: selectedIndex });
+          }
+        },
+        Enter: (state, dispatch) => {
+          const {
+            suggestionPos,
+            suggestionIndex,
+            filteredSuggestions
+          } = this.state;
+          if (suggestionPos >= 0) {
+            this.cancelTransaction = true;
+            setTimeout(() => {
+              this.selectSuggestion(
+                filteredSuggestions[suggestionIndex],
+                state,
+                dispatch
+              );
+            }, 100);
+          }
+        },
+        'Mod-Space': state => {
+          const transaction = state.tr;
+          let isSuggestion = this.isTextSuggestion(transaction, '@');
+          if (isSuggestion) {
+            this.requestSuggestionPhase1(transaction.selection.from);
+          } else {
+            isSuggestion = this.isTextSuggestion(transaction, '/');
+            if (isSuggestion) {
+              this.requestCommandSuggestion(state, transaction.selection.from);
+            }
+          }
         }
       })
     );
@@ -105,6 +164,10 @@ Still | renders | nicely
         plugins
       }),
       dispatchTransaction: transaction => {
+        if (this.cancelTransaction) {
+          this.cancelTransaction = false;
+          return;
+        }
         const { state, transactions } = this.view.state.applyTransaction(
           transaction
         );
@@ -311,6 +374,7 @@ Still | renders | nicely
       .then(newBoards => {
         this.setState({
           suggestions: newBoards,
+          suggestionIndex: 0,
           suggestionChar: '@',
           filteredSuggestions: newBoards.slice(0, MAX_SUGGESTIONS)
         });
@@ -327,6 +391,7 @@ Still | renders | nicely
     ).slice(0, MAX_SUGGESTIONS);
     this.setState({
       suggestions: filteredSuggestions,
+      suggestionIndex: 0,
       suggestionChar: '/',
       filteredSuggestions
     });
@@ -339,12 +404,13 @@ Still | renders | nicely
       suggestions: [],
       filteredSuggestions: [],
       suggestionPhase: 1,
+      suggestionIndex: 0,
       suggestionChar: undefined,
       selectedSuggestion: {}
     });
   }
 
-  selectSuggestion(suggestion) {
+  selectSuggestion(suggestion, state?, dispatch?) {
     const {
       suggestionPhase,
       suggestionPos,
@@ -352,7 +418,15 @@ Still | renders | nicely
       suggestionChar,
       cursor
     } = this.state;
-    const { state, dispatch } = this.view;
+    // const { state, dispatch } = this.view;
+    if (!state) {
+      // eslint-disable-next-line no-param-reassign
+      state = this.view.state;
+    }
+    if (!dispatch) {
+      // eslint-disable-next-line no-param-reassign
+      dispatch = this.view.dispatch;
+    }
     const { onRequestBoardDataAsync } = this.props;
 
     let from = cursor;
@@ -368,6 +442,7 @@ Still | renders | nicely
         this.setState({
           suggestionPhase: 2,
           suggestions: [],
+          suggestionIndex: 0,
           filteredSuggestions: [],
           selectedSuggestion: { board: suggestion }
         });
@@ -412,7 +487,7 @@ Still | renders | nicely
   render() {
     const { onRemoveCard } = this.props;
     const { state } = this.view;
-    const { filteredSuggestions, suggestionPos } = this.state;
+    const { filteredSuggestions, suggestionPos, suggestionIndex } = this.state;
     // TODO: improve performance?
     const { from } = state.selection;
     const linkElement = this.view.domAtPos(from).node.parentElement;
@@ -442,6 +517,7 @@ Still | renders | nicely
         {isSuggestion && (
           <SuggestionsPopup
             suggestions={filteredSuggestions}
+            suggestionIndex={suggestionIndex}
             position={position}
             textProperty={textProperty}
             onSelectSuggestion={this.selectSuggestion}
