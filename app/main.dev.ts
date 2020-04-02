@@ -63,9 +63,17 @@ const createWindow = async () => {
     width: 1366,
     height: 768,
     icon: path.join(__dirname, '/resources/icon.png'),
-    webPreferences: {
-      nodeIntegration: true
-    }
+    webPreferences:
+      process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
+        ? {
+            nodeIntegration: true
+          }
+        : {
+            nodeIntegration: true // TODO: change to false, more needs to be setup!
+            // contextIsolation: true, // protect against prototype pollution
+            // enableRemoteModule: false // turn off remote
+            // ,preload: path.join(__dirname, '/dist/renderer.prod.js')
+          }
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);

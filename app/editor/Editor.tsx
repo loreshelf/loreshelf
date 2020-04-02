@@ -237,16 +237,6 @@ Still | renders | nicely
     );
     const { autoFocus } = this.props;
 
-    ipcRenderer.on(
-      'board-spooling-data-callback',
-      (event, spoolingBoardData) => {
-        this.setState({
-          suggestions: spoolingBoardData.cards,
-          filteredSuggestions: spoolingBoardData.cards.slice(0, MAX_SUGGESTIONS)
-        });
-      }
-    );
-
     if (autoFocus) {
       this.view.focus();
     }
@@ -363,6 +353,7 @@ Still | renders | nicely
       cursor
     } = this.state;
     const { state, dispatch } = this.view;
+    const { onRequestBoardDataAsync } = this.props;
 
     let from = cursor;
     if (!from) {
@@ -380,7 +371,20 @@ Still | renders | nicely
           filteredSuggestions: [],
           selectedSuggestion: { board: suggestion }
         });
-        ipcRenderer.send('board-spooling-load', suggestion.path);
+        onRequestBoardDataAsync(suggestion.path)
+          .then(spoolingBoardData => {
+            this.setState({
+              suggestions: spoolingBoardData.cards,
+              filteredSuggestions: spoolingBoardData.cards.slice(
+                0,
+                MAX_SUGGESTIONS
+              )
+            });
+          })
+          .catch(error => {
+            console.log(error);
+          });
+        // ipcRenderer.send('board-spooling-load', suggestion.path);
       } else {
         // replace with link
         // [board.name/card](@board.name/card "board.name/card")

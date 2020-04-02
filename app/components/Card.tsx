@@ -47,7 +47,6 @@ const Card: React.FC<CardProps> = ({
   onEditTitle,
   onRequestBoardsAsync,
   onRequestBoardDataAsync,
-  onStartSpooling,
   onStopSpooling
 }) => {
   const ref = useRef<BlueCard>(null);
@@ -221,6 +220,7 @@ const Card: React.FC<CardProps> = ({
             }}
             onRemoveCard={() => onRemoveCard(index)}
             onRequestBoardsAsync={onRequestBoardsAsync}
+            onRequestBoardDataAsync={onRequestBoardDataAsync}
             onStartSpooling={(boardPath, cardName) => {
               ipcRenderer.send(
                 'board-spooling-load',

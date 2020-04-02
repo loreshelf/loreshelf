@@ -74,6 +74,7 @@ class Home extends Component {
     this.closeWorkspace = this.closeWorkspace.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
+    this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
   }
 
@@ -105,7 +106,7 @@ class Home extends Component {
       self.saveBoardCallback();
     });
 
-    ipcRenderer.on('board-new-callback', newBoardPath => {
+    ipcRenderer.on('board-new-callback', (event, newBoardPath) => {
       self.newBoardCallback(newBoardPath);
     });
 
@@ -340,13 +341,14 @@ class Home extends Component {
     if (!addContent) {
       addContent = '';
     }
-    ipcRenderer.send('board-save', newBoardPath, addContent);
+    ipcRenderer.send('board-save', newBoardPath, addContent, true);
   }
 
   newBoardCallback(newBoardPath) {
     const { workspace } = this.state;
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
+    console.log(newBoardPath);
     workspace.boards.push({
       path: newBoardPath,
       name: this.boardPathToName(newBoardPath)
@@ -619,7 +621,7 @@ class Home extends Component {
       boardContent,
       stats
     );
-    if (spoolingCardIndex !== undefined) {
+    if (spoolingCardIndex !== null) {
       // Start spooling
       const cardIndex = spoolingBoardData.cards.findIndex(card => {
         return card.title === cardName;
@@ -632,10 +634,19 @@ class Home extends Component {
         };
         this.setState({ boardData });
       }
-    } else {
+    } else if (this.spoolingBoardDataResolve) {
       // Pass spooling board to the editor
-      ipcRenderer.send('board-spooling-data-callback', spoolingBoardData);
+      this.spoolingBoardDataResolve(spoolingBoardData);
+      this.spoolingBoardDataResolve = undefined;
     }
+  }
+
+  requestBoardDataAsync(boardPath) {
+    const promiseResponse = (resolve, reject) => {
+      this.spoolingBoardDataResolve = resolve;
+      ipcRenderer.send('board-spooling-load', boardPath);
+    };
+    return new Promise(promiseResponse);
   }
 
   requestBoardsAsync(filter?) {
@@ -767,6 +778,7 @@ class Home extends Component {
                 onReorderCards={this.reorderCards}
                 onRemoveCard={this.removeCard}
                 onRequestBoardsAsync={this.requestBoardsAsync}
+                onRequestBoardDataAsync={this.requestBoardDataAsync}
                 onStopSpooling={this.stopSpooling}
               />
             ) : (
