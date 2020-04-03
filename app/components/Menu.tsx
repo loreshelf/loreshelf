@@ -101,7 +101,7 @@ class Menu extends Component {
       onOpenHomeBoard,
       onSetHome,
       homeBoard,
-      sorting,
+      sortBy,
       onSortSelect
     } = this.props;
     const {
@@ -293,7 +293,7 @@ class Menu extends Component {
               alignText="right"
               minimal
               small
-              text={sorting.method.name}
+              text={sortBy.method}
               style={{
                 minWidth: '150px',
                 maxWidth: '150px',

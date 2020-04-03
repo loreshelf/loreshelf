@@ -20,6 +20,10 @@ const CONFIG_SCHEMA = {
   },
   homeBoard: {
     type: 'string'
+  },
+  sortBy: {
+    method: 'string',
+    asc: 'boolean'
   }
 };
 
@@ -29,39 +33,34 @@ const CONFIG_STORE = new Store(CONFIG_SCHEMA);
 enum CONFIG {
   WORKSPACES = 'workspaces',
   HOMEWORKSPACE = 'homeWorkspace',
-  HOMEBOARD = 'homeBoard'
+  HOMEBOARD = 'homeBoard',
+  SORTBY = 'sortBy'
 }
 
-const SORTING = [
-  {
-    name: 'NAME',
-    sort: (a, b, asc) => {
-      const aname = a.name.toUpperCase();
-      const bname = b.name.toUpperCase();
-      if (aname > bname) {
-        return asc ? 1 : -1;
-      }
-      if (aname < bname) {
-        return asc ? -1 : 1;
-      }
-      return 0;
+const SORTING_METHODS = {
+  NAME: (a, b, asc) => {
+    const aname = a.name.toUpperCase();
+    const bname = b.name.toUpperCase();
+    if (aname > bname) {
+      return asc ? 1 : -1;
     }
+    if (aname < bname) {
+      return asc ? -1 : 1;
+    }
+    return 0;
   },
-  {
-    name: 'LAST UPDATED',
-    sort: (a, b, asc) => {
-      const amodified = a.modified;
-      const bmodified = b.modified;
-      if (amodified > bmodified) {
-        return asc ? -1 : 1;
-      }
-      if (amodified < bmodified) {
-        return asc ? 1 : -1;
-      }
-      return 0;
+  'LAST UPDATED': (a, b, asc) => {
+    const amodified = a.modified;
+    const bmodified = b.modified;
+    if (amodified > bmodified) {
+      return asc ? -1 : 1;
     }
+    if (amodified < bmodified) {
+      return asc ? 1 : -1;
+    }
+    return 0;
   }
-];
+};
 
 class Home extends Component {
   constructor() {
@@ -72,7 +71,11 @@ class Home extends Component {
     const knownWorkspaces = []; // [workspace1, workspace2]
 
     const homeBoard = undefined; // = boardPath
-    const sort = { method: SORTING[0], asc: true };
+
+    const sortBy = CONFIG_STORE.get(CONFIG.SORTBY, {
+      method: 'NAME',
+      asc: true
+    });
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
@@ -87,7 +90,7 @@ class Home extends Component {
       spoolingTimer,
       knownWorkspaces,
       homeBoard,
-      sort
+      sortBy
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -227,7 +230,7 @@ class Home extends Component {
   }
 
   updateWorkspace(workspacePath, knownWorkspaces, files, stats) {
-    const { sort } = this.state;
+    const { sortBy } = this.state;
     let numBoards = 0;
     const boards = [];
     files.forEach((file, id) => {
@@ -251,7 +254,7 @@ class Home extends Component {
     }
     workspace.numBoards = numBoards;
     boards.sort((a, b) => {
-      return sort.method.sort(a, b, sort.asc);
+      return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
     workspace.boards = boards;
     return workspace;
@@ -388,7 +391,7 @@ class Home extends Component {
   }
 
   newBoardCallback(newBoardPath) {
-    const { workspace, sort } = this.state;
+    const { workspace, sortBy } = this.state;
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
     workspace.boards.push({
@@ -396,7 +399,7 @@ class Home extends Component {
       name: this.boardPathToName(newBoardPath)
     });
     workspace.boards.sort((a, b) => {
-      return sort.method.sort(a, b, sort.asc);
+      return SORTING_METHODS[sortBy](a, b, sortBy.asc);
     });
     const newBoardMetaIndex = workspace.boards.findIndex(board => {
       return board.path === newBoardPath;
@@ -461,7 +464,7 @@ class Home extends Component {
 
   // eslint-disable-next-line class-methods-use-this
   saveBoardCallback() {
-    const { boardData, workspace, sort } = this.state;
+    const { boardData, workspace, sortBy } = this.state;
     // eslint-disable-next-line no-param-reassign
     boardData.status = 'All changes saved';
     const boardIndex = workspace.boards.findIndex(board => {
@@ -469,7 +472,7 @@ class Home extends Component {
     });
     workspace.boards[boardIndex].modified = Date.now();
     workspace.boards.sort((a, b) => {
-      return sort.method.sort(a, b, sort.asc);
+      return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
     this.setState({ boardData, workspace });
   }
@@ -618,7 +621,7 @@ class Home extends Component {
   }
 
   renameBoardCallback(oldBoardPath, newBoardPath) {
-    const { boardData, workspace, sort } = this.state;
+    const { boardData, workspace, sortBy } = this.state;
     const boardName = this.boardPathToName(newBoardPath);
     boardData.path = newBoardPath;
     boardData.name = boardName;
@@ -630,7 +633,7 @@ class Home extends Component {
     boardMeta.name = boardName;
     boardMeta.modified = Date.now();
     workspace.boards.sort((a, b) => {
-      return sort.method.sort(a, b, sort.asc);
+      return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
     this.setState({ boardData, workspace });
   }
@@ -696,19 +699,14 @@ class Home extends Component {
   }
 
   selectSort(sortName, sortAsc) {
-    const { sort, workspace } = this.state;
-    if (sortName === 'NAME') {
-      // eslint-disable-next-line prefer-destructuring
-      sort.method = SORTING[0];
-    } else {
-      // eslint-disable-next-line prefer-destructuring
-      sort.method = SORTING[1];
-    }
-    sort.asc = sortAsc;
+    const { sortBy, workspace } = this.state;
+    sortBy.method = sortName;
+    sortBy.asc = sortAsc;
     workspace.boards.sort((a, b) => {
-      return sort.method.sort(a, b, sort.asc);
+      return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
-    this.setState({ sort, workspace });
+    this.setState({ sortBy, workspace });
+    CONFIG_STORE.set(CONFIG.SORTBY, sortBy);
   }
 
   stopSpooling(spoolingCardIndex) {
@@ -777,7 +775,7 @@ class Home extends Component {
       workspace,
       boardData,
       homeBoard,
-      sort
+      sortBy
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -810,7 +808,7 @@ class Home extends Component {
               workspace={workspace}
               boardData={boardData}
               homeBoard={homeBoard}
-              sorting={sort}
+              sortBy={sortBy}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
