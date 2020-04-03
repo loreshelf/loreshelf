@@ -10,15 +10,18 @@ import {
   Menu as BJMenu,
   MenuDivider,
   Intent,
-  Dialog
+  Dialog,
+  Icon
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
+import { SortOption, renderSort } from './SortBySelect';
 import BoardItem from './MenuItem';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
+const SortSelect = Select.ofType<SortOption>();
 
 enum NewBoardType {
   CREATE = 1,
@@ -97,7 +100,9 @@ class Menu extends Component {
       onSwitchWorkspace,
       onOpenHomeBoard,
       onSetHome,
-      homeBoard
+      homeBoard,
+      sorting,
+      onSortSelect
     } = this.props;
     const {
       newBoardOpen,
@@ -269,6 +274,35 @@ class Menu extends Component {
             icon="plus"
             onClick={this.newBoardOpen}
           />
+          <SortSelect
+            items={[
+              { name: 'NAME', asc: true },
+              { name: 'LAST UPDATED', asc: true },
+              { name: 'NAME', asc: false },
+              { name: 'LAST UPDATED', asc: false }
+            ]}
+            itemRenderer={renderSort}
+            filterable={false}
+            onItemSelect={selectedSort => {
+              onSortSelect(selectedSort.name, selectedSort.asc);
+            }}
+            popoverProps={{ minimal: true }}
+          >
+            <Button
+              rightIcon="sort-asc"
+              alignText="right"
+              minimal
+              small
+              text={sorting.method.name}
+              style={{
+                minWidth: '150px',
+                maxWidth: '150px',
+                fontSize: 'small',
+                borderBottom: '1px solid hsl(206, 24%, 64%)',
+                borderTop: '1px solid hsl(206, 24%, 64%)'
+              }}
+            />
+          </SortSelect>
           <div style={{ height: '100%', overflowY: 'auto' }}>
             <ButtonGroup
               vertical

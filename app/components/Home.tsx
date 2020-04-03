@@ -32,15 +32,47 @@ enum CONFIG {
   HOMEBOARD = 'homeBoard'
 }
 
+const SORTING = [
+  {
+    name: 'NAME',
+    sort: (a, b, asc) => {
+      const aname = a.name.toUpperCase();
+      const bname = b.name.toUpperCase();
+      if (aname > bname) {
+        return asc ? 1 : -1;
+      }
+      if (aname < bname) {
+        return asc ? -1 : 1;
+      }
+      return 0;
+    }
+  },
+  {
+    name: 'LAST UPDATED',
+    sort: (a, b, asc) => {
+      const amodified = a.modified;
+      const bmodified = b.modified;
+      if (amodified > bmodified) {
+        return asc ? -1 : 1;
+      }
+      if (amodified < bmodified) {
+        return asc ? 1 : -1;
+      }
+      return 0;
+    }
+  }
+];
+
 class Home extends Component {
   constructor() {
     super();
 
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
-    const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status}
+    const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status, modified}
     const knownWorkspaces = []; // [workspace1, workspace2]
 
     const homeBoard = undefined; // = boardPath
+    const sort = { method: SORTING[0], asc: true };
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
@@ -54,7 +86,8 @@ class Home extends Component {
       saveTimer,
       spoolingTimer,
       knownWorkspaces,
-      homeBoard
+      homeBoard,
+      sort
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -76,6 +109,7 @@ class Home extends Component {
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
+    this.selectSort = this.selectSort.bind(this);
   }
 
   componentDidMount() {
@@ -88,10 +122,18 @@ class Home extends Component {
 
     ipcRenderer.on(
       'workspace-load-callback',
-      (event, workspacePath, files, shouldSetWorkspace, openBoardPath) => {
+      (
+        event,
+        workspacePath,
+        files,
+        stats,
+        shouldSetWorkspace,
+        openBoardPath
+      ) => {
         self.loadWorkspaceCallback(
           workspacePath,
           files,
+          stats,
           shouldSetWorkspace,
           openBoardPath
         );
@@ -184,15 +226,17 @@ class Home extends Component {
     this.setState({ homeBoard: boardData.path, homeWorkspace: workspace.path });
   }
 
-  updateWorkspace(workspacePath, knownWorkspaces, files) {
+  updateWorkspace(workspacePath, knownWorkspaces, files, stats) {
+    const { sort } = this.state;
     let numBoards = 0;
     const boards = [];
-    files.forEach(file => {
+    files.forEach((file, id) => {
       if (file.endsWith('.md')) {
         const boardPath = `${workspacePath}/${file}`;
         boards.push({
           path: boardPath,
-          name: this.boardPathToName(boardPath)
+          name: this.boardPathToName(boardPath),
+          modified: stats[id].mtimeMs
         });
         numBoards += 1;
       }
@@ -207,15 +251,7 @@ class Home extends Component {
     }
     workspace.numBoards = numBoards;
     boards.sort((a, b) => {
-      const aname = a.name.toUpperCase();
-      const bname = b.name.toUpperCase();
-      if (aname < bname) {
-        return -1;
-      }
-      if (aname > bname) {
-        return 1;
-      }
-      return 0;
+      return sort.method.sort(a, b, sort.asc);
     });
     workspace.boards = boards;
     return workspace;
@@ -234,6 +270,7 @@ class Home extends Component {
   loadWorkspaceCallback(
     workspacePath,
     files,
+    stats,
     shouldSetWorkspace,
     openBoardPath?
   ) {
@@ -241,7 +278,8 @@ class Home extends Component {
     const workspace = this.updateWorkspace(
       workspacePath,
       knownWorkspaces,
-      files
+      files,
+      stats
     );
     if (shouldSetWorkspace) {
       this.setState({
@@ -350,24 +388,15 @@ class Home extends Component {
   }
 
   newBoardCallback(newBoardPath) {
-    const { workspace } = this.state;
+    const { workspace, sort } = this.state;
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
-    console.log(newBoardPath);
     workspace.boards.push({
       path: newBoardPath,
       name: this.boardPathToName(newBoardPath)
     });
     workspace.boards.sort((a, b) => {
-      const aname = a.name.toUpperCase();
-      const bname = b.name.toUpperCase();
-      if (aname < bname) {
-        return -1;
-      }
-      if (aname > bname) {
-        return 1;
-      }
-      return 0;
+      return sort.method.sort(a, b, sort.asc);
     });
     const newBoardMetaIndex = workspace.boards.findIndex(board => {
       return board.path === newBoardPath;
@@ -432,10 +461,17 @@ class Home extends Component {
 
   // eslint-disable-next-line class-methods-use-this
   saveBoardCallback() {
-    const { boardData } = this.state;
+    const { boardData, workspace, sort } = this.state;
     // eslint-disable-next-line no-param-reassign
     boardData.status = 'All changes saved';
-    this.setState({ boardData });
+    const boardIndex = workspace.boards.findIndex(board => {
+      return board.path === boardData.path;
+    });
+    workspace.boards[boardIndex].modified = Date.now();
+    workspace.boards.sort((a, b) => {
+      return sort.method.sort(a, b, sort.asc);
+    });
+    this.setState({ boardData, workspace });
   }
 
   saveBoard(backgroundBoardData?) {
@@ -499,6 +535,7 @@ class Home extends Component {
     const card = boardData.cards[cardIndex];
     boardData.cards.splice(cardIndex, 1);
     const boardMeta = workspace.boards[boardId];
+    boardMeta.modified = Date.now();
     this.setState({ boardData });
     this.autoSave();
 
@@ -581,7 +618,7 @@ class Home extends Component {
   }
 
   renameBoardCallback(oldBoardPath, newBoardPath) {
-    const { boardData, workspace } = this.state;
+    const { boardData, workspace, sort } = this.state;
     const boardName = this.boardPathToName(newBoardPath);
     boardData.path = newBoardPath;
     boardData.name = boardName;
@@ -591,16 +628,9 @@ class Home extends Component {
     const boardMeta = workspace.boards[boardIndex];
     boardMeta.path = newBoardPath;
     boardMeta.name = boardName;
+    boardMeta.modified = Date.now();
     workspace.boards.sort((a, b) => {
-      const aname = a.name.toUpperCase();
-      const bname = b.name.toUpperCase();
-      if (aname < bname) {
-        return -1;
-      }
-      if (aname > bname) {
-        return 1;
-      }
-      return 0;
+      return sort.method.sort(a, b, sort.asc);
     });
     this.setState({ boardData, workspace });
   }
@@ -665,6 +695,22 @@ class Home extends Component {
     });
   }
 
+  selectSort(sortName, sortAsc) {
+    const { sort, workspace } = this.state;
+    if (sortName === 'NAME') {
+      // eslint-disable-next-line prefer-destructuring
+      sort.method = SORTING[0];
+    } else {
+      // eslint-disable-next-line prefer-destructuring
+      sort.method = SORTING[1];
+    }
+    sort.asc = sortAsc;
+    workspace.boards.sort((a, b) => {
+      return sort.method.sort(a, b, sort.asc);
+    });
+    this.setState({ sort, workspace });
+  }
+
   stopSpooling(spoolingCardIndex) {
     const { boardData } = this.state;
     this.autoSaveSpooling(spoolingCardIndex, true);
@@ -726,7 +772,13 @@ class Home extends Component {
   }
 
   render() {
-    const { knownWorkspaces, workspace, boardData, homeBoard } = this.state;
+    const {
+      knownWorkspaces,
+      workspace,
+      boardData,
+      homeBoard,
+      sort
+    } = this.state;
     const OpenWorkspace = (
       <Button
         intent={Intent.PRIMARY}
@@ -758,6 +810,7 @@ class Home extends Component {
               workspace={workspace}
               boardData={boardData}
               homeBoard={homeBoard}
+              sorting={sort}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
@@ -769,6 +822,7 @@ class Home extends Component {
               onSwitchWorkspace={this.switchWorkspace}
               onOpenHomeBoard={this.openHomeBoard}
               onSetHome={this.setHome}
+              onSortSelect={this.selectSort}
             />,
             boardData ? (
               <Board
