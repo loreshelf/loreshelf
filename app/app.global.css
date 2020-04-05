@@ -12,6 +12,14 @@ body {
   color: hsla(204, 33%, 97%, 1);
   height: 100vh;
   background-color: hsla(206, 24%, 21%, 1);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    black,
+    black 1px,
+    transparent 1px,
+    transparent 6px
+  );
+  background-size: 4px 4px;
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
   overflow-x: hidden;
@@ -26,13 +34,13 @@ h2 br {
 }
 
 p {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 .bp3-dark a,
 .bp3-dark a:hover {
-  color: rgb(153, 207, 241);
+  color: #92f8e6;
 }
 
 .bp3-editable-text {
@@ -52,7 +60,7 @@ p {
   padding: 4px;
   margin: 3px -5px;
   height: 25px;
-  border-left: 5px solid hsl(207, 23%, 37%);
+  border-left: 7px solid hsl(207, 23%, 37%);
 }
 
 .ProseMirror {
@@ -70,7 +78,7 @@ p {
 }
 
 .ProseMirror-focused {
-  border: 1px solid hsl(206, 24%, 64%) !important;
+  border: 1px solid #137cbd !important;
   outline: none;
 }
 
@@ -86,9 +94,34 @@ p {
   visibility: visible;
 }
 
-.ProseMirror ul,
+.ProseMirror ul {
+  padding: 0;
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.ProseMirror li {
+  text-indent: -0.7em;
+}
+
+.ProseMirror ul li {
+  padding-left: 5px;
+  color: #92f8e6;
+}
+
+.ProseMirror ul li p {
+  color: hsla(204, 33%, 97%, 1);
+}
+
 .ProseMirror ol {
+  padding: 0;
   padding-left: 15px;
+  margin: 0;
+  margin-top: 10px;
+}
+
+.ProseMirror ol li {
+  padding-left: 10px;
 }
 
 .ProseMirror-gapcursor {

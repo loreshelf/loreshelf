@@ -1,7 +1,7 @@
 .title {
   font-size: medium;
   width: 100% !important;
-  background: hsl(207, 23%, 37%);
+  background: #137cbd;
   padding: 5px;
   position: sticky;
   top: 0;
@@ -25,14 +25,15 @@
   text-align: center;
   font-weight: bold;
   width: 50%;
-  background: hsl(207, 23%, 37%);
+  background: #137cbd;
   border: 5px solid #30404d;
 }
 
 .card td {
   text-align: left;
   border-top: 1px solid hsl(206, 24%, 64%);
-  padding: 5px;
+  padding: 0;
+  padding-left: 5px;
 }
 
 @keyframes up-right {
@@ -51,17 +52,12 @@
 }
 
 .spoolingStatus {
-  border-radius: 50%;
-  float: left;
-  width: 10px;
-  height: 10px;
-  margin-top: 5px;
+  color: #92f8e6;
   margin-right: 5px;
-  background-color: #3dcc91;
 }
 
 .active {
-  background-color: #ffb366;
+  color: #ffb366;
   opacity: 0.25;
   -webkit-animation: up-right 1s infinite;
   -moz-animation: up-right 1s infinite;

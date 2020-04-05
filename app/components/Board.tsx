@@ -86,6 +86,16 @@ class Board extends Component {
         {cardData.length > 0 ? (
           <>
             {cards}
+            {cardData.length === dividerIndex && (
+              <div
+                style={{
+                  width: '1px',
+                  background: 'hsl(206, 24%, 64%)',
+                  maxWidth: '1px',
+                  marginRight: '-1px'
+                }}
+              />
+            )}
             <BlueCard
               key="addNew"
               elevation={Elevation.TWO}

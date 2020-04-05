@@ -11,8 +11,6 @@ import {
   Card as BlueCard,
   Elevation,
   Icon,
-  Intent,
-  Callout,
   EditableText,
   Button
 } from '@blueprintjs/core';
@@ -197,12 +195,25 @@ const Card: React.FC<CardProps> = ({
             />
           </h1>
           {card.spooling && (
-            <Callout intent={Intent.WARNING} icon="exchange">
-              <span className={`${styles.spoolingStatus} ${spoolingActive}`} />
-              {`Spooling '${cardData.title}' from '${card.spooling.boardData.name}'`}
+            <div
+              style={{
+                height: '30px',
+                padding: '5px',
+                background: '#202b33',
+                cursor: 'default'
+              }}
+              title="Spooling status"
+            >
+              <Icon
+                icon="exchange"
+                className={`${styles.spoolingStatus} ${spoolingActive}`}
+              />
+              <span />
+              {`@${cardData.title} from '${card.spooling.boardData.name}'`}
               <Button
                 icon="cross"
                 minimal
+                title="Stop spooling"
                 style={{
                   padding: '0px',
                   minWidth: '20px',
@@ -211,7 +222,7 @@ const Card: React.FC<CardProps> = ({
                 }}
                 onClick={() => onStopSpooling(index)}
               />
-            </Callout>
+            </div>
           )}
           <Editor
             doc={cardData.doc}

@@ -131,18 +131,16 @@ class Menu extends Component {
 
     return (
       <div className={styles.menu}>
-        <ButtonGroup
-          vertical
-          large
-          fill
-          minimal
-          alignText="right"
-          style={{
-            minWidth: '150px',
-            maxWidth: '150px'
-          }}
-        >
-          <ButtonGroup>
+        <ButtonGroup vertical fill>
+          <ButtonGroup
+            style={{
+              marginBottom: '10px',
+              width: '100%',
+              backgroundColor: '#30404d',
+              boxShadow:
+                '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
+            }}
+          >
             <Button
               key="homeBoard"
               title={
@@ -155,177 +153,216 @@ class Menu extends Component {
               icon="home"
               style={{
                 maxWidth: '75px',
-                boxShadow:
-                  homeBoard && homeBoard.endsWith(`${selectedBoardName}.md`)
-                    ? '0px 17px 0px -15px white'
-                    : 'none'
+                height: '40px',
+                minWidth: '75px'
               }}
             />
+            {homeBoard && homeBoard.endsWith(`${selectedBoardName}.md`) && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '18px',
+                  top: '35px',
+                  width: '40px',
+                  height: '3px',
+                  background: '#92f8e6',
+                  zIndex: 10
+                }}
+              />
+            )}
             <Button
               key="openWorkspace"
               title="Add and open new workspace"
               onClick={onAddWorkspace}
               icon="folder-open"
-              style={{ maxWidth: '75px' }}
+              style={{ maxWidth: '75px', minWidth: '75px' }}
             />
           </ButtonGroup>
-          <WorkspaceSelect
-            items={knownWorkspaces}
-            noResults={noResults}
-            itemPredicate={workspaceSelectProps.itemPredicate}
-            itemRenderer={workspaceSelectProps.itemRenderer}
-            onItemSelect={(selectedWorkspace, actionMeta) => {
-              if (actionMeta && actionMeta.action === 'close') {
-                onCloseWorkspace(actionMeta.workspacePath);
-              } else {
-                onSwitchWorkspace(selectedWorkspace);
-              }
-            }}
-            resetOnClose
-            resetOnSelect
-            popoverProps={{ minimal: true }}
-          >
-            <Button
-              rightIcon="caret-down"
-              alignText="left"
-              text={workspaceName}
-              style={{
-                minWidth: '150px',
-                maxWidth: '150px'
-              }}
-            />
-          </WorkspaceSelect>
-          <Button
-            active
-            key="selectedBoard"
-            onContextMenu={e => {
-              e.preventDefault();
-              const parent = e.target.offsetParent;
-              const boardContextMenu = React.createElement(
-                BJMenu,
-                {},
-                React.createElement(MenuItem, {
-                  onClick: () => {
-                    this.duplicateBoardOpen();
-                  },
-                  icon: 'duplicate',
-                  text: 'Duplicate'
-                }),
-                React.createElement(MenuItem, {
-                  onClick: () => {
-                    this.renameBoardOpen();
-                  },
-                  icon: 'edit',
-                  text: 'Rename'
-                }),
-                React.createElement(MenuItem, {
-                  onClick: () => {
-                    onSetHome();
-                  },
-                  icon: 'home',
-                  text: 'Set Home'
-                }),
-                React.createElement(MenuItem, {
-                  onClick: () => {
-                    console.log('export');
-                  },
-                  icon: 'export',
-                  text: 'Export'
-                }),
-                React.createElement(MenuDivider),
-                React.createElement(MenuItem, {
-                  onClick: onDeleteBoard,
-                  icon: 'trash',
-                  intent: Intent.DANGER,
-                  text: 'Delete'
-                })
-              );
-
-              ContextMenu.show(
-                boardContextMenu,
-                {
-                  left: parent.offsetLeft + parent.offsetWidth + 1,
-                  top: parent.offsetTop
-                },
-                () => {
-                  // menu was closed; callback optional
-                },
-                true
-              );
+          <ButtonGroup
+            vertical
+            alignText="right"
+            style={{
+              minWidth: '150px',
+              maxWidth: '150px',
+              backgroundColor: '#30404d',
+              marginBottom: '10px',
+              boxShadow:
+                '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
             }}
           >
-            {selectedBoardName}
-          </Button>
-          {boardData && (
-            <div
-              style={{
-                fontSize: 'small',
-                paddingRight: '5px',
-                paddingTop: '5px',
-                paddingBottom: '5px'
+            <WorkspaceSelect
+              items={knownWorkspaces}
+              noResults={noResults}
+              itemPredicate={workspaceSelectProps.itemPredicate}
+              itemRenderer={workspaceSelectProps.itemRenderer}
+              onItemSelect={(selectedWorkspace, actionMeta) => {
+                if (actionMeta && actionMeta.action === 'close') {
+                  onCloseWorkspace(actionMeta.workspacePath);
+                } else {
+                  onSwitchWorkspace(selectedWorkspace);
+                }
               }}
+              resetOnClose
+              resetOnSelect
+              popoverProps={{ minimal: true }}
             >
-              <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
-            </div>
-          )}
-          <Button
-            key="newBoard"
-            title="Create a new spool"
-            icon="plus"
-            onClick={this.newBoardOpen}
-          />
-          <SortSelect
-            items={[
-              { name: 'NAME', asc: true },
-              { name: 'LAST UPDATED', asc: true },
-              { name: 'NAME', asc: false },
-              { name: 'LAST UPDATED', asc: false }
-            ]}
-            itemRenderer={renderSort}
-            filterable={false}
-            onItemSelect={selectedSort => {
-              onSortSelect(selectedSort.name, selectedSort.asc);
-            }}
-            popoverProps={{ minimal: true }}
-          >
+              <Button
+                rightIcon="caret-down"
+                alignText="left"
+                text={workspaceName}
+                style={{
+                  minWidth: '150px',
+                  maxWidth: '150px'
+                }}
+              />
+            </WorkspaceSelect>
             <Button
-              rightIcon="sort-asc"
-              alignText="right"
-              minimal
-              small
-              text={sortBy.method}
-              style={{
-                minWidth: '150px',
-                maxWidth: '150px',
-                fontSize: 'small',
-                borderBottom: '1px solid hsl(206, 24%, 64%)',
-                borderTop: '1px solid hsl(206, 24%, 64%)'
-              }}
-            />
-          </SortSelect>
-          <div style={{ height: '100%', overflowY: 'auto' }}>
-            <ButtonGroup
-              vertical
-              large
-              minimal
-              alignText="right"
-              style={{ width: '100%' }}
-            >
-              {boards.map((boardMeta, id) => {
-                return (
-                  <BoardItem
-                    // eslint-disable-next-line react/no-array-index-key
-                    key={id}
-                    disabled={boardMeta.name === selectedBoardName}
-                    onClick={() => onSelectBoard(id)}
-                    moveCard={cardIndex => onMoveCardToBoard(cardIndex, id)}
-                  >
-                    {boardMeta.name}
-                  </BoardItem>
+              active
+              key="selectedBoard"
+              onContextMenu={e => {
+                e.preventDefault();
+                const parent = e.target.offsetParent;
+                const boardContextMenu = React.createElement(
+                  BJMenu,
+                  {},
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      this.duplicateBoardOpen();
+                    },
+                    icon: 'duplicate',
+                    text: 'Duplicate'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      this.renameBoardOpen();
+                    },
+                    icon: 'edit',
+                    text: 'Rename'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      onSetHome();
+                    },
+                    icon: 'home',
+                    text: 'Set Home'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      console.log('export');
+                    },
+                    icon: 'export',
+                    text: 'Export'
+                  }),
+                  React.createElement(MenuDivider),
+                  React.createElement(MenuItem, {
+                    onClick: onDeleteBoard,
+                    icon: 'trash',
+                    intent: Intent.DANGER,
+                    text: 'Delete'
+                  })
                 );
-              })}
-            </ButtonGroup>
-          </div>
+
+                ContextMenu.show(
+                  boardContextMenu,
+                  {
+                    left: parent.offsetLeft + parent.offsetWidth + 1,
+                    top: parent.offsetTop
+                  },
+                  () => {
+                    // menu was closed; callback optional
+                  },
+                  true
+                );
+              }}
+            >
+              {selectedBoardName}
+            </Button>
+            {boardData && (
+              <div
+                style={{
+                  fontSize: 'small',
+                  paddingRight: '5px',
+                  paddingTop: '5px',
+                  paddingBottom: '5px'
+                }}
+              >
+                <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
+              </div>
+            )}
+          </ButtonGroup>
+          <ButtonGroup
+            vertical
+            fill
+            alignText="right"
+            style={{
+              minWidth: '150px',
+              maxWidth: '150px',
+              backgroundColor: '#30404d',
+              boxShadow:
+                '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
+            }}
+          >
+            <Button
+              key="newBoard"
+              title="Create a new spool"
+              intent={Intent.PRIMARY}
+              icon="plus"
+              onClick={this.newBoardOpen}
+            />
+            <SortSelect
+              items={[
+                { name: 'NAME', asc: true },
+                { name: 'LAST UPDATED', asc: true },
+                { name: 'NAME', asc: false },
+                { name: 'LAST UPDATED', asc: false }
+              ]}
+              itemRenderer={renderSort}
+              filterable={false}
+              onItemSelect={selectedSort => {
+                onSortSelect(selectedSort.name, selectedSort.asc);
+              }}
+              popoverProps={{ minimal: true }}
+            >
+              <Button
+                rightIcon={sortBy.asc ? 'sort-asc' : 'sort-desc'}
+                alignText="right"
+                text={sortBy.method}
+                style={{
+                  minWidth: '150px',
+                  maxWidth: '150px',
+                  fontSize: 'small',
+                  marginBottom: '5px',
+                  borderBottom: '1px solid hsl(206, 24%, 64%)'
+                }}
+              />
+            </SortSelect>
+            <div style={{ height: '100%', overflowY: 'auto' }}>
+              <ButtonGroup
+                vertical
+                minimal
+                fill
+                small="true"
+                alignText="right"
+                style={{
+                  width: '100%'
+                }}
+              >
+                {boards.map((boardMeta, id) => {
+                  return (
+                    <BoardItem
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={id}
+                      disabled={boardMeta.name === selectedBoardName}
+                      onClick={() => onSelectBoard(id)}
+                      moveCard={cardIndex => onMoveCardToBoard(cardIndex, id)}
+                    >
+                      {boardMeta.name}
+                    </BoardItem>
+                  );
+                })}
+              </ButtonGroup>
+            </div>
+          </ButtonGroup>
         </ButtonGroup>
         <Dialog
           className={Classes.DARK}
