@@ -8,6 +8,7 @@ import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
+import { goToNextCell } from 'prosemirror-tables';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
 import LinkPopup from './LinkPopup';
@@ -57,6 +58,32 @@ const COMMANDS = [
       const today = new Date().toLocaleTimeString(undefined, options);
       const tr = state.tr.insertText(today, start, cursor);
       tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
+      dispatch(tr);
+    }
+  },
+  {
+    name: 'table',
+    onSelect: (start, end, state, dispatch, cursor) => {
+      const headerCells = [];
+      const cells = [];
+      const pros = schema.text('Pros');
+      console.log(pros);
+      const cons = schema.text('Cons');
+      cells.push(schema.nodes.table_cell.createAndFill());
+      cells.push(schema.nodes.table_cell.createAndFill());
+      headerCells.push(schema.nodes.table_header.createChecked(null, pros));
+      headerCells.push(schema.nodes.table_header.createChecked(null, cons));
+      const headerRows = schema.nodes.table_row.createChecked(
+        null,
+        headerCells
+      );
+      const rows = schema.nodes.table_row.createChecked(null, cells);
+      const thead = schema.nodes.table_head.createChecked(null, headerRows);
+      const tbody = schema.nodes.table_body.createChecked(null, rows);
+      const table = schema.nodes.table.createChecked(null, [thead, tbody]);
+      // dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
+      const tr = state.tr.replaceWith(start - 1, end + 1, table);
+      tr.setSelection(Selection.near(tr.doc.resolve(cursor)));
       dispatch(tr);
     }
   }

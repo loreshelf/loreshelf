@@ -1,14 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-import {
-  Button,
-  Card as BlueCard,
-  Elevation,
-  Icon,
-  Intent,
-  NonIdealState
-} from '@blueprintjs/core';
+import { Button, Intent, NonIdealState } from '@blueprintjs/core';
 import Card from './Card';
 import styles from './Board.css';
 
@@ -96,17 +89,6 @@ class Board extends Component {
                 }}
               />
             )}
-            <BlueCard
-              key="addNew"
-              elevation={Elevation.TWO}
-              intent={Intent.SUCCESS}
-              title="Add a new knot"
-              interactive
-              className={styles.newCard}
-              onClick={onNewCard}
-            >
-              <Icon icon="plus" iconSize={Icon.SIZE_LARGE} />
-            </BlueCard>
           </>
         ) : (
           <NonIdealState

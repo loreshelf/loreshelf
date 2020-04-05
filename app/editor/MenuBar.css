@@ -1,6 +1,7 @@
 .bar {
   z-index: 1;
   margin-left: -32px;
+  margin-top: -30px;
   padding-right: 1px;
   height: 215px;
   position: sticky;

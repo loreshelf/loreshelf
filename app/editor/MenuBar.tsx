@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { Button, ButtonGroup } from '@blueprintjs/core';
+import { Button, ButtonGroup, Icon } from '@blueprintjs/core';
 import { redo, undo } from 'prosemirror-history';
 import { ipcRenderer } from 'electron';
 import classes from './MenuBar.css';
@@ -25,7 +25,7 @@ function MenuBar(props) {
   const { state, dispatch } = view;
   return (
     <div className={classes.bar}>
-      <ButtonGroup vertical style={{ background: '#30404d' }}>
+      <ButtonGroup vertical>
         <Button
           onMouseDown={e => {
             e.preventDefault();
@@ -34,6 +34,7 @@ function MenuBar(props) {
           disabled={!undo(state)}
           title="Undo"
           icon="undo"
+          style={{ background: '#30404d' }}
         />
         <Button
           onMouseDown={e => {
@@ -43,43 +44,9 @@ function MenuBar(props) {
           disabled={!redo(state)}
           title="Redo"
           icon="redo"
+          style={{ background: '#30404d' }}
         />
-        <div style={{ margin: '5px' }} />
-        <Button
-          onMouseDown={e => {
-            e.preventDefault();
-            const headerCells = [];
-            const cells = [];
-            const pros = schema.text('Pros');
-            const cons = schema.text('Cons');
-            cells.push(schema.nodes.table_cell.createAndFill());
-            cells.push(schema.nodes.table_cell.createAndFill());
-            headerCells.push(
-              schema.nodes.table_header.createChecked(null, pros)
-            );
-            headerCells.push(
-              schema.nodes.table_header.createChecked(null, cons)
-            );
-            const headerRows = schema.nodes.table_row.createChecked(
-              null,
-              headerCells
-            );
-            const rows = schema.nodes.table_row.createChecked(null, cells);
-            const thead = schema.nodes.table_head.createChecked(
-              null,
-              headerRows
-            );
-            const tbody = schema.nodes.table_body.createChecked(null, rows);
-            const table = schema.nodes.table.createChecked(null, [
-              thead,
-              tbody
-            ]);
-            dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
-          }}
-          disabled={!canInsert(schema.nodes.table)(state)}
-          title="Insert a table"
-          icon="list-columns"
-        />
+        <div style={{ height: '40px', background: 'transparent !important' }} />
         <Button
           onMouseDown={e => {
             e.preventDefault();
@@ -122,15 +89,16 @@ function MenuBar(props) {
           title="Add a local image"
           icon="media"
         />
-        <div style={{ margin: '10px' }} />
+        <div style={{ height: '15px', background: '#30404d' }} />
         <Button
           onMouseDown={e => {
             e.preventDefault();
             onRemoveCard();
           }}
           title="Remove the card"
-          icon="trash"
-        />
+        >
+          <Icon icon="trash" style={{ color: '#ff7373' }} />
+        </Button>
       </ButtonGroup>
     </div>
   );

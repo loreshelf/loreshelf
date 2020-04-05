@@ -100,6 +100,7 @@ class Menu extends Component {
       onSwitchWorkspace,
       onOpenHomeBoard,
       onSetHome,
+      onNewCard,
       homeBoard,
       sortBy,
       onSortSelect
@@ -134,7 +135,7 @@ class Menu extends Component {
         <ButtonGroup vertical fill>
           <ButtonGroup
             style={{
-              marginBottom: '10px',
+              marginBottom: '12px',
               width: '100%',
               backgroundColor: '#30404d',
               boxShadow:
@@ -216,6 +217,19 @@ class Menu extends Component {
                 }}
               />
             </WorkspaceSelect>
+            <Button
+              style={{
+                width: '30px',
+                marginTop: '30px',
+                marginLeft: '150px',
+                position: 'absolute',
+                borderRadius: '0 15px 15px 0',
+                zIndex: 10
+              }}
+              intent={Intent.PRIMARY}
+              onClick={onNewCard}
+              icon="plus"
+            />
             <Button
               active
               key="selectedBoard"

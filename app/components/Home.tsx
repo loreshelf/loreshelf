@@ -119,9 +119,12 @@ class Home extends Component {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
-    ipcRenderer.on('workspace-add-callback', (event, workspacePath, files) => {
-      self.addWorkspaceCallback(workspacePath, files);
-    });
+    ipcRenderer.on(
+      'workspace-add-callback',
+      (event, workspacePath, files, stats) => {
+        self.addWorkspaceCallback(workspacePath, files, stats);
+      }
+    );
 
     ipcRenderer.on(
       'workspace-load-callback',
@@ -303,7 +306,7 @@ class Home extends Component {
     }
   }
 
-  addWorkspaceCallback(workspacePath, files) {
+  addWorkspaceCallback(workspacePath, files, stats) {
     const { knownWorkspaces } = this.state;
     this.setState({
       boardData: undefined
@@ -311,7 +314,8 @@ class Home extends Component {
     const workspace = this.updateWorkspace(
       workspacePath,
       knownWorkspaces,
-      files
+      files,
+      stats
     );
     this.setState({
       knownWorkspaces,
@@ -511,7 +515,7 @@ class Home extends Component {
         this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
         const n = this.boardRef.boardRef.current.childNodes;
         const title =
-          n[n.length - 2].firstChild.firstChild.lastChild.firstElementChild;
+          n[n.length - 1].firstChild.firstChild.lastChild.firstElementChild;
         title.focus();
         title.select();
       }, 100);
@@ -821,6 +825,7 @@ class Home extends Component {
               onOpenHomeBoard={this.openHomeBoard}
               onSetHome={this.setHome}
               onSortSelect={this.selectSort}
+              onNewCard={this.newCard}
             />,
             boardData ? (
               <Board

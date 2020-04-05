@@ -112,7 +112,11 @@ const createWindow = async () => {
       } else {
         const workspacePath = data.filePaths[0];
         fs.readdir(workspacePath, (err, files) => {
-          event.reply('workspace-add-callback', workspacePath, files);
+          const stats = [];
+          files.forEach(filePath => {
+            stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+          });
+          event.reply('workspace-add-callback', workspacePath, files, stats);
         });
       }
     });
