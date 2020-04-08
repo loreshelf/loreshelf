@@ -46,7 +46,7 @@ function MenuBar(props) {
           icon="redo"
           style={{ background: '#30404d' }}
         />
-        <div style={{ height: '40px', background: 'transparent !important' }} />
+        <div style={{ height: '40px' }} />
         <Button
           onMouseDown={e => {
             e.preventDefault();
