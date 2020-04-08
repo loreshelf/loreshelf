@@ -795,7 +795,7 @@ class Home extends Component {
         intent={Intent.PRIMARY}
         onClick={() => menuRef.current.newBoardOpen()}
       >
-        Create Spool
+        Create Notebook
       </Button>
     );
     return (
@@ -849,7 +849,7 @@ class Home extends Component {
                 key="empty-workspace"
                 icon="grid-view"
                 title="Empty Workspace"
-                description="Start with creating a new spool, the place where you will capture and analyze related information. For example 'Accounts', 'Insurances', 'Investments' in 'Finance' workspace. Every spool will be stored as a standalone .md Markdown file in the current workspace."
+                description="Start with creating a new notebook, the place where you will capture and analyze related information. For example 'Accounts', 'Insurances', 'Investments' in 'Finance' workspace. Every notebook will be stored as a standalone .md Markdown file in the current workspace."
                 action={CreateBoard}
               />
             )

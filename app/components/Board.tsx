@@ -34,7 +34,7 @@ class Board extends Component {
     const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
-        Add new knot
+        Add new block
       </Button>
     );
     const moveCard = (sourceIndex, left) => {
@@ -93,8 +93,8 @@ class Board extends Component {
         ) : (
           <NonIdealState
             icon="new-layer"
-            title="Empty Spool"
-            description="Start with adding a new knot. Knots are key information that you want to remember next to the other related knots within the same spool."
+            title="Empty Notebook"
+            description="Start with adding a new block. Blocks contain key information that you want to remember next to the other related blocks within the notebook."
             action={NewCard}
           />
         )}

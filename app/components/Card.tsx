@@ -202,7 +202,7 @@ const Card: React.FC<CardProps> = ({
                 background: '#202b33',
                 cursor: 'default'
               }}
-              title="Spooling status"
+              title="Gateway forwarding status"
             >
               <Icon
                 icon="exchange"
@@ -213,7 +213,7 @@ const Card: React.FC<CardProps> = ({
               <Button
                 icon="cross"
                 minimal
-                title="Stop spooling"
+                title="Stop forwarding"
                 style={{
                   padding: '0px',
                   minWidth: '20px',

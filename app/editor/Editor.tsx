@@ -500,7 +500,7 @@ Still | renders | nicely
             suggestionPos + linkName.length,
             schema.marks.link.create({
               href: `@${boardPath}/${cardName}`,
-              title: `Open '${cardName}' knot from '${boardName}' spool`
+              title: `Open '${cardName}' block from '${boardName}' notebook`
             })
           )
         );

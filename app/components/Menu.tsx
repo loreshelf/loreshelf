@@ -34,7 +34,7 @@ class Menu extends Component {
     super(props);
     this.state = {
       newBoardOpen: false,
-      newBoardName: 'NewSpool.md',
+      newBoardName: 'Notebook.md',
       newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE
     };
@@ -47,7 +47,7 @@ class Menu extends Component {
   newBoardOpen() {
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'NewSpool.md',
+      newBoardName: 'Notebook.md',
       newBoardType: NewBoardType.CREATE
     });
   }
@@ -55,7 +55,7 @@ class Menu extends Component {
   duplicateBoardOpen() {
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'DuplicateSpool.md',
+      newBoardName: 'DuplicateNotebook.md',
       newBoardType: NewBoardType.DUPLICATE
     });
   }
@@ -63,7 +63,7 @@ class Menu extends Component {
   renameBoardOpen() {
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'RenamedSpool.md',
+      newBoardName: 'RenamedNotebook.md',
       newBoardType: NewBoardType.RENAME
     });
   }
@@ -117,17 +117,17 @@ class Menu extends Component {
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
     const selectedBoardName =
-      boardData && boardData.name ? boardData.name : 'No spools';
+      boardData && boardData.name ? boardData.name : 'No notebooks';
     const boardStatus = boardData && boardData.status ? boardData.status : '';
     const boards = workspace && workspace.boards ? workspace.boards : [];
 
     let dialogTitle;
     if (newBoardType === NewBoardType.CREATE) {
-      dialogTitle = 'Create a new spool';
+      dialogTitle = 'Create a new notebook';
     } else if (newBoardType === NewBoardType.DUPLICATE) {
-      dialogTitle = 'Duplicate the spool';
+      dialogTitle = 'Duplicate the notebook';
     } else if (newBoardType === NewBoardType.RENAME) {
-      dialogTitle = 'Rename the spool';
+      dialogTitle = 'Rename the notebook';
     }
 
     return (
@@ -146,8 +146,8 @@ class Menu extends Component {
               key="homeBoard"
               title={
                 homeBoard
-                  ? 'Open the home spool'
-                  : 'Set home spool in the context menu of your current spool'
+                  ? 'Open the home notebook'
+                  : 'Set home notebook in the context menu of your current notebook'
               }
               onClick={onOpenHomeBoard}
               disabled={!homeBoard}
@@ -228,6 +228,7 @@ class Menu extends Component {
               }}
               intent={Intent.PRIMARY}
               onClick={onNewCard}
+              title="Add a new block"
               icon="plus"
             />
             <Button
@@ -259,13 +260,6 @@ class Menu extends Component {
                     },
                     icon: 'home',
                     text: 'Set Home'
-                  }),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      console.log('export');
-                    },
-                    icon: 'export',
-                    text: 'Export'
                   }),
                   React.createElement(MenuDivider),
                   React.createElement(MenuItem, {
@@ -318,7 +312,7 @@ class Menu extends Component {
           >
             <Button
               key="newBoard"
-              title="Create a new spool"
+              title="Create a new notebook"
               intent={Intent.PRIMARY}
               icon="plus"
               onClick={this.newBoardOpen}
@@ -387,12 +381,12 @@ class Menu extends Component {
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
-              The new spool will be stored at
+              The new notebook will be stored at
               <strong>{` ${workspacePath}/${newBoardName}`}</strong>
             </p>
             <p style={{ color: 'red' }}>
               {newBoardIntent === Intent.DANGER
-                ? 'A spool with this name already exists.'
+                ? 'A notebook with this name already exists.'
                 : ''}
             </p>
             <InputGroup

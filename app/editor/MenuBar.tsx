@@ -95,7 +95,7 @@ function MenuBar(props) {
             e.preventDefault();
             onRemoveCard();
           }}
-          title="Remove the card"
+          title="Remove the block"
         >
           <Icon icon="trash" style={{ color: '#ff7373' }} />
         </Button>

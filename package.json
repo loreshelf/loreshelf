@@ -2,7 +2,7 @@
   "name": "jotspin",
   "productName": "Jotspin",
   "version": "1.0.0",
-  "description": "Jotspin is an application for taking and organizing crucial and often tangled information that should be quickly accessible.",
+  "description": "Jotspin is an application for taking and organizing crucial and often tangled information that should be quickly accessible. Navigate though your workspaces and operate on lifelong information stored in Markdown.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -83,7 +83,7 @@
     },
     "linux": {
       "icon": "icon.icns",
-      "synopsis": "Take and organize crucial and often tangled information",
+      "synopsis": "Scientific note organizer",
       "target": [
         "AppImage",
         "deb"
