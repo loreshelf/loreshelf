@@ -164,6 +164,7 @@ const Card: React.FC<CardProps> = ({
               <Button
                 icon="chevron-left"
                 minimal
+                title="Close gateway"
                 style={{ padding: '0px', minWidth: '20px', minHeight: '20px' }}
                 onClick={() => onStopSpooling(index)}
               />
@@ -202,7 +203,7 @@ const Card: React.FC<CardProps> = ({
                 background: '#202b33',
                 cursor: 'default'
               }}
-              title="Gateway forwarding status"
+              title="Gateway status"
             >
               <Icon
                 icon="exchange"
@@ -213,7 +214,7 @@ const Card: React.FC<CardProps> = ({
               <Button
                 icon="cross"
                 minimal
-                title="Stop forwarding"
+                title="Close gateway"
                 style={{
                   padding: '0px',
                   minWidth: '20px',

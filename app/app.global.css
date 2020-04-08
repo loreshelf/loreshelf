@@ -59,7 +59,6 @@ p {
   font-size: small;
   padding: 4px;
   margin: 3px -5px;
-  height: 25px;
   border-left: 7px solid hsl(207, 23%, 37%);
 }
 
@@ -100,16 +99,12 @@ p {
   margin-top: 10px;
 }
 
-.ProseMirror li {
-  text-indent: -0.7em;
-}
-
 .ProseMirror ul li {
-  padding-left: 5px;
   color: #92f8e6;
 }
 
-.ProseMirror ul li p {
+.ProseMirror ul li p,
+.ProseMirror ol li p {
   color: hsla(204, 33%, 97%, 1);
 }
 
@@ -121,7 +116,8 @@ p {
 }
 
 .ProseMirror ol li {
-  padding-left: 10px;
+  padding-left: 5px;
+  color: #92f8e6;
 }
 
 .ProseMirror-gapcursor {

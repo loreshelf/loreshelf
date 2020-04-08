@@ -104,7 +104,6 @@ Still | renders | nicely
     console.log(a); */
 
     this.editorRef = React.createRef();
-    this.linkRef = React.createRef();
     const { attributes, nodeViews, doc, onStartSpooling } = this.props;
 
     this.state = {
@@ -316,7 +315,6 @@ Still | renders | nicely
       nodeViews
     });
 
-    this.setLink = this.setLink.bind(this);
     this.selectSuggestion = this.selectSuggestion.bind(this);
   }
 
@@ -347,10 +345,6 @@ Still | renders | nicely
 
   get content() {
     return defaultMarkdownSerializer.serialize(this.view.state.doc);
-  }
-
-  setLink() {
-    this.linkRef.current.setLink();
   }
 
   getSuggestionProperty() {
@@ -533,14 +527,7 @@ Still | renders | nicely
     return (
       <div ref={this.editorRef} className={style.editor}>
         <MenuBar view={this.view} onRemoveCard={onRemoveCard} />
-        {url && (
-          <LinkPopup
-            ref={this.linkRef}
-            url={url}
-            view={this.view}
-            position={position}
-          />
-        )}
+        {url && <LinkPopup url={url} view={this.view} position={position} />}
         {isSuggestion && (
           <SuggestionsPopup
             suggestions={filteredSuggestions}
