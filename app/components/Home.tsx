@@ -691,14 +691,15 @@ class Home extends Component {
     return new Promise(promiseResponse);
   }
 
-  requestBoardsAsync(filter?) {
-    const { boardData } = this.state;
+  requestBoardsAsync() {
     return new Promise((resolve, reject) => {
+      const { boardData, workspace, knownWorkspaces } = this.state;
       // get boards from the current workspace
-      if (!filter) {
-        const { workspace } = this.state;
-        resolve(workspace.boards.filter(b => b.path !== boardData.path));
-      }
+      let allBoards = workspace.boards.filter(b => b.path !== boardData.path);
+      knownWorkspaces.forEach(w => {
+        allBoards = allBoards.concat(w.boards);
+      });
+      resolve(allBoards);
     });
   }
 
