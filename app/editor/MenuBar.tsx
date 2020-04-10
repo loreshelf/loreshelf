@@ -25,7 +25,15 @@ function MenuBar(props) {
   const { state, dispatch } = view;
   return (
     <div className={classes.bar}>
-      <ButtonGroup vertical>
+      <ButtonGroup
+        vertical
+        style={{
+          background: '#30404d',
+          boxShadow:
+            '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)',
+          border: '1px solid #137cbd'
+        }}
+      >
         <Button
           onMouseDown={e => {
             e.preventDefault();
@@ -33,8 +41,8 @@ function MenuBar(props) {
           }}
           disabled={!undo(state)}
           title="Undo"
+          minimal
           icon="undo"
-          style={{ background: '#30404d' }}
         />
         <Button
           onMouseDown={e => {
@@ -43,10 +51,10 @@ function MenuBar(props) {
           }}
           disabled={!redo(state)}
           title="Redo"
+          minimal
           icon="redo"
-          style={{ background: '#30404d' }}
         />
-        <div style={{ height: '40px' }} />
+        <div style={{ height: '15px' }} />
         <Button
           onMouseDown={e => {
             e.preventDefault();
@@ -67,6 +75,7 @@ function MenuBar(props) {
             }, 200);
           }}
           title="Add link to a file"
+          minimal
           icon="document-open"
         />
         <Button
@@ -87,14 +96,16 @@ function MenuBar(props) {
             }, 200);
           }}
           title="Add a local image"
+          minimal
           icon="media"
         />
-        <div style={{ height: '15px', background: '#30404d' }} />
+        <div style={{ height: '15px' }} />
         <Button
           onMouseDown={e => {
             e.preventDefault();
             onRemoveCard();
           }}
+          minimal
           title="Remove the block"
         >
           <Icon icon="trash" style={{ color: '#ff7373' }} />

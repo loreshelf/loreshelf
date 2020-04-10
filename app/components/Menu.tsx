@@ -236,7 +236,10 @@ class Menu extends Component {
               key="selectedBoard"
               onContextMenu={e => {
                 e.preventDefault();
-                const parent = e.target.offsetParent;
+                let parent = e.target;
+                if (parent.tagName !== 'BUTTON') {
+                  parent = e.target.offsetParent;
+                }
                 const boardContextMenu = React.createElement(
                   BJMenu,
                   {},

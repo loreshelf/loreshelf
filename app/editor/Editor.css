@@ -1,6 +1,6 @@
 .editor {
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   height: calc(100% - 30px);
   min-height: calc(100% - 30px);
 }
