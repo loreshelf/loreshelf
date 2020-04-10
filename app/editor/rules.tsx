@@ -90,7 +90,10 @@ export function buildInputRules(schema) {
       new InputRule(linkRegexp, (state, match, start, end) => {
         let insert = 'Web address';
         let newStart = start;
-        const url = match[0];
+        let url = match[0];
+        if (url.startsWith('www.')) {
+          url = `https://${url}`;
+        }
         if (match[1]) {
           const offset = match[0].lastIndexOf(match[1]);
           insert += match[0].slice(offset + match[1].length);
