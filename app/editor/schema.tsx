@@ -24,11 +24,21 @@ export const schema = new Schema({
     },
 
     paragraph: {
+      attrs: { class: { default: '' } },
       content: 'inline*',
       group: 'block',
-      parseDOM: [{ tag: 'p' }],
-      toDOM() {
-        return ['p', 0];
+      parseDOM: [
+        {
+          tag: 'p',
+          getAttrs(dom) {
+            return {
+              class: dom.getAttribute('class')
+            };
+          }
+        }
+      ],
+      toDOM(node) {
+        return ['p', node.attrs, 0];
       }
     },
 
@@ -59,11 +69,7 @@ export const schema = new Schema({
         { tag: 'h2', attrs: { level: 2, class: 'property' } }
       ],
       toDOM(node) {
-        return [
-          `h${node.attrs.level}`,
-          { class: node.attrs.level === 2 ? 'property' : undefined },
-          0
-        ];
+        return [`h${node.attrs.level}`, node.attrs, 0];
       }
     },
 
@@ -93,7 +99,11 @@ export const schema = new Schema({
     ordered_list: {
       content: 'list_item+',
       group: 'block',
-      attrs: { order: { default: 1 }, tight: { default: false } },
+      attrs: {
+        order: { default: 1 },
+        tight: { default: false },
+        class: { default: '' }
+      },
       parseDOM: [
         {
           tag: 'ol',
@@ -110,7 +120,8 @@ export const schema = new Schema({
           'ol',
           {
             start: node.attrs.order === 1 ? null : node.attrs.order,
-            'data-tight': node.attrs.tight ? 'true' : null
+            'data-tight': node.attrs.tight ? 'true' : null,
+            class: node.attrs.class
           },
           0
         ];
@@ -120,7 +131,7 @@ export const schema = new Schema({
     bullet_list: {
       content: 'list_item+',
       group: 'block',
-      attrs: { tight: { default: true } },
+      attrs: { tight: { default: true }, class: { default: '' } },
       parseDOM: [
         {
           tag: 'ul',
@@ -128,7 +139,7 @@ export const schema = new Schema({
         }
       ],
       toDOM(node) {
-        return ['ul', { 'data-tight': node.attrs.tight ? 'true' : null }, 0];
+        return ['ul', node.attrs, 0];
       }
     },
 

@@ -11,7 +11,9 @@ import {
   MenuDivider,
   Intent,
   Dialog,
-  Icon
+  Icon,
+  Popover,
+  Position
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -38,6 +40,9 @@ class Menu extends Component {
       newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE
     };
+
+    this.searchInputRef = React.createRef();
+
     this.newBoardOpen = this.newBoardOpen.bind(this);
     this.duplicateBoardOpen = this.duplicateBoardOpen.bind(this);
     this.newBoardClose = this.newBoardClose.bind(this);
@@ -103,7 +108,9 @@ class Menu extends Component {
       onNewCard,
       homeBoard,
       sortBy,
-      onSortSelect
+      onSortSelect,
+      searchText,
+      onSearchText
     } = this.props;
     const {
       newBoardOpen,
@@ -313,40 +320,84 @@ class Menu extends Component {
                 '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
             }}
           >
-            <Button
-              key="newBoard"
-              title="Create a new notebook"
-              intent={Intent.PRIMARY}
-              icon="plus"
-              onClick={this.newBoardOpen}
-            />
-            <SortSelect
-              items={[
-                { name: 'NAME', asc: true },
-                { name: 'LAST UPDATED', asc: true },
-                { name: 'NAME', asc: false },
-                { name: 'LAST UPDATED', asc: false }
-              ]}
-              itemRenderer={renderSort}
-              filterable={false}
-              onItemSelect={selectedSort => {
-                onSortSelect(selectedSort.name, selectedSort.asc);
-              }}
-              popoverProps={{ minimal: true }}
-            >
+            <ButtonGroup>
+              <SortSelect
+                items={[
+                  { name: 'NAME', asc: true, icon: 'sort-alphabetical' },
+                  { name: 'LAST UPDATED', asc: true, icon: 'sort-asc' },
+                  { name: 'NAME', asc: false, icon: 'sort-alphabetical-desc' },
+                  { name: 'LAST UPDATED', asc: false, icon: 'sort-desc' }
+                ]}
+                itemRenderer={renderSort}
+                filterable={false}
+                onItemSelect={selectedSort => {
+                  onSortSelect(
+                    selectedSort.name,
+                    selectedSort.asc,
+                    selectedSort.icon
+                  );
+                }}
+                popoverProps={{ minimal: true }}
+              >
+                <Button
+                  rightIcon={sortBy.icon}
+                  alignText="right"
+                  title={`Sorting by ${sortBy.method.toLowerCase()}`}
+                  style={{
+                    minWidth: '50px',
+                    maxWidth: '50px',
+                    fontSize: 'small'
+                  }}
+                />
+              </SortSelect>
               <Button
-                rightIcon={sortBy.asc ? 'sort-asc' : 'sort-desc'}
-                alignText="right"
-                text={sortBy.method}
+                key="newBoard"
+                title="Create a new notebook"
+                intent={Intent.PRIMARY}
+                icon="plus"
+                onClick={this.newBoardOpen}
+              />
+              <Button
+                icon="reset"
+                disabled={!searchText}
                 style={{
-                  minWidth: '150px',
-                  maxWidth: '150px',
-                  fontSize: 'small',
-                  marginBottom: '5px',
-                  borderBottom: '1px solid hsl(206, 24%, 64%)'
+                  minWidth: '50px',
+                  width: '50px',
+                  maxWidth: '50px'
+                }}
+                onClick={() => {
+                  this.searchInputRef.current.value = '';
+                  onSearchText(undefined);
+                }}
+                title="Reset search"
+              />
+            </ButtonGroup>
+            <div
+              className={`bp3-input-group ${
+                searchText ? 'bp3-intent-warning' : ''
+              }`}
+              style={{ marginTop: '1px' }}
+            >
+              <Icon
+                icon="search-text"
+                onClick={() => {
+                  console.log('ahoj');
                 }}
               />
-            </SortSelect>
+              <input
+                ref={this.searchInputRef}
+                className="bp3-input"
+                style={{ borderRadius: '0px', paddingRight: '0px' }}
+                type="search"
+                placeholder="Search in blocks"
+                onKeyPress={e => {
+                  if (e.key === 'Enter') {
+                    onSearchText(e.target.value);
+                  }
+                }}
+                dir="auto"
+              />
+            </div>
             <div style={{ height: '100%', overflowY: 'auto' }}>
               <ButtonGroup
                 vertical

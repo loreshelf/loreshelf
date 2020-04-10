@@ -27,7 +27,10 @@ const COMMANDS = [
     name: 'header',
     disabled: isNotInline,
     onSelect: (start, end, state, dispatch, cursor) => {
-      const insert = schema.nodes.heading.createAndFill({ level: 2 });
+      const insert = schema.nodes.heading.createAndFill({
+        level: 2,
+        class: 'property'
+      });
       const tr = state.tr.replaceWith(start - 1, end + 1, insert);
       tr.setSelection(Selection.near(tr.doc.resolve(cursor - 1)));
       dispatch(tr);
@@ -105,6 +108,7 @@ Still | renders | nicely
 
     this.editorRef = React.createRef();
     const { attributes, nodeViews, doc, onStartSpooling } = this.props;
+    this.saveChanges = true;
 
     this.state = {
       suggestionPos: -1,
@@ -222,7 +226,7 @@ Still | renders | nicely
             step.slice.content.content[0].text === '@'
           ) {
             // Start @ card link suggestion
-            onChange(state.doc);
+            onChange(state.doc, this.saveChanges);
             const isSuggestion = this.isTextSuggestion(transaction, '@');
             if (isSuggestion) {
               this.requestSuggestionPhase1(selection.from);
@@ -233,7 +237,7 @@ Still | renders | nicely
             step.slice.content.content[0].text === '/'
           ) {
             // Start @ card link suggestion
-            onChange(state.doc);
+            onChange(state.doc, this.saveChanges);
             const isSuggestion = this.isTextSuggestion(transaction, '/');
             if (isSuggestion) {
               filteredSuggestions = this.requestCommandSuggestion(
@@ -276,12 +280,16 @@ Still | renders | nicely
                 })
                 .slice(0, MAX_SUGGESTIONS);
             }
-            onChange(state.doc);
+            onChange(state.doc, this.saveChanges);
             if (backToPhase1) {
               this.requestSuggestionPhase1(suggestionPos);
             }
           } else {
-            onChange(state.doc);
+            onChange(state.doc, this.saveChanges);
+          }
+
+          if (!this.saveChanges) {
+            this.saveChanges = true;
           }
         }
 
@@ -505,6 +513,38 @@ Still | renders | nicely
     }
   }
 
+  highlightSearchedLines(searchText) {
+    this.saveChanges = false; // don't automatically save notebook
+    let pos = 0;
+    let transaction = this.view.state.tr;
+    this.view.state.doc.content.content.forEach(element => {
+      if (!searchText || element.textContent.includes(searchText)) {
+        const { attrs } = element;
+        if (!searchText) {
+          transaction = transaction.setNodeMarkup(pos, undefined, {
+            class: attrs.class
+              ? attrs.class.replace(' searchLine', '')
+              : undefined,
+            level: attrs.level,
+            order: attrs.order
+          });
+        } else if (
+          attrs &&
+          (!attrs.class || !attrs.class.includes('searchLine'))
+        ) {
+          transaction = transaction.setNodeMarkup(pos, undefined, {
+            class: `${attrs.class} searchLine`,
+            level: attrs.level,
+            order: attrs.order
+          });
+        }
+      }
+      pos += element.nodeSize;
+    });
+    transaction = transaction.setMeta('addToHistory', false);
+    this.view.dispatch(transaction);
+  }
+
   render() {
     const { onRemoveCard } = this.props;
     const { state } = this.view;
@@ -513,6 +553,24 @@ Still | renders | nicely
     const { from } = state.selection;
     const linkElement = this.view.domAtPos(from).node.parentElement;
     const url = linkElement.href;
+
+    /**
+    const searchText = 'ahoj';
+    console.log(this.view.docView);
+    const paragraphs = this.view.docView.contentDOM.getElementsByTagName('p');
+    if (paragraphs) {
+      for (let i = 0; i < paragraphs.length; i += 1) {
+        const p = paragraphs[i];
+        console.log(p);
+        if (
+          p.innerText.includes(searchText) &&
+          !p.classList.contains('searchLine')
+        ) {
+          // eslint-disable-next-line no-param-reassign
+          p.classList.add('searchLine');
+        }
+      }
+    } */
 
     const isSuggestion = suggestionPos >= 0;
     let position;

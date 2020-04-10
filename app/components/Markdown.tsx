@@ -17,7 +17,10 @@ const markdownParser = new MarkdownParser(
     },
     heading: {
       block: 'heading',
-      getAttrs: tok => ({ level: +tok.tag.slice(1) })
+      getAttrs: tok => ({
+        level: +tok.tag.slice(1),
+        class: +tok.tag.slice(1) === 2 ? 'property' : undefined
+      })
     },
     code_block: { block: 'code_block' },
     fence: {

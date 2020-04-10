@@ -6,6 +6,7 @@ import { ItemRenderer } from '@blueprintjs/select';
 export interface SortOption {
   name: string;
   asc: boolean;
+  icon: string;
 }
 
 export const renderSort: ItemRenderer<SortOption> = (
@@ -15,12 +16,11 @@ export const renderSort: ItemRenderer<SortOption> = (
   if (!modifiers.matchesPredicate) {
     return null;
   }
-  const icon = sorting.asc ? 'sort-asc' : 'sort-desc';
   return (
-    <span key={`${sorting.name}-${icon}`}>
+    <span key={`${sorting.name}-${sorting.icon}`}>
       <MenuItem
         onClick={handleClick}
-        icon={icon}
+        icon={sorting.icon}
         text={` Sort by ${sorting.name}`}
       />
     </span>

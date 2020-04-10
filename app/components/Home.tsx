@@ -23,7 +23,8 @@ const CONFIG_SCHEMA = {
   },
   sortBy: {
     method: 'string',
-    asc: 'boolean'
+    asc: 'boolean',
+    icon: 'string'
   }
 };
 
@@ -74,8 +75,10 @@ class Home extends Component {
 
     const sortBy = CONFIG_STORE.get(CONFIG.SORTBY, {
       method: 'NAME',
-      asc: true
+      asc: true,
+      icon: 'sort-alphabetical'
     });
+    const searchText = undefined;
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
@@ -90,7 +93,8 @@ class Home extends Component {
       spoolingTimer,
       knownWorkspaces,
       homeBoard,
-      sortBy
+      sortBy,
+      searchText
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -113,6 +117,7 @@ class Home extends Component {
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
     this.selectSort = this.selectSort.bind(this);
+    this.searchText = this.searchText.bind(this);
   }
 
   componentDidMount() {
@@ -558,17 +563,21 @@ class Home extends Component {
     this.setState({ boardData });
   }
 
-  editCard(cardId, doc) {
+  editCard(cardId, doc, saveChanges) {
     const { boardData } = this.state;
     const card = boardData.cards[cardId];
     const { spooling } = card;
     if (spooling) {
       const spoolingBoardData = spooling.boardData;
       spoolingBoardData.cards[spooling.cardIndex].doc = doc;
-      this.autoSaveSpooling(cardId);
+      if (saveChanges) {
+        this.autoSaveSpooling(cardId);
+      }
     } else {
       card.doc = doc;
-      this.autoSave();
+      if (saveChanges) {
+        this.autoSave();
+      }
     }
     this.setState({ boardData });
   }
@@ -703,10 +712,11 @@ class Home extends Component {
     });
   }
 
-  selectSort(sortName, sortAsc) {
+  selectSort(sortName, sortAsc, sortIcon) {
     const { sortBy, workspace } = this.state;
     sortBy.method = sortName;
     sortBy.asc = sortAsc;
+    sortBy.icon = sortIcon;
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
@@ -719,6 +729,11 @@ class Home extends Component {
     this.autoSaveSpooling(spoolingCardIndex, true);
     boardData.cards[spoolingCardIndex].spooling = undefined;
     this.setState({ boardData });
+  }
+
+  searchText(newSearchText) {
+    this.boardRef.highlightSearchedLines(newSearchText);
+    this.setState({ searchText: newSearchText });
   }
 
   autoSave(immediatelyWhenNeeded?) {
@@ -780,7 +795,8 @@ class Home extends Component {
       workspace,
       boardData,
       homeBoard,
-      sortBy
+      sortBy,
+      searchText
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -814,6 +830,7 @@ class Home extends Component {
               boardData={boardData}
               homeBoard={homeBoard}
               sortBy={sortBy}
+              searchText={searchText}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
@@ -827,6 +844,7 @@ class Home extends Component {
               onSetHome={this.setHome}
               onSortSelect={this.selectSort}
               onNewCard={this.newCard}
+              onSearchText={this.searchText}
             />,
             boardData ? (
               <Board
@@ -836,6 +854,7 @@ class Home extends Component {
                   this.boardRef = el;
                 }}
                 boardData={boardData}
+                searchText={searchText}
                 onEditTitle={this.editTitle}
                 onEditCard={this.editCard}
                 onNewCard={this.newCard}

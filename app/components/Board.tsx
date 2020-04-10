@@ -11,11 +11,24 @@ class Board extends Component {
 
     this.boardRef = React.createRef();
     this.state = { dividerIndex: -1 };
+    this.addCardRef = this.addCardRef.bind(this);
     this.updateDivider = this.updateDivider.bind(this);
   }
 
   updateDivider(newIndex) {
     this.setState({ dividerIndex: newIndex });
+  }
+
+  addCardRef(node) {
+    this.cardRefs = [...this.cardRefs, node];
+  }
+
+  highlightSearchedLines(searchText) {
+    this.cardRefs.forEach(cardRef => {
+      if (cardRef) {
+        cardRef.highlightSearchedLines(searchText);
+      }
+    });
   }
 
   render() {
@@ -28,8 +41,10 @@ class Board extends Component {
       onEditTitle,
       onRequestBoardsAsync,
       onRequestBoardDataAsync,
-      onStopSpooling
+      onStopSpooling,
+      searchText
     } = this.props;
+    this.cardRefs = [];
     const { dividerIndex } = this.state;
     const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
@@ -57,6 +72,7 @@ class Board extends Component {
     };
     const cards = cardData.map((c, id) => (
       <Card
+        ref={this.addCardRef}
         key={id}
         card={c}
         index={id}
