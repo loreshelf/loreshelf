@@ -38,6 +38,7 @@ const Card: React.FC<CardProps> = forwardRef(
     {
       card,
       dividerIndex,
+      dividerLeft,
       index,
       moveCard,
       hoverDivider,
@@ -159,17 +160,6 @@ const Card: React.FC<CardProps> = forwardRef(
 
     return (
       <>
-        <DragPreviewImage connect={preview} src={cardPreview} />
-        {dividerIndex === index && (
-          <div
-            style={{
-              background: 'hsl(206, 24%, 64%)',
-              maxWidth: '1px',
-              width: '1px',
-              marginLeft: '-1px'
-            }}
-          />
-        )}
         <div
           ref={blueRef}
           className={`${styles.card}`}
@@ -177,6 +167,31 @@ const Card: React.FC<CardProps> = forwardRef(
             opacity
           }}
         >
+          <DragPreviewImage connect={preview} src={cardPreview} />
+          {dividerIndex === index && dividerLeft && (
+            <div
+              style={{
+                borderLeft: '1px solid hsl(206, 24%, 64%)',
+                float: 'left',
+                maxWidth: '0px',
+                height: '100%',
+                width: '0px',
+                marginLeft: '-5px'
+              }}
+            />
+          )}
+          {dividerIndex === index && !dividerLeft && (
+            <div
+              style={{
+                borderRight: '1px solid hsl(206, 24%, 64%)',
+                float: 'right',
+                maxWidth: '0px',
+                height: '100%',
+                width: '0px',
+                marginRight: '-5px'
+              }}
+            />
+          )}
           <BlueCard
             // eslint-disable-next-line react/no-array-index-key
             elevation={Elevation.TWO}

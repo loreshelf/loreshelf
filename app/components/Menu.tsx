@@ -378,12 +378,7 @@ class Menu extends Component {
               }`}
               style={{ marginTop: '1px' }}
             >
-              <Icon
-                icon="search-text"
-                onClick={() => {
-                  console.log('ahoj');
-                }}
-              />
+              <Icon icon="search-text" />
               <input
                 ref={this.searchInputRef}
                 className="bp3-input"

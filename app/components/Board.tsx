@@ -10,13 +10,13 @@ class Board extends Component {
     super(props);
 
     this.boardRef = React.createRef();
-    this.state = { dividerIndex: -1 };
+    this.state = { dividerIndex: -1, dividerLeft: false };
     this.addCardRef = this.addCardRef.bind(this);
     this.updateDivider = this.updateDivider.bind(this);
   }
 
-  updateDivider(newIndex) {
-    this.setState({ dividerIndex: newIndex });
+  updateDivider(newIndex, left) {
+    this.setState({ dividerIndex: newIndex, dividerLeft: left });
   }
 
   addCardRef(node) {
@@ -41,11 +41,10 @@ class Board extends Component {
       onEditTitle,
       onRequestBoardsAsync,
       onRequestBoardDataAsync,
-      onStopSpooling,
-      searchText
+      onStopSpooling
     } = this.props;
     this.cardRefs = [];
-    const { dividerIndex } = this.state;
+    const { dividerIndex, dividerLeft } = this.state;
     const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
@@ -53,21 +52,20 @@ class Board extends Component {
       </Button>
     );
     const moveCard = (sourceIndex, left) => {
-      if (left && sourceIndex > dividerIndex) {
-        onReorderCards(sourceIndex, dividerIndex);
+      const di = !dividerLeft ? dividerIndex + 1 : dividerIndex;
+      if (left && sourceIndex > di) {
+        onReorderCards(sourceIndex, di);
       } else if (left) {
-        onReorderCards(sourceIndex, dividerIndex - 1);
-      } else if (sourceIndex < dividerIndex) {
-        onReorderCards(sourceIndex, dividerIndex - 1);
+        onReorderCards(sourceIndex, di - 1);
+      } else if (sourceIndex < di) {
+        onReorderCards(sourceIndex, di - 1);
       } else {
-        onReorderCards(sourceIndex, dividerIndex);
+        onReorderCards(sourceIndex, di);
       }
     };
     const hoverDivider = (index, left) => {
-      if (left && dividerIndex !== index) {
-        this.updateDivider(index);
-      } else if (!left && dividerIndex !== index + 1) {
-        this.updateDivider(index + 1);
+      if (dividerLeft !== left || dividerIndex !== index) {
+        this.updateDivider(index, left);
       }
     };
     const cards = cardData.map((c, id) => (
@@ -77,6 +75,7 @@ class Board extends Component {
         card={c}
         index={id}
         dividerIndex={dividerIndex}
+        dividerLeft={dividerLeft}
         resetDivider={() => {
           this.setState({ dividerIndex: -1 });
         }}

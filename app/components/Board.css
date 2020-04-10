@@ -10,7 +10,8 @@
   padding-right: 30px;
   padding-left: 30px;
   margin-top: 10px;
-  overflow-y: auto;
+  overflow: -moz-scrollbars-vertical;
+  overflow-y: scroll;
 }
 
 .board > * {
