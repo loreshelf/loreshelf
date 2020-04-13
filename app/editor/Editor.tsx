@@ -3,16 +3,21 @@
 /* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { EditorState, Selection, TextSelection } from 'prosemirror-state';
+import { Menu, MenuItem, ContextMenu } from '@blueprintjs/core';
+import {
+  EditorState,
+  Selection,
+  TextSelection,
+  Plugin
+} from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, clipboard, shell } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
-import LinkPopup from './LinkPopup';
 import plugins from './plugins';
 import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
@@ -107,10 +112,10 @@ Still | renders | nicely
     );
     console.log(a); */
 
-    console.log('ahoj');
     this.editorRef = React.createRef();
     const { attributes, nodeViews, doc, onStartSpooling } = this.props;
     this.saveChanges = true;
+    this.originalDoc = doc;
 
     this.state = {
       suggestionPos: -1,
@@ -189,6 +194,77 @@ Still | renders | nicely
         }
       })
     );
+    const clickMousePlugin = new Plugin({
+      props: {
+        handleClickOn(view, pos, node, nodePos, event) {
+          const isCTRL = /Mac/.test(navigator.platform)
+            ? event.metaKey
+            : event.ctrlKey;
+          if (node.type.name === 'paragraph') {
+            const marks = node.firstChild.marks.filter(
+              m => m.attrs.href !== undefined
+            );
+            const url =
+              marks && marks.length > 0 ? marks[0].attrs.href : undefined;
+            if (url) {
+              const openUrl = () => {
+                if (url.startsWith('file')) {
+                  shell.openItem(url);
+                  return true;
+                }
+                window.open(url, '_blank');
+                return true;
+              };
+              if (event.which === 3) {
+                // Right click for context menu
+                const menu = React.createElement(
+                  Menu,
+                  {}, // empty props
+                  React.createElement(MenuItem, {
+                    onClick: openUrl,
+                    text: 'Open'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      clipboard.writeText(url);
+                    },
+                    text: 'Copy to clipboard'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      view.dispatch(
+                        view.state.tr.removeMark(
+                          nodePos,
+                          node.nodeSize,
+                          schema.marks.link
+                        )
+                      );
+                    },
+                    text: 'Remove'
+                  })
+                );
+
+                // mouse position is available on event
+                ContextMenu.show(
+                  menu,
+                  { left: event.clientX, top: event.clientY },
+                  () => {
+                    // menu was closed; callback optional
+                  },
+                  true
+                );
+                return true;
+              }
+              if (isCTRL) {
+                return openUrl();
+              }
+            }
+          }
+          return isCTRL;
+        }
+      }
+    });
+    plugins.unshift(clickMousePlugin);
 
     this.view = new EditorView(null, {
       state: EditorState.create({
@@ -229,7 +305,7 @@ Still | renders | nicely
           ) {
             // Start @ card link suggestion
             onChange(state.doc, this.saveChanges);
-            this.updateDoc(state.doc);
+            this.updateDoc();
             const isSuggestion = this.isTextSuggestion(transaction, '@');
             if (isSuggestion) {
               this.requestSuggestionPhase1(selection.from);
@@ -241,7 +317,7 @@ Still | renders | nicely
           ) {
             // Start @ card link suggestion
             onChange(state.doc, this.saveChanges);
-            this.updateDoc(state.doc);
+            this.updateDoc();
             const isSuggestion = this.isTextSuggestion(transaction, '/');
             if (isSuggestion) {
               filteredSuggestions = this.requestCommandSuggestion(
@@ -285,13 +361,13 @@ Still | renders | nicely
                 .slice(0, MAX_SUGGESTIONS);
             }
             onChange(state.doc, this.saveChanges);
-            this.updateDoc(state.doc);
+            this.updateDoc();
             if (backToPhase1) {
               this.requestSuggestionPhase1(suggestionPos);
             }
           } else {
             onChange(state.doc, this.saveChanges);
-            this.updateDoc(state.doc);
+            this.updateDoc();
           }
 
           if (!this.saveChanges) {
@@ -440,8 +516,7 @@ Still | renders | nicely
     return where;
   }
 
-  updateDoc(doc) {
-    // this.forceUpdate();
+  updateDoc() {
     // eslint-disable-next-line react/no-access-state-in-setstate
     this.setState({ state: this.state });
   }
@@ -609,40 +684,16 @@ Still | renders | nicely
   }
 
   render() {
-    console.log('render');
     const { onRemoveCard } = this.props;
     const { state } = this.view;
     const { filteredSuggestions, suggestionPos, suggestionIndex } = this.state;
-    // TODO: improve performance?
-    const { from } = state.selection;
-    const linkElement = this.view.domAtPos(from).node.parentElement;
-    const url = linkElement.href;
-
-    /**
-    const searchText = 'ahoj';
-    console.log(this.view.docView);
-    const paragraphs = this.view.docView.contentDOM.getElementsByTagName('p');
-    if (paragraphs) {
-      for (let i = 0; i < paragraphs.length; i += 1) {
-        const p = paragraphs[i];
-        console.log(p);
-        if (
-          p.innerText.includes(searchText) &&
-          !p.classList.contains('searchLine')
-        ) {
-          // eslint-disable-next-line no-param-reassign
-          p.classList.add('searchLine');
-        }
-      }
-    } */
 
     const isSuggestion = suggestionPos >= 0;
     let position;
-    if (url || isSuggestion) {
-      position = this.view.coordsAtPos(from);
-    }
     let textProperty;
     if (isSuggestion) {
+      const { from } = state.selection;
+      position = this.view.coordsAtPos(from);
       textProperty = this.getSuggestionProperty();
     }
 
@@ -657,7 +708,6 @@ Still | renders | nicely
           onAddLink={this.onAddLink}
           onAddImage={this.onAddImage}
         />
-        {url && <LinkPopup url={url} view={this.view} position={position} />}
         {isSuggestion && (
           <SuggestionsPopup
             suggestions={filteredSuggestions}

@@ -513,7 +513,7 @@ class Home extends Component {
       const doc = parseMarkdown('');
       cards.push({ doc, title: 'Edit Title...' });
       this.autoSave();
-      this.setState({ boardData });
+      this.boardRef.forceUpdate();
 
       // This part very much depends on Board component structure!
       setTimeout(() => {
@@ -538,7 +538,6 @@ class Home extends Component {
       }
     }
     cards.splice(to, 0, cards.splice(from, 1)[0]);
-    this.setState({ boardData });
     this.autoSave();
   }
 
@@ -548,7 +547,6 @@ class Home extends Component {
     boardData.cards.splice(cardIndex, 1);
     const boardMeta = workspace.boards[boardId];
     boardMeta.modified = Date.now();
-    this.setState({ boardData });
     this.autoSave();
 
     const cardContent = serializeMarkdown(card.doc);
@@ -560,7 +558,6 @@ class Home extends Component {
     const { boardData } = this.state;
     boardData.cards[cardId].title = newTitle;
     this.autoSave();
-    this.setState({ boardData });
   }
 
   editCard(cardId, doc, saveChanges) {
@@ -585,7 +582,7 @@ class Home extends Component {
     const { boardData } = this.state;
     boardData.cards.splice(cardId, 1);
     this.autoSave();
-    this.setState({ boardData });
+    this.boardRef.forceUpdate();
   }
 
   deleteBoard() {
@@ -682,7 +679,7 @@ class Home extends Component {
           boardData: spoolingBoardData,
           cardIndex
         };
-        this.setState({ boardData });
+        this.boardRef.forceUpdate();
       }
     } else if (this.spoolingBoardDataResolve) {
       // Pass spooling board to the editor
@@ -727,7 +724,7 @@ class Home extends Component {
     const { boardData } = this.state;
     this.autoSaveSpooling(spoolingCardIndex, true);
     boardData.cards[spoolingCardIndex].spooling = undefined;
-    this.setState({ boardData });
+    this.boardRef.forceUpdate();
   }
 
   searchText(newSearchText) {
@@ -766,17 +763,18 @@ class Home extends Component {
       this.saveBoard(spoolingBoardData);
       spoolingBoardData.status = 'All changes saved';
     } else if (!immediatelyWhenNeeded) {
-      spoolingBoardData.status = 'Saving...';
       spoolingTimer = setTimeout(() => {
         this.saveBoard(spoolingBoardData);
         spoolingBoardData.status = 'All changes saved';
         boardData.cards[
           spoolingCardIndex
         ].spooling.boardData = spoolingBoardData;
-        this.setState({ boardData });
       }, 1000);
+      if (spoolingBoardData.status !== 'Saving...') {
+        spoolingBoardData.status = 'Saving...';
+      }
     }
-    this.setState({ boardData, spoolingTimer });
+    this.setState({ spoolingTimer });
   }
 
   storeConfiguration() {

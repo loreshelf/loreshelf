@@ -158,6 +158,9 @@ const Card: React.FC<CardProps> = forwardRef(
       }
     }));
 
+    const [, updateState] = React.useState();
+    const forceUpdate = React.useCallback(() => updateState({}), []);
+
     return (
       <>
         <div
@@ -232,7 +235,11 @@ const Card: React.FC<CardProps> = forwardRef(
                   }, 100);
                 }}
                 value={card.title}
-                onChange={e => onEditTitle(index, e)}
+                onChange={e => {
+                  card.title = e;
+                  onEditTitle(index, e);
+                  forceUpdate();
+                }}
                 style={{ width: '100%' }}
               />
             </h1>

@@ -15,8 +15,6 @@ export default class MenuBuilder {
       process.env.NODE_ENV === 'development' ||
       process.env.DEBUG_PROD === 'true'
     ) {
-      this.setupDevelopmentEnvironment();
-
       const template = this.buildDevTemplate();
       const menu = Menu.buildFromTemplate(template);
       Menu.setApplicationMenu(menu);
@@ -24,21 +22,6 @@ export default class MenuBuilder {
     }
     Menu.setApplicationMenu(null);
     return null;
-  }
-
-  setupDevelopmentEnvironment() {
-    this.mainWindow.webContents.on('context-menu', (_, props) => {
-      const { x, y } = props;
-
-      Menu.buildFromTemplate([
-        {
-          label: 'Inspect element',
-          click: () => {
-            this.mainWindow.webContents.inspectElement(x, y);
-          }
-        }
-      ]).popup({ window: this.mainWindow });
-    });
   }
 
   buildDevTemplate() {

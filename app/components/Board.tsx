@@ -11,15 +11,26 @@ class Board extends Component {
 
     this.boardRef = React.createRef();
     this.state = { dividerIndex: -1, dividerLeft: false };
+    const { boardData } = this.props;
+    this.numCards = boardData ? boardData.cards.length : 0;
     this.addCardRef = this.addCardRef.bind(this);
     this.updateDivider = this.updateDivider.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
     const { boardData } = this.props;
+    if (this.state !== nextState) {
+      return true;
+    }
     if (boardData !== nextProps.boardData) {
       return true;
     }
+    /** if (boardData) {
+      if (boardData.cards.length !== this.numCards) {
+        this.numCards = boardData.cards.length;
+        return true;
+      }
+    } */
     return false;
   }
 

@@ -11,9 +11,7 @@ import {
   MenuDivider,
   Intent,
   Dialog,
-  Icon,
-  Popover,
-  Position
+  Icon
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -50,9 +48,12 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardName, boardStatus, searchText } = this.props;
+    const { boardName, boardStatus, searchText, homeBoard } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
+      return true;
+    }
+    if (this.state !== nextState) {
       return true;
     }
     if (boardName !== nextProps.boardName) {
@@ -62,6 +63,9 @@ class Menu extends Component {
       return true;
     }
     if (searchText !== nextProps.searchText) {
+      return true;
+    }
+    if (homeBoard !== nextProps.homeBoard) {
       return true;
     }
     return false;
