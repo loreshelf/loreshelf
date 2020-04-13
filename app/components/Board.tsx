@@ -15,6 +15,14 @@ class Board extends Component {
     this.updateDivider = this.updateDivider.bind(this);
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    const { boardData } = this.props;
+    if (boardData !== nextProps.boardData) {
+      return true;
+    }
+    return false;
+  }
+
   updateDivider(newIndex, left) {
     this.setState({ dividerIndex: newIndex, dividerLeft: left });
   }

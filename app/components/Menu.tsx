@@ -49,6 +49,24 @@ class Menu extends Component {
     this.handleNameChange = this.handleNameChange.bind(this);
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    const { boardName, boardStatus, searchText } = this.props;
+    if (this.shouldUpdate) {
+      this.shouldUpdate = false;
+      return true;
+    }
+    if (boardName !== nextProps.boardName) {
+      return true;
+    }
+    if (boardStatus !== nextProps.boardStatus) {
+      return true;
+    }
+    if (searchText !== nextProps.searchText) {
+      return true;
+    }
+    return false;
+  }
+
   newBoardOpen() {
     this.setState({
       newBoardOpen: true,
@@ -93,7 +111,8 @@ class Menu extends Component {
     const {
       knownWorkspaces,
       workspace,
-      boardData,
+      boardName,
+      boardStatus,
       onNewBoard,
       onDuplicateBoard,
       onSelectBoard,
@@ -123,9 +142,6 @@ class Menu extends Component {
       workspace && workspace.name ? workspace.name : '(No selection)';
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
-    const selectedBoardName =
-      boardData && boardData.name ? boardData.name : 'No notebooks';
-    const boardStatus = boardData && boardData.status ? boardData.status : '';
     const boards = workspace && workspace.boards ? workspace.boards : [];
 
     let dialogTitle;
@@ -165,7 +181,7 @@ class Menu extends Component {
                 minWidth: '75px'
               }}
             />
-            {homeBoard && homeBoard.endsWith(`${selectedBoardName}.md`) && (
+            {homeBoard && homeBoard.endsWith(`${boardName}.md`) && (
               <div
                 style={{
                   position: 'absolute',
@@ -293,9 +309,9 @@ class Menu extends Component {
                 );
               }}
             >
-              {selectedBoardName}
+              {boardName}
             </Button>
-            {boardData && (
+            {boardName && (
               <div
                 style={{
                   fontSize: 'small',
@@ -331,6 +347,7 @@ class Menu extends Component {
                 itemRenderer={renderSort}
                 filterable={false}
                 onItemSelect={selectedSort => {
+                  this.shouldUpdate = true;
                   onSortSelect(
                     selectedSort.name,
                     selectedSort.asc,
@@ -408,8 +425,8 @@ class Menu extends Component {
                   return (
                     <BoardItem
                       // eslint-disable-next-line react/no-array-index-key
-                      key={id}
-                      disabled={boardMeta.name === selectedBoardName}
+                      key={boardMeta.path}
+                      disabled={boardMeta.name === boardName}
                       onClick={() => onSelectBoard(id)}
                       moveCard={cardIndex => onMoveCardToBoard(cardIndex, id)}
                     >

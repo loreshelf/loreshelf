@@ -408,7 +408,7 @@ class Home extends Component {
       name: this.boardPathToName(newBoardPath)
     });
     workspace.boards.sort((a, b) => {
-      return SORTING_METHODS[sortBy](a, b, sortBy.asc);
+      return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
     const newBoardMetaIndex = workspace.boards.findIndex(board => {
       return board.path === newBoardPath;
@@ -579,7 +579,6 @@ class Home extends Component {
         this.autoSave();
       }
     }
-    this.setState({ boardData });
   }
 
   removeCard(cardId) {
@@ -751,7 +750,7 @@ class Home extends Component {
         this.saveBoard(); // save board 3s after the last change
       }, 3000);
     }
-    this.setState({ boardData, saveTimer });
+    this.setState({ saveTimer });
   }
 
   autoSaveSpooling(spoolingCardIndex, immediatelyWhenNeeded?) {
@@ -815,6 +814,10 @@ class Home extends Component {
         Create Notebook
       </Button>
     );
+
+    const boardName =
+      boardData && boardData.name ? boardData.name : 'No notebooks';
+    const boardStatus = boardData && boardData.status ? boardData.status : '';
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -825,9 +828,10 @@ class Home extends Component {
             <Menu
               key="menu"
               ref={menuRef}
+              boardName={boardName}
+              boardStatus={boardStatus}
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}
-              boardData={boardData}
               homeBoard={homeBoard}
               sortBy={sortBy}
               searchText={searchText}

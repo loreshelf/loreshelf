@@ -8,7 +8,8 @@ import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
-import { goToNextCell } from 'prosemirror-tables';
+import { redo, undo } from 'prosemirror-history';
+import { ipcRenderer } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
 import LinkPopup from './LinkPopup';
@@ -106,6 +107,7 @@ Still | renders | nicely
     );
     console.log(a); */
 
+    console.log('ahoj');
     this.editorRef = React.createRef();
     const { attributes, nodeViews, doc, onStartSpooling } = this.props;
     this.saveChanges = true;
@@ -227,6 +229,7 @@ Still | renders | nicely
           ) {
             // Start @ card link suggestion
             onChange(state.doc, this.saveChanges);
+            this.updateDoc(state.doc);
             const isSuggestion = this.isTextSuggestion(transaction, '@');
             if (isSuggestion) {
               this.requestSuggestionPhase1(selection.from);
@@ -238,6 +241,7 @@ Still | renders | nicely
           ) {
             // Start @ card link suggestion
             onChange(state.doc, this.saveChanges);
+            this.updateDoc(state.doc);
             const isSuggestion = this.isTextSuggestion(transaction, '/');
             if (isSuggestion) {
               filteredSuggestions = this.requestCommandSuggestion(
@@ -281,11 +285,13 @@ Still | renders | nicely
                 .slice(0, MAX_SUGGESTIONS);
             }
             onChange(state.doc, this.saveChanges);
+            this.updateDoc(state.doc);
             if (backToPhase1) {
               this.requestSuggestionPhase1(suggestionPos);
             }
           } else {
             onChange(state.doc, this.saveChanges);
+            this.updateDoc(state.doc);
           }
 
           if (!this.saveChanges) {
@@ -324,6 +330,11 @@ Still | renders | nicely
     });
 
     this.selectSuggestion = this.selectSuggestion.bind(this);
+    this.onUndo = this.onUndo.bind(this);
+    this.onRedo = this.onRedo.bind(this);
+    this.onAddLink = this.onAddLink.bind(this);
+    this.onAddImage = this.onAddImage.bind(this);
+    this.updateDoc = this.updateDoc.bind(this);
   }
 
   componentDidMount() {
@@ -340,15 +351,61 @@ Still | renders | nicely
 
   componentDidUpdate() {
     const { doc } = this.props;
-    if (this.view.state.doc !== doc) {
+    if (this.originalDoc !== doc) {
       this.view.updateState(
         EditorState.create({
           doc,
           plugins
         })
       );
-      this.forceUpdate();
+      this.originalDoc = doc;
     }
+  }
+
+  onUndo() {
+    const { state, dispatch } = this.view;
+    undo(state, dispatch);
+  }
+
+  onRedo() {
+    const { state, dispatch } = this.view;
+    redo(state, dispatch);
+  }
+
+  onAddLink() {
+    setTimeout(() => {
+      const { state, dispatch } = this.view;
+      const baseURI = document.getElementById('baseURI');
+      const filePath = ipcRenderer.sendSync('file-link', baseURI.href);
+      if (filePath) {
+        const label = 'Local file';
+        const cursorPos = state.selection.from;
+        let tr = state.tr.insertText(label);
+        tr = tr.addMark(
+          cursorPos,
+          cursorPos + label.length + 1,
+          schema.marks.link.create({ href: filePath })
+        );
+        dispatch(tr);
+      }
+    }, 200);
+  }
+
+  onAddImage() {
+    setTimeout(() => {
+      const { state, dispatch } = this.view;
+      const baseURI = document.getElementById('baseURI');
+      const filePath = ipcRenderer.sendSync('file-link', baseURI.href);
+      if (filePath) {
+        const insert = schema.nodes.image.create({
+          src: filePath,
+          title: filePath,
+          alt: filePath
+        });
+        const tr = state.tr.replaceSelectionWith(insert);
+        dispatch(tr);
+      }
+    }, 200);
   }
 
   get content() {
@@ -381,6 +438,12 @@ Still | renders | nicely
       }
     }
     return where;
+  }
+
+  updateDoc(doc) {
+    // this.forceUpdate();
+    // eslint-disable-next-line react/no-access-state-in-setstate
+    this.setState({ state: this.state });
   }
 
   isTextSuggestion(transaction, suggestionChar) {
@@ -546,6 +609,7 @@ Still | renders | nicely
   }
 
   render() {
+    console.log('render');
     const { onRemoveCard } = this.props;
     const { state } = this.view;
     const { filteredSuggestions, suggestionPos, suggestionIndex } = this.state;
@@ -584,7 +648,15 @@ Still | renders | nicely
 
     return (
       <div ref={this.editorRef} className={style.editor}>
-        <MenuBar view={this.view} onRemoveCard={onRemoveCard} />
+        <MenuBar
+          undoDisabled={!undo(state)}
+          redoDisabled={!redo(state)}
+          onRemoveCard={onRemoveCard}
+          onUndo={this.onUndo}
+          onRedo={this.onRedo}
+          onAddLink={this.onAddLink}
+          onAddImage={this.onAddImage}
+        />
         {url && <LinkPopup url={url} view={this.view} position={position} />}
         {isSuggestion && (
           <SuggestionsPopup
