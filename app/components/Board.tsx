@@ -11,8 +11,8 @@ class Board extends Component {
 
     this.boardRef = React.createRef();
     this.state = { dividerIndex: -1, dividerLeft: false };
-    const { boardData } = this.props;
-    this.numCards = boardData ? boardData.cards.length : 0;
+    // const { boardData } = this.props;
+    // this.numCards = boardData ? boardData.cards.length : 0;
     this.addCardRef = this.addCardRef.bind(this);
     this.updateDivider = this.updateDivider.bind(this);
   }
@@ -90,7 +90,7 @@ class Board extends Component {
     const cards = cardData.map((c, id) => (
       <Card
         ref={this.addCardRef}
-        key={id}
+        key={`${c.title}-${id}`}
         card={c}
         index={id}
         dividerIndex={dividerIndex}

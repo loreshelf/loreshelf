@@ -38,9 +38,9 @@ p {
   margin-bottom: 8px;
 }
 
-.bp3-dark a,
-.bp3-dark a:hover {
-  color: #92f8e6;
+p a,
+p a:hover {
+  color: #92f8e6 !important;
   cursor: text;
 }
 
