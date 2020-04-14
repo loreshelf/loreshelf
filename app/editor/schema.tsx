@@ -24,7 +24,7 @@ export const schema = new Schema({
     },
 
     paragraph: {
-      attrs: { class: { default: '' } },
+      attrs: { class: { default: undefined } },
       content: 'inline*',
       group: 'block',
       parseDOM: [
@@ -60,7 +60,7 @@ export const schema = new Schema({
     },
 
     heading: {
-      attrs: { level: { default: 1 }, class: { default: '' } },
+      attrs: { level: { default: 1 }, class: { default: undefined } },
       content: 'inline*',
       group: 'block',
       defining: true,
@@ -102,7 +102,7 @@ export const schema = new Schema({
       attrs: {
         order: { default: 1 },
         tight: { default: false },
-        class: { default: '' }
+        class: { default: undefined }
       },
       parseDOM: [
         {
@@ -131,7 +131,7 @@ export const schema = new Schema({
     bullet_list: {
       content: 'list_item+',
       group: 'block',
-      attrs: { tight: { default: true }, class: { default: '' } },
+      attrs: { tight: { default: true }, class: { default: undefined } },
       parseDOM: [
         {
           tag: 'ul',

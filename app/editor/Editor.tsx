@@ -76,7 +76,6 @@ const COMMANDS = [
       const headerCells = [];
       const cells = [];
       const pros = schema.text('Pros');
-      console.log(pros);
       const cons = schema.text('Cons');
       cells.push(schema.nodes.table_cell.createAndFill());
       cells.push(schema.nodes.table_cell.createAndFill());
@@ -210,6 +209,13 @@ Still | renders | nicely
               const openUrl = () => {
                 if (url.startsWith('file')) {
                   shell.openItem(url);
+                  return true;
+                }
+                if (url.startsWith('@')) {
+                  const separatorIndex = url.lastIndexOf('/');
+                  const boardPath = decodeURI(url.substring(1, separatorIndex));
+                  const cardName = decodeURI(url.substring(separatorIndex + 1));
+                  onStartSpooling(boardPath, cardName);
                   return true;
                 }
                 window.open(url, '_blank');
@@ -380,20 +386,6 @@ Still | renders | nicely
           if (diff < 0 || diff > suggestionText.length + 1) {
             this.resetSuggestions();
           }
-        }
-
-        // Click on a card link to start spooling
-        const linkElement = this.view.domAtPos(currentCursor).node
-          .parentElement;
-        if (linkElement.classList.contains('cardLink')) {
-          const url = linkElement.href;
-          const separatorSpooling = url.lastIndexOf('@');
-          const separatorIndex = url.lastIndexOf('/');
-          const boardPath = decodeURI(
-            url.substring(separatorSpooling + 1, separatorIndex)
-          );
-          const cardName = decodeURI(url.substring(separatorIndex + 1));
-          onStartSpooling(boardPath, cardName);
         }
 
         this.setState({

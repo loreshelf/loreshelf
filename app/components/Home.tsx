@@ -118,6 +118,19 @@ class Home extends Component {
     this.stopSpooling = this.stopSpooling.bind(this);
     this.selectSort = this.selectSort.bind(this);
     this.searchText = this.searchText.bind(this);
+
+    window.onkeydown = e => {
+      if (e.ctrlKey) {
+        document.body.className = 'ctrl';
+      } else if (document.body.className === 'ctrl') {
+        document.body.className = '';
+      }
+    };
+    window.onkeyup = e => {
+      if (document.body.className === 'ctrl') {
+        document.body.className = '';
+      }
+    };
   }
 
   componentDidMount() {

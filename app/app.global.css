@@ -41,6 +41,12 @@ p {
 .bp3-dark a,
 .bp3-dark a:hover {
   color: #92f8e6;
+  cursor: text;
+}
+
+.ctrl a:hover {
+  color: #92f8e6;
+  cursor: pointer;
 }
 
 .bp3-editable-text {
