@@ -207,6 +207,43 @@ ul.searchLine::before {
   content: ' \f3c5';
 }
 
+blockquote {
+  border-left: 1px solid #92f8e6;
+  font-style: italic;
+  line-height: 1.8em;
+  margin: 0;
+  padding: 0;
+  padding-left: 10px;
+  position: relative;
+}
+
+blockquote::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  background-color: #30404d;
+  height: 2em;
+  left: -4px;
+  width: 5px;
+  margin-top: -1em;
+}
+
+blockquote::after {
+  content: '\f10e';
+  position: absolute;
+  top: 50%;
+  color: #92f8e6;
+  font-family: 'Font Awesome\ 5 Free', sans-serif;
+  font-weight: 900;
+  font-size: 8px;
+  line-height: 1em;
+  left: -0.5em;
+  text-align: center;
+  text-indent: -2px;
+  width: 1em;
+  margin-top: -0.5em;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

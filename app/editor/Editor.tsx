@@ -4,12 +4,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import { Menu, MenuItem, ContextMenu } from '@blueprintjs/core';
-import {
-  EditorState,
-  Selection,
-  TextSelection,
-  Plugin
-} from 'prosemirror-state';
+import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
@@ -21,81 +16,9 @@ import MenuBar from './MenuBar';
 import plugins from './plugins';
 import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
+import COMMANDS from './SlashCommands';
 
 const MAX_SUGGESTIONS = 5;
-
-const isNotInline = state => {
-  return state.tr.selection.$cursor.parent.type !== schema.nodes.paragraph;
-};
-
-const COMMANDS = [
-  {
-    name: 'header',
-    disabled: isNotInline,
-    onSelect: (start, end, state, dispatch, cursor) => {
-      const insert = schema.nodes.heading.createAndFill({
-        level: 2,
-        class: 'property'
-      });
-      const tr = state.tr.replaceWith(start - 1, end + 1, insert);
-      tr.setSelection(Selection.near(tr.doc.resolve(cursor - 1)));
-      dispatch(tr);
-    }
-  },
-  {
-    name: 'today',
-    onSelect: (start, end, state, dispatch, cursor) => {
-      const options = {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      };
-      const today = new Date().toLocaleDateString(undefined, options);
-      const tr = state.tr.insertText(today, start, cursor);
-      tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
-      dispatch(tr);
-    }
-  },
-  {
-    name: 'now',
-    onSelect: (start, end, state, dispatch, cursor) => {
-      const options = {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      };
-      const today = new Date().toLocaleTimeString(undefined, options);
-      const tr = state.tr.insertText(today, start, cursor);
-      tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
-      dispatch(tr);
-    }
-  },
-  {
-    name: 'table',
-    onSelect: (start, end, state, dispatch, cursor) => {
-      const headerCells = [];
-      const cells = [];
-      const pros = schema.text('Pros');
-      const cons = schema.text('Cons');
-      cells.push(schema.nodes.table_cell.createAndFill());
-      cells.push(schema.nodes.table_cell.createAndFill());
-      headerCells.push(schema.nodes.table_header.createChecked(null, pros));
-      headerCells.push(schema.nodes.table_header.createChecked(null, cons));
-      const headerRows = schema.nodes.table_row.createChecked(
-        null,
-        headerCells
-      );
-      const rows = schema.nodes.table_row.createChecked(null, cells);
-      const thead = schema.nodes.table_head.createChecked(null, headerRows);
-      const tbody = schema.nodes.table_body.createChecked(null, rows);
-      const table = schema.nodes.table.createChecked(null, [thead, tbody]);
-      // dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
-      const tr = state.tr.replaceWith(start - 1, end + 1, table);
-      tr.setSelection(Selection.near(tr.doc.resolve(cursor)));
-      dispatch(tr);
-    }
-  }
-];
 
 class Editor extends React.Component {
   constructor(props) {
@@ -126,6 +49,8 @@ Still | renders | nicely
       suggestionIndex: 0,
       cursor: undefined
     };
+
+    // Keyboard plugin
 
     plugins.unshift(
       keymap({
@@ -193,6 +118,9 @@ Still | renders | nicely
         }
       })
     );
+
+    // Mouse plugin
+
     const clickMousePlugin = new Plugin({
       props: {
         handleClickOn(view, pos, node, nodePos, event) {
@@ -272,6 +200,8 @@ Still | renders | nicely
     });
     plugins.unshift(clickMousePlugin);
 
+    // Create view
+
     this.view = new EditorView(null, {
       state: EditorState.create({
         doc,
@@ -341,8 +271,9 @@ Still | renders | nicely
               node &&
               paragraph &&
               !paragraph.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
-
-            if (node) {
+            if (paragraph.charAt(1) === ' ') {
+              this.resetSuggestions();
+            } else if (node) {
               const where = this.getSuggestionCharacterPos(
                 paragraph,
                 cursor,
@@ -640,6 +571,7 @@ Still | renders | nicely
     } else {
       // slash command
       suggestion.onSelect(suggestionPos - 1, from, state, dispatch, from);
+      this.resetSuggestions();
     }
   }
 
