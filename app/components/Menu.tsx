@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import {
@@ -11,7 +12,8 @@ import {
   MenuDivider,
   Intent,
   Dialog,
-  Icon
+  Icon,
+  Label
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -36,7 +38,9 @@ class Menu extends Component {
       newBoardOpen: false,
       newBoardName: 'Notebook.md',
       newBoardType: NewBoardType.CREATE,
-      newBoardIntent: Intent.NONE
+      newBoardIntent: Intent.NONE,
+      licensePopupOpen: false,
+      licenseActivatePopupOpen: false
     };
 
     this.searchInputRef = React.createRef();
@@ -45,6 +49,8 @@ class Menu extends Component {
     this.duplicateBoardOpen = this.duplicateBoardOpen.bind(this);
     this.newBoardClose = this.newBoardClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
+    this.licensePopupOpen = this.licensePopupOpen.bind(this);
+    this.licensePopupClose = this.licensePopupClose.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -79,6 +85,12 @@ class Menu extends Component {
     });
   }
 
+  licensePopupOpen() {
+    this.setState({
+      licensePopupOpen: true
+    });
+  }
+
   duplicateBoardOpen() {
     this.setState({
       newBoardOpen: true,
@@ -97,6 +109,10 @@ class Menu extends Component {
 
   newBoardClose() {
     this.setState({ newBoardOpen: false });
+  }
+
+  licensePopupClose() {
+    this.setState({ licensePopupOpen: false });
   }
 
   handleNameChange(event, workspacePath) {
@@ -133,13 +149,16 @@ class Menu extends Component {
       sortBy,
       onSortSelect,
       searchText,
-      onSearchText
+      onSearchText,
+      license
     } = this.props;
     const {
       newBoardOpen,
       newBoardName,
       newBoardIntent,
-      newBoardType
+      newBoardType,
+      licensePopupOpen,
+      licenseActivatePopupOpen
     } = this.state;
     const noResults = <MenuItem text="No matching workspaces found" />;
     const workspaceName =
@@ -160,6 +179,50 @@ class Menu extends Component {
     return (
       <div className={styles.menu}>
         <ButtonGroup vertical fill>
+          {license === 'PREMIUM' ? (
+            <Button
+              minimal
+              icon="crown"
+              style={{
+                textAlign: 'center',
+                cursor: 'default',
+                fontWeight: 'bolder',
+                backgroundColor: '#394b59',
+                boxShadow:
+                  '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
+              }}
+            >
+              PREMIUM
+            </Button>
+          ) : license === 'FREE' ? (
+            <Button
+              intent={Intent.WARNING}
+              icon="issue"
+              style={{
+                textAlign: 'center',
+                fontWeight: 'bolder',
+                boxShadow:
+                  '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
+              }}
+              onClick={this.licensePopupOpen}
+            >
+              FREE VERSION
+            </Button>
+          ) : (
+            <Button
+              minimal
+              style={{
+                textAlign: 'center',
+                cursor: 'default',
+                fontWeight: 'bolder',
+                backgroundColor: '#394b59',
+                boxShadow:
+                  '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
+              }}
+            >
+              CHECKING...
+            </Button>
+          )}
           <ButtonGroup
             style={{
               marginBottom: '12px',
@@ -190,7 +253,7 @@ class Menu extends Component {
                 style={{
                   position: 'absolute',
                   left: '18px',
-                  top: '35px',
+                  top: '65px',
                   width: '40px',
                   height: '3px',
                   background: '#92f8e6',
@@ -484,6 +547,81 @@ class Menu extends Component {
                 }}
               >
                 Confirm
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="git-repo"
+          onClose={this.licensePopupClose}
+          isOpen={licensePopupOpen}
+          title="Free version"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>
+              This is a free version of Jotspin for personal use. In order to
+              remove the popup and enable premium features, please consider
+              upgrading to the premium version.
+            </p>
+            <Button
+              onClick={() => {
+                this.setState({
+                  licensePopupOpen: false,
+                  licenseActivatePopupOpen: true
+                });
+              }}
+            >
+              Activate license
+            </Button>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.licensePopupClose}>Close</Button>
+              <Button
+                intent={Intent.PRIMARY}
+                onClick={() => {
+                  window.open('https://jotspin.com/pricing', '_blank');
+                }}
+              >
+                Buy online
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="key"
+          onClose={() => {
+            this.setState({ licenseActivatePopupOpen: false });
+          }}
+          isOpen={licenseActivatePopupOpen}
+          title="Activate License"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>
+              Fill in your email address which you used for the purchase and the
+              license key which you received in the welcome email.
+            </p>
+            <Label>
+              Email:
+              <InputGroup placeholder="Enter email" />
+            </Label>
+            <Label>
+              License Key:
+              <InputGroup placeholder="Enter the license key" />
+            </Label>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.licensePopupClose}>Close</Button>
+              <Button
+                intent={Intent.PRIMARY}
+                onClick={() => {
+                  window.open('https://jotspin.com/pricing', '_blank');
+                }}
+              >
+                Activate
               </Button>
             </div>
           </div>

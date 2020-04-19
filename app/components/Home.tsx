@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { ipcRenderer } from 'electron';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import Store from 'electron-store';
+import SHA3 from 'crypto-js/sha3';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -200,6 +201,10 @@ class Home extends Component {
       }
     );
 
+    ipcRenderer.on('deviceId-callback', (event, deviceId) => {
+      self.checkLicense(deviceId);
+    });
+
     document.addEventListener('keyup', e => {
       if (e.ctrlKey || e.metaKey) {
         // eslint-disable-next-line default-case
@@ -232,6 +237,7 @@ class Home extends Component {
       });
     }
     this.setState({ homeWorkspace, homeBoard });
+    ipcRenderer.send('deviceId');
   }
 
   getCurrentBoardMd(data?) {
@@ -248,6 +254,28 @@ class Home extends Component {
     CONFIG_STORE.set(CONFIG.HOMEBOARD, boardData.path);
     CONFIG_STORE.set(CONFIG.HOMEWORKSPACE, workspace.path);
     this.setState({ homeBoard: boardData.path, homeWorkspace: workspace.path });
+  }
+
+  checkLicense(deviceId) {
+    const SLV_STORE = new Store({
+      name: 'slv',
+      encryptionKey: deviceId
+    });
+    const email = SLV_STORE.get('email');
+    const licenseKey = SLV_STORE.get('licenseKey');
+    const hash = SHA3(`${email}-${licenseKey}+${deviceId}`);
+    const hashString = hash.toString();
+    const originalHash = SLV_STORE.get('hash');
+    if (hashString === originalHash) {
+      const license = 'PREMIUM';
+      this.setState({ license });
+    } else {
+      const license = 'FREE';
+      this.setState({ license });
+      setTimeout(() => {
+        this.menuRef.current.licensePopupOpen();
+      }, 2000);
+    }
   }
 
   updateWorkspace(workspacePath, knownWorkspaces, files, stats) {
@@ -806,7 +834,8 @@ class Home extends Component {
       boardData,
       homeBoard,
       sortBy,
-      searchText
+      searchText,
+      license
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -846,6 +875,7 @@ class Home extends Component {
               homeBoard={homeBoard}
               sortBy={sortBy}
               searchText={searchText}
+              license={license}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}

@@ -259,6 +259,7 @@
     "@hot-loader/react-dom": "^16.11.0",
     "connected-react-router": "^6.6.1",
     "core-js": "^3.6.4",
+    "crypto-js": "^4.0.0",
     "devtron": "^1.4.0",
     "electron-debug": "^3.0.1",
     "electron-log": "^4.0.6",
@@ -279,7 +280,8 @@
     "react-split-pane": "^0.1.89",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
-    "source-map-support": "^0.5.16"
+    "source-map-support": "^0.5.16",
+    "systeminformation": "^4.23.3"
   },
   "devEngines": {
     "node": ">=7.x",
