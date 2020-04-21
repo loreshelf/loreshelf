@@ -62,7 +62,13 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardName, boardStatus, searchText, homeBoard } = this.props;
+    const {
+      boardName,
+      boardStatus,
+      searchText,
+      homeBoard,
+      license
+    } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -71,6 +77,9 @@ class Menu extends Component {
       return true;
     }
     if (boardName !== nextProps.boardName) {
+      return true;
+    }
+    if (license !== nextProps.license) {
       return true;
     }
     if (boardStatus !== nextProps.boardStatus) {
