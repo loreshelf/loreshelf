@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { ipcRenderer } from 'electron';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import Store from 'electron-store';
-import SHA3 from 'crypto-js/sha3';
+import SHA512 from 'crypto-js/sha512';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -73,6 +73,7 @@ class Home extends Component {
     const knownWorkspaces = []; // [workspace1, workspace2]
 
     const homeBoard = undefined; // = boardPath
+    const deviceId = undefined;
 
     const sortBy = CONFIG_STORE.get(CONFIG.SORTBY, {
       method: 'NAME',
@@ -95,7 +96,8 @@ class Home extends Component {
       knownWorkspaces,
       homeBoard,
       sortBy,
-      searchText
+      searchText,
+      deviceId
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -119,6 +121,7 @@ class Home extends Component {
     this.stopSpooling = this.stopSpooling.bind(this);
     this.selectSort = this.selectSort.bind(this);
     this.searchText = this.searchText.bind(this);
+    this.licenseActivated = this.licenseActivated.bind(this);
 
     window.onkeydown = e => {
       if (e.ctrlKey) {
@@ -263,15 +266,15 @@ class Home extends Component {
     });
     const email = SLV_STORE.get('email');
     const licenseKey = SLV_STORE.get('licenseKey');
-    const hash = SHA3(`${email}-${licenseKey}+${deviceId}`);
+    const hash = SHA512(`${email}-${licenseKey}+${deviceId}`);
     const hashString = hash.toString();
     const originalHash = SLV_STORE.get('hash');
     if (hashString === originalHash) {
       const license = 'PREMIUM';
-      this.setState({ license });
+      this.setState({ license, deviceId });
     } else {
       const license = 'FREE';
-      this.setState({ license });
+      this.setState({ license, deviceId });
       setTimeout(() => {
         this.menuRef.current.licensePopupOpen();
       }, 2000);
@@ -773,6 +776,22 @@ class Home extends Component {
     this.setState({ searchText: newSearchText });
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  licenseActivated(email, licenseKey, deviceId, hash) {
+    const SLV_STORE = new Store({
+      name: 'slv',
+      encryptionKey: deviceId
+    });
+    const hashCheck = SHA512(`${email}-${licenseKey}+${deviceId}`);
+    const hashString = hashCheck.toString();
+    if (hashString === hash) {
+      SLV_STORE.set('email', email);
+      SLV_STORE.set('licenseKey', licenseKey);
+      SLV_STORE.set('hash', hash);
+    }
+    this.checkLicense(deviceId);
+  }
+
   autoSave(immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
@@ -835,7 +854,8 @@ class Home extends Component {
       homeBoard,
       sortBy,
       searchText,
-      license
+      license,
+      deviceId
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -876,6 +896,7 @@ class Home extends Component {
               sortBy={sortBy}
               searchText={searchText}
               license={license}
+              deviceId={deviceId}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
@@ -890,6 +911,7 @@ class Home extends Component {
               onSortSelect={this.selectSort}
               onNewCard={this.newCard}
               onSearchText={this.searchText}
+              onLicenseActivated={this.licenseActivated}
             />,
             boardData ? (
               <Board

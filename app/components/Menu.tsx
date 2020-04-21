@@ -40,7 +40,12 @@ class Menu extends Component {
       newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE,
       licensePopupOpen: false,
-      licenseActivatePopupOpen: false
+      licenseActivatePopupOpen: false,
+      licenseEmail: '',
+      licenseKey: '',
+      licenseEmailIntent: Intent.NONE,
+      licenseKeyIntent: Intent.NONE,
+      licenseActivatedOpen: false
     };
 
     this.searchInputRef = React.createRef();
@@ -51,6 +56,9 @@ class Menu extends Component {
     this.handleNameChange = this.handleNameChange.bind(this);
     this.licensePopupOpen = this.licensePopupOpen.bind(this);
     this.licensePopupClose = this.licensePopupClose.bind(this);
+    this.licenseActivatedClose = this.licenseActivatedClose.bind(this);
+    this.handleLicenseKeyChange = this.handleLicenseKeyChange.bind(this);
+    this.handleLicenseEmailChange = this.handleLicenseEmailChange.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -72,6 +80,22 @@ class Menu extends Component {
       return true;
     }
     if (homeBoard !== nextProps.homeBoard) {
+      return true;
+    }
+    return false;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  isValidEmail(email) {
+    if (/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+      return true;
+    }
+    return false;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  isValidLicenseKey(licenseKey) {
+    if (/^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(licenseKey)) {
       return true;
     }
     return false;
@@ -115,6 +139,10 @@ class Menu extends Component {
     this.setState({ licensePopupOpen: false });
   }
 
+  licenseActivatedClose() {
+    this.setState({ licenseActivatedOpen: false });
+  }
+
   handleNameChange(event, workspacePath) {
     // Check if board already exists
     const newBoardName = `${event.target.value}.md`;
@@ -125,6 +153,30 @@ class Menu extends Component {
       newBoardIntent = Intent.NONE;
     }
     this.setState({ newBoardName, newBoardIntent });
+  }
+
+  handleLicenseKeyChange(event) {
+    // Check if board already exists
+    const licenseKey = event.target.value;
+    let licenseKeyIntent;
+    if (!this.isValidLicenseKey(licenseKey)) {
+      licenseKeyIntent = Intent.DANGER;
+    } else {
+      licenseKeyIntent = Intent.NONE;
+    }
+    this.setState({ licenseKey, licenseKeyIntent });
+  }
+
+  handleLicenseEmailChange(event) {
+    // Check if board already exists
+    const licenseEmail = event.target.value;
+    let licenseEmailIntent;
+    if (!this.isValidEmail(licenseEmail)) {
+      licenseEmailIntent = Intent.DANGER;
+    } else {
+      licenseEmailIntent = Intent.NONE;
+    }
+    this.setState({ licenseEmail, licenseEmailIntent });
   }
 
   render() {
@@ -150,7 +202,9 @@ class Menu extends Component {
       onSortSelect,
       searchText,
       onSearchText,
-      license
+      license,
+      deviceId,
+      onLicenseActivated
     } = this.props;
     const {
       newBoardOpen,
@@ -158,7 +212,12 @@ class Menu extends Component {
       newBoardIntent,
       newBoardType,
       licensePopupOpen,
-      licenseActivatePopupOpen
+      licenseActivatePopupOpen,
+      licenseKey,
+      licenseKeyIntent,
+      licenseEmail,
+      licenseEmailIntent,
+      licenseActivatedOpen
     } = this.state;
     const noResults = <MenuItem text="No matching workspaces found" />;
     const workspaceName =
@@ -605,11 +664,19 @@ class Menu extends Component {
             </p>
             <Label>
               Email:
-              <InputGroup placeholder="Enter email" />
+              <InputGroup
+                placeholder="Enter your email"
+                intent={licenseEmailIntent}
+                onChange={this.handleLicenseEmailChange}
+              />
             </Label>
             <Label>
               License Key:
-              <InputGroup placeholder="Enter the license key" />
+              <InputGroup
+                placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+                intent={licenseKeyIntent}
+                onChange={this.handleLicenseKeyChange}
+              />
             </Label>
           </div>
           <div className={Classes.DIALOG_FOOTER}>
@@ -618,10 +685,65 @@ class Menu extends Component {
               <Button
                 intent={Intent.PRIMARY}
                 onClick={() => {
-                  window.open('https://jotspin.com/pricing', '_blank');
+                  // check inputs, email and licenseKey
+                  const valid =
+                    this.isValidEmail(licenseEmail) &&
+                    this.isValidLicenseKey(licenseKey);
+                  if (valid) {
+                    const requestOptions = {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: licenseEmail,
+                        licenseKey,
+                        deviceId
+                      })
+                    };
+                    // eslint-disable-next-line promise/catch-or-return
+                    fetch('http://localhost:4242/activate', requestOptions)
+                      .then(response => response.json())
+                      // eslint-disable-next-line promise/always-return
+                      .then(data => {
+                        const { hash } = data;
+                        onLicenseActivated(
+                          licenseEmail,
+                          licenseKey,
+                          deviceId,
+                          hash
+                        );
+                        this.setState({
+                          licenseActivatePopupOpen: false,
+                          licenseActivatedOpen: true
+                        });
+                      });
+                  }
                 }}
               >
                 Activate
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="crown"
+          onClose={this.licenseActivatedClose}
+          isOpen={licenseActivatedOpen}
+          title="Premium version"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>
+              Congratulations! You successfully activated your premium license.
+              The premium functions have been enabled. Use it well.
+            </p>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button
+                onClick={this.licenseActivatedClose}
+                intent={Intent.PRIMARY}
+              >
+                Close
               </Button>
             </div>
           </div>
