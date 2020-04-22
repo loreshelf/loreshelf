@@ -107,7 +107,7 @@ class Home extends Component {
     this.newBoard = this.newBoard.bind(this);
     this.duplicateBoard = this.duplicateBoard.bind(this);
     this.selectBoard = this.selectBoard.bind(this);
-    this.selectBoardWithPath = this.selectBoardWithPath.bind(this);
+    this.loadBoardWithPath = this.loadBoardWithPath.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.renameBoard = this.renameBoard.bind(this);
     this.openHomeBoard = this.openHomeBoard.bind(this);
@@ -343,10 +343,15 @@ class Home extends Component {
       });
       if (workspace.numBoards > 0) {
         if (!openBoardPath) {
-          this.selectBoard(0);
+          this.loadBoard(0);
         } else {
-          this.selectBoardWithPath(openBoardPath);
+          this.loadBoardWithPath(openBoardPath);
         }
+      } else {
+        this.setState({
+          boardData: undefined
+        });
+        this.menuRef.current.forceUpdate();
       }
     } else {
       this.setState({
@@ -357,9 +362,6 @@ class Home extends Component {
 
   addWorkspaceCallback(workspacePath, files, stats) {
     const { knownWorkspaces } = this.state;
-    this.setState({
-      boardData: undefined
-    });
     const workspace = this.updateWorkspace(
       workspacePath,
       knownWorkspaces,
@@ -372,7 +374,12 @@ class Home extends Component {
     });
     this.storeConfiguration();
     if (workspace.numBoards > 0) {
-      this.selectBoard(0);
+      this.loadBoard(boardIndex);
+    } else {
+      this.setState({
+        boardData: undefined
+      });
+      this.menuRef.current.forceUpdate();
     }
   }
 
@@ -422,6 +429,7 @@ class Home extends Component {
     this.setState({
       boardData
     });
+    this.menuRef.current.forceUpdate();
   }
 
   loadBoard(boardMetaIndex) {
@@ -458,7 +466,7 @@ class Home extends Component {
       return board.path === newBoardPath;
     });
     this.setState({ workspace });
-    this.selectBoard(newBoardMetaIndex);
+    this.loadBoard(newBoardMetaIndex);
   }
 
   duplicateBoard(newBoardName) {
@@ -472,13 +480,13 @@ class Home extends Component {
     this.loadBoard(boardMetaIndex);
   }
 
-  selectBoardWithPath(boardPath) {
+  loadBoardWithPath(boardPath) {
     const { workspace } = this.state;
     const boardIndex = workspace.boards.findIndex(board => {
       return board.path === boardPath;
     });
     if (boardIndex >= 0) {
-      this.selectBoard(boardIndex);
+      this.loadBoard(boardIndex);
     }
   }
 
@@ -513,6 +521,7 @@ class Home extends Component {
       this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
     }
     this.storeConfiguration();
+    this.menuRef.current.forceUpdate();
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -528,6 +537,7 @@ class Home extends Component {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
     this.setState({ boardData, workspace });
+    this.menuRef.current.forceUpdate();
   }
 
   saveBoard(backgroundBoardData?) {
@@ -662,7 +672,9 @@ class Home extends Component {
     this.setState({ workspace, knownWorkspaces, boardData: undefined });
     // select next board
     if (boardIndex >= 0) {
-      this.selectBoard(boardIndex);
+      this.loadBoard(boardIndex);
+    } else {
+      this.menuRef.current.forceUpdate();
     }
   }
 
@@ -689,6 +701,7 @@ class Home extends Component {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
     this.setState({ boardData, workspace });
+    this.menuRef.current.forceUpdate();
   }
 
   openHomeBoard() {
@@ -875,9 +888,8 @@ class Home extends Component {
       </Button>
     );
 
-    const boardName =
-      boardData && boardData.name ? boardData.name : 'No notebooks';
     const boardStatus = boardData && boardData.status ? boardData.status : '';
+
     return (
       <div
         className={`${styles.container} ${Classes.DARK}`}
@@ -888,7 +900,7 @@ class Home extends Component {
             <Menu
               key="menu"
               ref={menuRef}
-              boardName={boardName}
+              boardData={boardData}
               boardStatus={boardStatus}
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}

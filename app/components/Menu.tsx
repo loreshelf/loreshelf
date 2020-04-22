@@ -62,13 +62,7 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const {
-      boardName,
-      boardStatus,
-      searchText,
-      homeBoard,
-      license
-    } = this.props;
+    const { boardStatus, searchText, homeBoard, license } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -76,13 +70,10 @@ class Menu extends Component {
     if (this.state !== nextState) {
       return true;
     }
-    if (boardName !== nextProps.boardName) {
+    if (boardStatus !== nextProps.boardStatus) {
       return true;
     }
     if (license !== nextProps.license) {
-      return true;
-    }
-    if (boardStatus !== nextProps.boardStatus) {
       return true;
     }
     if (searchText !== nextProps.searchText) {
@@ -190,10 +181,10 @@ class Menu extends Component {
 
   render() {
     const {
+      boardData,
+      boardStatus,
       knownWorkspaces,
       workspace,
-      boardName,
-      boardStatus,
       onNewBoard,
       onDuplicateBoard,
       onSelectBoard,
@@ -234,6 +225,8 @@ class Menu extends Component {
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
     const boards = workspace && workspace.boards ? workspace.boards : [];
+    const boardName =
+      boardData && boardData.name ? boardData.name : 'No notebooks';
 
     let dialogTitle;
     if (newBoardType === NewBoardType.CREATE) {
