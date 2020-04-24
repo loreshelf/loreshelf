@@ -12,7 +12,9 @@ import {
   Elevation,
   Icon,
   EditableText,
-  Button
+  Button,
+  Tooltip,
+  Position
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
 import { ipcRenderer } from 'electron';
@@ -220,45 +222,48 @@ const Card: React.FC<CardProps> = forwardRef(
                   />
                 </div>
               )}
-              <EditableText
-                ref={titleRef}
-                maxLength={23}
-                placeholder="Edit title..."
-                alwaysRenderInput={!card.spooling}
-                disabled={card.spooling}
-                confirmOnEnterKey
-                onConfirm={() => {
-                  titleRef.current.inputElement.blur();
-                  // console.log(titleRef.current);
-                  setTimeout(() => {
-                    titleRef.current.inputElement.parentElement.parentElement.nextSibling.firstChild.focus();
-                  }, 100);
-                }}
-                value={card.title}
-                onChange={e => {
-                  card.title = e;
-                  onEditTitle(index, e);
-                  forceUpdate();
-                }}
-                style={{ width: '100%' }}
-              />
+              <Tooltip
+                content={card.title}
+                disabled={card.title.length <= 23}
+                position={Position.BOTTOM}
+                inheritDarkTheme
+              >
+                <EditableText
+                  ref={titleRef}
+                  placeholder="Edit title..."
+                  alwaysRenderInput={!card.spooling}
+                  disabled={card.spooling}
+                  confirmOnEnterKey
+                  onConfirm={() => {
+                    titleRef.current.inputElement.blur();
+                    setTimeout(() => {
+                      titleRef.current.inputElement.parentElement.parentElement.parentElement.parentElement.nextSibling.firstChild.focus();
+                    }, 100);
+                  }}
+                  value={card.title}
+                  onChange={e => {
+                    card.title = e;
+                    onEditTitle(index, e);
+                    forceUpdate();
+                  }}
+                />
+              </Tooltip>
+              {card.title.length > 23 && (
+                <div style={{ marginLeft: '3px' }}>...</div>
+              )}
             </h1>
             {card.spooling && (
               <div
                 style={{
-                  height: '30px',
+                  minHeight: '30px',
                   padding: '5px',
                   background: '#202b33',
-                  cursor: 'default'
+                  cursor: 'default',
+                  textIndent: '-20px',
+                  paddingLeft: '25px'
                 }}
                 title="Gateway status"
               >
-                <Icon
-                  icon="exchange"
-                  className={`${styles.spoolingStatus} ${spoolingActive}`}
-                />
-                <span />
-                {`@${cardData.title} from '${card.spooling.boardData.name}'`}
                 <Button
                   icon="cross"
                   minimal
@@ -271,11 +276,17 @@ const Card: React.FC<CardProps> = forwardRef(
                   }}
                   onClick={() => onStopSpooling(index)}
                 />
+                <Icon
+                  icon="exchange"
+                  className={`${styles.spoolingStatus} ${spoolingActive}`}
+                />
+                {`@${cardData.title} from '${card.spooling.boardData.name}'`}
               </div>
             )}
             <Editor
               ref={editorRef}
               doc={cardData.doc}
+              index={index}
               onChange={(doc, saveChanges) => {
                 onEditCard(index, doc, saveChanges);
               }}

@@ -115,7 +115,13 @@ const createWindow = async () => {
     const options = {
       title: 'Add and open a workspace',
       buttonLabel: 'Open workspace',
-      properties: ['openDirectory']
+      properties: [
+        'openDirectory',
+        'createDirectory',
+        'promptToCreate',
+        'treatPackageAsDirectory',
+        'dontAddToRecent'
+      ]
     };
     // eslint-disable-next-line promise/catch-or-return
     dialog.showOpenDialog(mainWindow, options).then(data => {

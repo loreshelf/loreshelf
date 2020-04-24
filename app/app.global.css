@@ -50,11 +50,17 @@ p a:hover {
 }
 
 .bp3-editable-text {
-  width: 100%;
+  width: 170px;
+  overflow: hidden;
+}
+
+.bp3-editable-text-content {
+  text-overflow: clip;
 }
 
 .bp3-editable-text-input {
-  width: 100% !important;
+  width: 170px;
+  overflow: hidden;
 }
 
 #root {

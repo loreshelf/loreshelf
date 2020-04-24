@@ -121,6 +121,7 @@ Still | renders | nicely
 
     // Mouse plugin
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const clickMousePlugin = new Plugin({
       props: {
         handleClickOn(view, pos, node, nodePos, event) {
@@ -143,7 +144,7 @@ Still | renders | nicely
                   const separatorIndex = url.lastIndexOf('/');
                   const boardPath = decodeURI(url.substring(1, separatorIndex));
                   const cardName = decodeURI(url.substring(separatorIndex + 1));
-                  onStartSpooling(boardPath, cardName);
+                  view.onStartSpooling(boardPath, cardName);
                   return true;
                 }
                 window.open(url, '_blank');
@@ -328,6 +329,8 @@ Still | renders | nicely
       nodeViews
     });
 
+    this.view.onStartSpooling = onStartSpooling;
+
     this.selectSuggestion = this.selectSuggestion.bind(this);
     this.onUndo = this.onUndo.bind(this);
     this.onRedo = this.onRedo.bind(this);
@@ -349,7 +352,7 @@ Still | renders | nicely
   }
 
   componentDidUpdate() {
-    const { doc } = this.props;
+    const { doc, onStartSpooling } = this.props;
     if (this.originalDoc !== doc) {
       this.view.updateState(
         EditorState.create({
@@ -357,6 +360,7 @@ Still | renders | nicely
           plugins
         })
       );
+      this.view.onStartSpooling = onStartSpooling;
       this.originalDoc = doc;
     }
   }

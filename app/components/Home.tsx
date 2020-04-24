@@ -217,11 +217,11 @@ class Home extends Component {
             e.preventDefault();
             this.autoSave(true);
             break;
+          case 't':
+            e.preventDefault();
+            this.newCard();
+            break;
         }
-      }
-      if (e.code === 'Insert') {
-        e.preventDefault();
-        this.newCard();
       }
     });
     const workspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
@@ -374,7 +374,7 @@ class Home extends Component {
     });
     this.storeConfiguration();
     if (workspace.numBoards > 0) {
-      this.loadBoard(boardIndex);
+      this.loadBoard(0);
     } else {
       this.setState({
         boardData: undefined
@@ -574,7 +574,8 @@ class Home extends Component {
         this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
         const n = this.boardRef.boardRef.current.childNodes;
         const title =
-          n[n.length - 1].firstChild.firstChild.lastChild.firstElementChild;
+          n[n.length - 1].firstChild.firstChild.lastChild.firstChild.firstChild
+            .firstElementChild;
         title.focus();
         title.select();
       }, 100);
@@ -808,25 +809,31 @@ class Home extends Component {
   autoSave(immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
-    const shouldSave = immediatelyWhenNeeded && saveTimer;
+    const shouldSave =
+      immediatelyWhenNeeded !== undefined &&
+      immediatelyWhenNeeded &&
+      saveTimer !== undefined;
     if (saveTimer) {
       clearTimeout(saveTimer);
     }
     if (shouldSave) {
-      this.saveBoard();
+      this.saveBoard(boardData);
     } else if (!immediatelyWhenNeeded) {
       boardData.status = 'Saving...';
       saveTimer = setTimeout(() => {
         this.saveBoard(); // save board 3s after the last change
       }, 3000);
+      this.setState({ saveTimer });
     }
-    this.setState({ saveTimer });
   }
 
   autoSaveSpooling(spoolingCardIndex, immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { spoolingTimer } = this.state;
-    const shouldSave = immediatelyWhenNeeded && spoolingTimer;
+    const shouldSave =
+      immediatelyWhenNeeded !== undefined &&
+      immediatelyWhenNeeded &&
+      spoolingTimer !== undefined;
     if (spoolingTimer) {
       clearTimeout(spoolingTimer);
     }
@@ -835,6 +842,7 @@ class Home extends Component {
     if (shouldSave) {
       this.saveBoard(spoolingBoardData);
       spoolingBoardData.status = 'All changes saved';
+      this.setState({ spoolingTimer: undefined });
     } else if (!immediatelyWhenNeeded) {
       spoolingTimer = setTimeout(() => {
         this.saveBoard(spoolingBoardData);
@@ -846,8 +854,8 @@ class Home extends Component {
       if (spoolingBoardData.status !== 'Saving...') {
         spoolingBoardData.status = 'Saving...';
       }
+      this.setState({ spoolingTimer });
     }
-    this.setState({ spoolingTimer });
   }
 
   storeConfiguration() {

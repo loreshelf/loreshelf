@@ -87,32 +87,31 @@ class Board extends Component {
         this.updateDivider(index, left);
       }
     };
-    const cards = cardData.map((c, id) => (
-      <Card
-        ref={this.addCardRef}
-        key={`${c.title}-${id}`}
-        card={c}
-        index={id}
-        dividerIndex={dividerIndex}
-        dividerLeft={dividerLeft}
-        resetDivider={() => {
-          this.setState({ dividerIndex: -1 });
-        }}
-        moveCard={moveCard}
-        hoverDivider={hoverDivider}
-        onEditCard={onEditCard}
-        onRemoveCard={onRemoveCard}
-        onEditTitle={onEditTitle}
-        onRequestBoardsAsync={onRequestBoardsAsync}
-        onRequestBoardDataAsync={onRequestBoardDataAsync}
-        onStopSpooling={onStopSpooling}
-      />
-    ));
     return (
       <div className={styles.board} ref={this.boardRef}>
         {cardData.length > 0 ? (
           <>
-            {cards}
+            {cardData.map((c, id) => (
+              <Card
+                ref={this.addCardRef}
+                key={`${c.title}-${cardData.indexOf(c)}`}
+                card={c}
+                index={cardData.indexOf(c)}
+                dividerIndex={dividerIndex}
+                dividerLeft={dividerLeft}
+                resetDivider={() => {
+                  this.setState({ dividerIndex: -1 });
+                }}
+                moveCard={moveCard}
+                hoverDivider={hoverDivider}
+                onEditCard={onEditCard}
+                onRemoveCard={onRemoveCard}
+                onEditTitle={onEditTitle}
+                onRequestBoardsAsync={onRequestBoardsAsync}
+                onRequestBoardDataAsync={onRequestBoardDataAsync}
+                onStopSpooling={onStopSpooling}
+              />
+            ))}
             {cardData.length === dividerIndex && (
               <div
                 style={{
