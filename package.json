@@ -61,6 +61,13 @@
       "main.prod.js.map",
       "package.json"
     ],
+    "fileAssociations": [
+      {
+        "ext": ["md"],
+        "name": "Markdown file",
+        "role": "Editor"
+      }
+    ],
     "dmg": {
       "contents": [
         {
@@ -76,10 +83,14 @@
       ]
     },
     "win": {
+      "icon": "icon.png",
       "target": [
-        "nsis",
-        "msi"
+        "nsis"
       ]
+    },
+    "nsis":{
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "linux": {
       "icon": "icon.icns",

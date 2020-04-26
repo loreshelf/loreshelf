@@ -4,6 +4,7 @@
 /* eslint-disable react/prop-types */
 import React from 'react';
 import { Menu, MenuItem, ContextMenu } from '@blueprintjs/core';
+import path from 'path';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
@@ -136,12 +137,13 @@ Still | renders | nicely
               marks && marks.length > 0 ? marks[0].attrs.href : undefined;
             if (url) {
               const openUrl = () => {
-                if (url.startsWith('file')) {
-                  shell.openItem(url);
+                if (url.startsWith('file') || url.startsWith('.')) {
+                  const baseURI = document.getElementById('baseURI');
+                  shell.openItem(path.normalize(path.join(baseURI.href, url)));
                   return true;
                 }
                 if (url.startsWith('@')) {
-                  const separatorIndex = url.lastIndexOf('/');
+                  const separatorIndex = url.lastIndexOf(path.sep);
                   const boardPath = decodeURI(url.substring(1, separatorIndex));
                   const cardName = decodeURI(url.substring(separatorIndex + 1));
                   view.onStartSpooling(boardPath, cardName);
@@ -161,7 +163,18 @@ Still | renders | nicely
                   }),
                   React.createElement(MenuItem, {
                     onClick: () => {
-                      clipboard.writeText(url);
+                      const baseURI = document.getElementById('baseURI');
+                      console.log(baseURI.href);
+                      console.log(decodeURI(url));
+                      console.log(
+                        path.normalize(decodeURI(path.join(baseURI.href, url)))
+                      );
+                      console.log(
+                        path.normalize(path.join(baseURI.href, decodeURI(url)))
+                      );
+                      clipboard.writeText(
+                        path.normalize(path.join(baseURI.href, url))
+                      );
                     },
                     text: 'Copy to clipboard'
                   }),
@@ -379,9 +392,12 @@ Still | renders | nicely
     setTimeout(() => {
       const { state, dispatch } = this.view;
       const baseURI = document.getElementById('baseURI');
-      const filePath = ipcRenderer.sendSync('file-link', baseURI.href);
+      const filePath = path.normalize(
+        ipcRenderer.sendSync('file-link', baseURI.href)
+      );
       if (filePath) {
         const label = 'Local file';
+        console.log(filePath);
         const cursorPos = state.selection.from;
         let tr = state.tr.insertText(label);
         tr = tr.addMark(
@@ -398,8 +414,11 @@ Still | renders | nicely
     setTimeout(() => {
       const { state, dispatch } = this.view;
       const baseURI = document.getElementById('baseURI');
-      const filePath = ipcRenderer.sendSync('file-link', baseURI.href);
+      const filePath = path.normalize(
+        ipcRenderer.sendSync('file-link', baseURI.href)
+      );
       if (filePath) {
+        console.log(filePath);
         const insert = schema.nodes.image.create({
           src: filePath,
           title: filePath,

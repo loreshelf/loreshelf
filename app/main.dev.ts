@@ -244,6 +244,8 @@ const createWindow = async () => {
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
 
+  console.log(process.argv);
+
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   // new AppUpdater();
@@ -259,6 +261,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  console.log(filePath);
 });
 
 app.on('ready', createWindow);

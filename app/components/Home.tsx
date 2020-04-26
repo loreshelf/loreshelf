@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { ipcRenderer } from 'electron';
+import nodePath from 'path';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
@@ -276,7 +277,9 @@ class Home extends Component {
       const license = 'FREE';
       this.setState({ license, deviceId });
       setTimeout(() => {
-        this.menuRef.current.licensePopupOpen();
+        if (this.menuRef.current) {
+          this.menuRef.current.licensePopupOpen();
+        }
       }, 2000);
     }
   }
@@ -287,7 +290,7 @@ class Home extends Component {
     const boards = [];
     files.forEach((file, id) => {
       if (file.endsWith('.md')) {
-        const boardPath = `${workspacePath}/${file}`;
+        const boardPath = nodePath.join(workspacePath, file);
         boards.push({
           path: boardPath,
           name: this.boardPathToName(boardPath),
@@ -300,7 +303,9 @@ class Home extends Component {
       return workspacePath === w.path;
     });
     if (!workspace) {
-      const name = workspacePath.substring(workspacePath.lastIndexOf('/') + 1);
+      const name = workspacePath.substring(
+        workspacePath.lastIndexOf(nodePath.sep) + 1
+      );
       workspace = { selectedBoard: -1, name, path: workspacePath };
       knownWorkspaces.push(workspace);
     }
@@ -386,7 +391,7 @@ class Home extends Component {
   // eslint-disable-next-line class-methods-use-this
   boardPathToName(boardPath) {
     return boardPath.substring(
-      boardPath.lastIndexOf('/') + 1,
+      boardPath.lastIndexOf(nodePath.sep) + 1,
       boardPath.length - 3
     );
   }
@@ -422,9 +427,9 @@ class Home extends Component {
   loadBoardCallback(boardMeta, boardContent, stats) {
     const boardData = this.toBoardData(boardMeta, boardContent, stats);
     const baseURI = document.getElementById('baseURI');
-    baseURI.href = boardData.path.substring(
-      0,
-      boardData.path.lastIndexOf('/') + 1
+    baseURI.href = nodePath.join(
+      'file:///',
+      boardData.path.substring(0, boardData.path.lastIndexOf(nodePath.sep) + 1)
     );
     this.setState({
       boardData

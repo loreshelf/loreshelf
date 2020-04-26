@@ -31,7 +31,7 @@ const markdownParser = new MarkdownParser(
     image: {
       node: 'image',
       getAttrs: tok => ({
-        src: tok.attrGet('src'),
+        src: decodeURI(tok.attrGet('src')),
         title: (tok.children[0] && tok.children[0].content) || null,
         alt: (tok.children[0] && tok.children[0].content) || null
       })
@@ -43,8 +43,8 @@ const markdownParser = new MarkdownParser(
     link: {
       mark: 'link',
       getAttrs: tok => ({
-        href: tok.attrGet('href'),
-        title: tok.attrGet('href') || null
+        href: decodeURI(tok.attrGet('href')),
+        title: decodeURI(tok.attrGet('href')) || null
       })
     },
     code_inline: { mark: 'code' },
@@ -198,7 +198,7 @@ const markdownSerializer = new MarkdownSerializer(
       close(state, mark, parent, index) {
         return isPlainURL(mark, parent, index, -1)
           ? '>'
-          : `](${encodeURI(state.esc(mark.attrs.href))}${
+          : `](${encodeURI(mark.attrs.href)}${
               mark.attrs.title ? ` ${state.quote(mark.attrs.title)}` : ''
             })`;
       }
