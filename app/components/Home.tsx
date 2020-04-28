@@ -308,6 +308,15 @@ class Home extends Component {
       );
       workspace = { selectedBoard: -1, name, path: workspacePath };
       knownWorkspaces.push(workspace);
+      knownWorkspaces.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
     }
     workspace.numBoards = numBoards;
     boards.sort((a, b) => {

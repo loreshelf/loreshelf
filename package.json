@@ -1,8 +1,8 @@
 {
-  "name": "jotspin",
-  "productName": "Jotspin",
+  "name": "loreshelf",
+  "productName": "Loreshelf",
   "version": "1.0.0",
-  "description": "Jotspin is an application for taking and organizing crucial and often tangled information that should be quickly accessible. Navigate though your workspaces and operate on lifelong information stored in Markdown.",
+  "description": "Loreshelf is an application for taking and organizing crucial and often tangled information that should be quickly accessible. Navigate though your workspaces and operate on lifelong information stored in Markdown.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -51,8 +51,8 @@
     ]
   },
   "build": {
-    "productName": "Jotspin",
-    "appId": "com.jotspin",
+    "productName": "Loreshelf",
+    "appId": "com.loreshelf",
     "files": [
       "dist/",
       "node_modules/",
@@ -108,27 +108,27 @@
     "publish": {
       "provider": "github",
       "owner": "ibek",
-      "repo": "jotspin",
+      "repo": "loreshelf",
       "private": true
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ibek/jotspin.git"
+    "url": "git+https://github.com/ibek/loreshelf.git"
   },
   "author": {
     "name": "Ivo Bek",
     "email": "bekivo@gmail.com",
-    "url": "https://jotspin.com"
+    "url": "https://loreshelf.com"
   },
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ibek/jotspin.git/issues"
+    "url": "https://github.com/ibek/loreshelf.git/issues"
   },
   "keywords": [
     "markdown"
   ],
-  "homepage": "https://github.com/ibek/jotspin.git#readme",
+  "homepage": "https://github.com/ibek/loreshelf.git#readme",
   "jest": {
     "testURL": "http://localhost/",
     "moduleNameMapper": {

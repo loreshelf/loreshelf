@@ -1,6 +1,6 @@
-[![Jotspin](resources/fulllogo.png)](https://jotspin.com/)
+[![Loreshelf](resources/fulllogo.png)](https://loreshelf.com/)
 
-Jotspin is the supervised information-spinning application for the highest productivity in working with information.
+Loreshelf is the supervised information-spinning application for the highest productivity in working with information.
 
 <br>
 
@@ -9,13 +9,13 @@ Jotspin is the supervised information-spinning application for the highest produ
 First, clone the repo via git:
 
 ```bash
-git clone https://github.com/ibek/jotspin.git
+git clone https://github.com/ibek/loreshelf.git
 ```
 
 And then install the dependencies with yarn.
 
 ```bash
-$ cd jotspin
+$ cd loreshelf
 $ yarn
 ```
 

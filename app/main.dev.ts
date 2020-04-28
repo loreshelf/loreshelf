@@ -60,7 +60,7 @@ const createWindow = async () => {
   }
 
   mainWindow = new BrowserWindow({
-    title: 'Jotspin',
+    title: 'Loreshelf',
     show: false,
     darkTheme: true,
     width: 1366,

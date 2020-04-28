@@ -14,13 +14,13 @@ const COMMANDS = [
   {
     name: 'header',
     disabled: isNotInline,
-    onSelect: (start, end, state, dispatch, cursor) => {
+    onSelect: (start, end, state, dispatch) => {
       const insert = schema.nodes.heading.createAndFill({
         level: 2,
         class: 'property'
       });
       const tr = state.tr.replaceWith(start - 1, end + 1, insert);
-      tr.setSelection(Selection.near(tr.doc.resolve(cursor - 1)));
+      tr.setSelection(Selection.near(tr.doc.resolve(start - 1)));
       dispatch(tr);
     }
   },
@@ -34,7 +34,7 @@ const COMMANDS = [
       };
       const today = new Date().toLocaleDateString(undefined, options);
       const tr = state.tr.insertText(today, start, cursor);
-      tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
+      tr.setSelection(TextSelection.create(tr.doc, start + today.length));
       dispatch(tr);
     }
   },
@@ -48,14 +48,14 @@ const COMMANDS = [
       };
       const today = new Date().toLocaleTimeString(undefined, options);
       const tr = state.tr.insertText(today, start, cursor);
-      tr.setSelection(TextSelection.create(tr.doc, cursor + today.length - 1));
+      tr.setSelection(TextSelection.create(tr.doc, start + today.length));
       dispatch(tr);
     }
   },
   {
     name: 'table',
     disabled: isNotInline,
-    onSelect: (start, end, state, dispatch, cursor) => {
+    onSelect: (start, end, state, dispatch) => {
       const headerCells = [];
       const cells = [];
       const pros = schema.text('Pros');
@@ -74,17 +74,17 @@ const COMMANDS = [
       const table = schema.nodes.table.createChecked(null, [thead, tbody]);
       // dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
       const tr = state.tr.replaceWith(start - 1, end + 1, table);
-      tr.setSelection(Selection.near(tr.doc.resolve(cursor)));
+      tr.setSelection(Selection.near(tr.doc.resolve(start)));
       dispatch(tr);
     }
   },
   {
     name: 'quote',
     disabled: isNotInline,
-    onSelect: (start, end, state, dispatch, cursor) => {
+    onSelect: (start, end, state, dispatch) => {
       const insert = schema.nodes.blockquote.createAndFill();
       const tr = state.tr.replaceWith(start - 1, end + 1, insert);
-      tr.setSelection(Selection.near(tr.doc.resolve(cursor - 1)));
+      tr.setSelection(Selection.near(tr.doc.resolve(start - 1)));
       dispatch(tr);
     }
   }

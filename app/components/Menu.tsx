@@ -621,7 +621,7 @@ class Menu extends Component {
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
-              This is a free version of Jotspin for personal use. In order to
+              This is a free version of Loreshelf for personal use. In order to
               remove the popup and enable premium features, please consider
               upgrading to the premium version.
             </p>
@@ -642,7 +642,7 @@ class Menu extends Component {
               <Button
                 intent={Intent.PRIMARY}
                 onClick={() => {
-                  window.open('https://jotspin.com/pricing', '_blank');
+                  window.open('https://loreshelf.com/pricing', '_blank');
                 }}
               >
                 Buy online
@@ -683,7 +683,13 @@ class Menu extends Component {
           </div>
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Button onClick={this.licensePopupClose}>Close</Button>
+              <Button
+                onClick={() => {
+                  this.setState({ licenseActivatePopupOpen: false });
+                }}
+              >
+                Close
+              </Button>
               <Button
                 intent={Intent.PRIMARY}
                 onClick={() => {

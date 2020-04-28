@@ -418,7 +418,6 @@ Still | renders | nicely
         ipcRenderer.sendSync('file-link', baseURI.href)
       );
       if (filePath) {
-        console.log(filePath);
         const insert = schema.nodes.image.create({
           src: filePath,
           title: filePath,
