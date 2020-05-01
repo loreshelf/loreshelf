@@ -774,7 +774,9 @@ class Home extends Component {
       // get boards from the current workspace
       let allBoards = workspace.boards.filter(b => b.path !== boardData.path);
       knownWorkspaces.forEach(w => {
-        allBoards = allBoards.concat(w.boards);
+        if (workspace.path !== w.path) {
+          allBoards = allBoards.concat(w.boards);
+        }
       });
       resolve(allBoards);
     });

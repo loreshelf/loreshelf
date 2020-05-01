@@ -146,17 +146,19 @@ const createWindow = async () => {
     (event, workspacePath, shouldSetWorkspace, openBoardPath) => {
       fs.readdir(workspacePath, (err, files) => {
         const stats = [];
-        files.forEach(filePath => {
-          stats.push(fs.statSync(`${workspacePath}/${filePath}`));
-        });
-        event.reply(
-          'workspace-load-callback',
-          workspacePath,
-          files,
-          stats,
-          shouldSetWorkspace,
-          openBoardPath
-        );
+        if (files) {
+          files.forEach(filePath => {
+            stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+          });
+          event.reply(
+            'workspace-load-callback',
+            workspacePath,
+            files,
+            stats,
+            shouldSetWorkspace,
+            openBoardPath
+          );
+        }
       });
     }
   );

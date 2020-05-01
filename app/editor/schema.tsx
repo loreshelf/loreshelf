@@ -303,7 +303,8 @@ export const schema = new Schema({
           tag: 'a[href]',
           getAttrs(dom) {
             return {
-              href: dom.getAttribute('href')
+              href: dom.getAttribute('href'),
+              title: dom.getAttribute('title')
             };
           }
         }

@@ -2,7 +2,7 @@
   "name": "loreshelf",
   "productName": "Loreshelf",
   "version": "1.0.0",
-  "description": "Loreshelf is an application for taking and organizing crucial and often tangled information that should be quickly accessible. Navigate though your workspaces and operate on lifelong information stored in Markdown.",
+  "description": "Line up lasting notes in Markdown.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -63,7 +63,7 @@
     ],
     "fileAssociations": [
       {
-        "ext": ["md"],
+        "ext": "md",
         "name": "Markdown file",
         "role": "Editor"
       }
@@ -94,9 +94,8 @@
     },
     "linux": {
       "icon": "icon.icns",
-      "synopsis": "Scientific note organizer",
+      "synopsis": "Knowledge databank",
       "target": [
-        "AppImage",
         "deb"
       ],
       "category": "Office"

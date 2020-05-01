@@ -164,14 +164,6 @@ Still | renders | nicely
                   React.createElement(MenuItem, {
                     onClick: () => {
                       const baseURI = document.getElementById('baseURI');
-                      console.log(baseURI.href);
-                      console.log(decodeURI(url));
-                      console.log(
-                        path.normalize(decodeURI(path.join(baseURI.href, url)))
-                      );
-                      console.log(
-                        path.normalize(path.join(baseURI.href, decodeURI(url)))
-                      );
                       clipboard.writeText(
                         path.normalize(path.join(baseURI.href, url))
                       );
@@ -578,11 +570,10 @@ Still | renders | nicely
         const boardName = selectedSuggestion.board.name;
         const boardPath = selectedSuggestion.board.path;
         const cardName = suggestion.title;
-        const linkName = `${boardName}/${cardName}`;
         dispatch(
-          state.tr.insertText(linkName, suggestionPos - 1, from).addMark(
+          state.tr.insertText(cardName, suggestionPos - 1, from).addMark(
             suggestionPos - 1,
-            suggestionPos + linkName.length,
+            suggestionPos + cardName.length,
             schema.marks.link.create({
               href: `@${boardPath}/${cardName}`,
               title: `Open '${cardName}' block from '${boardName}' notebook`
