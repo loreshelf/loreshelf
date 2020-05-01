@@ -24,11 +24,23 @@ function SuggestionsPopup(props) {
         className={classes.suggestions}
       >
         {suggestions.map((suggestion, id) => {
+          let title = null;
+          if (suggestion.path) {
+            const lastSlash = suggestion.path.lastIndexOf('/');
+            const previousSlash = suggestion.path.lastIndexOf(
+              '/',
+              lastSlash - 1
+            );
+            title = "from '";
+            title += suggestion.path.substring(previousSlash + 1, lastSlash);
+            title += "' notebook";
+          }
           return (
             <MenuItem
               key={id}
               active={id === suggestionIndex}
               text={suggestion[textProperty]}
+              title={title}
               onMouseDown={e => {
                 e.preventDefault();
                 onSelectSuggestion(suggestion);

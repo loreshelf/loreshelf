@@ -39,6 +39,7 @@ const Card: React.FC<CardProps> = forwardRef(
   (
     {
       card,
+      license,
       dividerIndex,
       dividerLeft,
       index,
@@ -287,6 +288,7 @@ const Card: React.FC<CardProps> = forwardRef(
               ref={editorRef}
               doc={cardData.doc}
               index={index}
+              license={license}
               onChange={(doc, saveChanges) => {
                 onEditCard(index, doc, saveChanges);
               }}

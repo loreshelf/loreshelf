@@ -236,14 +236,15 @@ Still | renders | nicely
         let filteredSuggestions = [];
 
         if (transactions.some(tr => tr.docChanged)) {
-          const { onChange } = this.props;
+          const { onChange, license } = this.props;
           const { selection } = state;
 
           const step = transaction.steps[0];
           if (
             suggestionPos < 0 &&
             step.from === step.to &&
-            step.slice.content.content[0].text === '@'
+            step.slice.content.content[0].text === '@' &&
+            license === 'PREMIUM'
           ) {
             // Start @ card link suggestion
             onChange(state.doc, this.saveChanges);
@@ -277,7 +278,8 @@ Still | renders | nicely
               node &&
               paragraph &&
               !paragraph.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
-            if (paragraph.charAt(1) === ' ') {
+            if (paragraph.endsWith('/ ')) {
+              // Reset suggestion when user adds incorrect character after /
               this.resetSuggestions();
             } else if (node) {
               const where = this.getSuggestionCharacterPos(
@@ -297,9 +299,12 @@ Still | renders | nicely
                 // phase 1
                 filterText = suggestionText;
               }
+              filterText = filterText.toLowerCase();
               filteredSuggestions = suggestions
                 .filter(s => {
-                  return s[this.getSuggestionProperty()].includes(filterText);
+                  return s[this.getSuggestionProperty()]
+                    .toLowerCase()
+                    .includes(filterText);
                 })
                 .slice(0, MAX_SUGGESTIONS);
             }
@@ -472,20 +477,24 @@ Still | renders | nicely
   }
 
   requestSuggestionPhase1(cursor) {
-    const { onRequestBoardsAsync } = this.props;
-    this.resetSuggestions(cursor);
-    onRequestBoardsAsync()
-      .then(newBoards => {
-        this.setState({
-          suggestions: newBoards,
-          suggestionIndex: 0,
-          suggestionChar: '@',
-          filteredSuggestions: newBoards.slice(0, MAX_SUGGESTIONS)
+    const { onRequestBoardsAsync, license } = this.props;
+    if (license === 'PREMIUM') {
+      this.resetSuggestions(cursor);
+      onRequestBoardsAsync()
+        .then(newBoards => {
+          this.setState({
+            suggestions: newBoards,
+            suggestionIndex: 0,
+            suggestionChar: '@',
+            filteredSuggestions: newBoards.slice(0, MAX_SUGGESTIONS)
+          });
+        })
+        .catch(error => {
+          console.log(error);
         });
-      })
-      .catch(error => {
-        console.log(error);
-      });
+    } else {
+      this.resetSuggestions();
+    }
   }
 
   requestCommandSuggestion(state, cursor) {

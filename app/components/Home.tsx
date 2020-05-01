@@ -958,6 +958,7 @@ class Home extends Component {
                 }}
                 boardData={boardData}
                 searchText={searchText}
+                license={license}
                 onEditTitle={this.editTitle}
                 onEditCard={this.editCard}
                 onNewCard={this.newCard}

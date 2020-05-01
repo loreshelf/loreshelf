@@ -53,6 +53,7 @@ class Board extends Component {
   render() {
     const {
       boardData,
+      license,
       onEditCard,
       onNewCard,
       onRemoveCard,
@@ -96,6 +97,7 @@ class Board extends Component {
                 ref={this.addCardRef}
                 key={`${c.title}-${cardData.indexOf(c)}`}
                 card={c}
+                license={license}
                 index={cardData.indexOf(c)}
                 dividerIndex={dividerIndex}
                 dividerLeft={dividerLeft}
