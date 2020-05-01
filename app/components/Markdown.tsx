@@ -32,7 +32,7 @@ const markdownParser = new MarkdownParser(
       node: 'image',
       getAttrs: tok => ({
         src: decodeURI(tok.attrGet('src')),
-        title: (tok.children[0] && tok.children[0].content) || null,
+        title: tok.attrGet('title') || null,
         alt: (tok.children[0] && tok.children[0].content) || null
       })
     },

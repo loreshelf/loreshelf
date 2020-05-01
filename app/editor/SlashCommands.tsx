@@ -1,5 +1,6 @@
 import { Selection, TextSelection } from 'prosemirror-state';
 import { schema } from './schema';
+import MarkdownIcons from '../components/MarkdownIcons';
 
 const isNotInline = state => {
   const { path } = state.tr.selection.$cursor;
@@ -89,5 +90,20 @@ const COMMANDS = [
     }
   }
 ];
+
+MarkdownIcons.forEach(mdi => {
+  COMMANDS.push({
+    name: `icon-${mdi.name}`,
+    onSelect: (start, end, state, dispatch) => {
+      const insert = schema.nodes.image.createAndFill({
+        src: mdi.icon,
+        alt: 'Icon'
+      });
+      const tr = state.tr.replaceWith(start, end, insert);
+      tr.setSelection(Selection.near(tr.doc.resolve(start + 1)));
+      dispatch(tr);
+    }
+  });
+});
 
 export default COMMANDS;

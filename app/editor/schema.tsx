@@ -1,4 +1,7 @@
 import { Schema } from 'prosemirror-model';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import ImageNode from './ImageNode';
 
 function getCellAttrs(dom) {
   const widthAttr = dom.getAttribute('data-colwidth');
@@ -176,10 +179,26 @@ export const schema = new Schema({
               alt: dom.getAttribute('alt')
             };
           }
+        },
+        {
+          tag: 'span[icon]',
+          getAttrs(dom) {
+            return { src: dom.getAttribute('icon'), alt: 'Icon' };
+          }
         }
       ],
       toDOM(node) {
-        return ['img', node.attrs];
+        // return ['img', node.attrs];
+        const dom = document.createElement('span');
+        ReactDOM.render(
+          <ImageNode
+            src={node.attrs.src}
+            alt={node.attrs.alt}
+            title={node.attrs.title}
+          />,
+          dom
+        );
+        return dom;
       }
     },
 
@@ -230,7 +249,7 @@ export const schema = new Schema({
       }
     },
     table_cell: {
-      content: 'text*',
+      content: 'inline*',
       attrs: {
         colspan: { default: 1 },
         rowspan: { default: 1 },
@@ -250,7 +269,7 @@ export const schema = new Schema({
       }
     },
     table_header: {
-      content: 'text*',
+      content: 'inline*',
       attrs: {
         colspan: { default: 1 },
         rowspan: { default: 1 },

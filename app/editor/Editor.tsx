@@ -19,7 +19,7 @@ import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 import COMMANDS from './SlashCommands';
 
-const MAX_SUGGESTIONS = 5;
+const MAX_SUGGESTIONS = 7;
 
 class Editor extends React.Component {
   constructor(props) {
@@ -269,49 +269,56 @@ Still | renders | nicely
               );
             }
           } else if (suggestionPos >= 0) {
-            const { $cursor } = transaction.selection;
-            const cursor = $cursor.parentOffset;
-            const node = $cursor.nodeBefore;
-            const paragraph = node ? node.text : '';
-            const backToPhase1 =
-              suggestionPhase === 2 &&
-              node &&
-              paragraph &&
-              !paragraph.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
-            if (paragraph.endsWith('/ ')) {
-              // Reset suggestion when user adds incorrect character after /
-              this.resetSuggestions();
-            } else if (node) {
-              const where = this.getSuggestionCharacterPos(
-                paragraph,
-                cursor,
-                suggestionChar
-              );
-              suggestionText =
-                where >= 0 ? paragraph.substring(where + 1, cursor) : '';
-              let filterText;
-              if (selectedSuggestion.board) {
-                // phase 2
-                filterText = suggestionText.substring(
-                  selectedSuggestion.board.name.length + 1
+            const diff = currentCursor - suggestionPos;
+            if (diff < 0) {
+              onChange(state.doc, this.saveChanges);
+              this.updateDoc();
+              // should reset
+            } else {
+              const { $cursor } = transaction.selection;
+              const cursor = $cursor.parentOffset;
+              const node = $cursor.nodeBefore;
+              const paragraph = node ? node.text : '';
+              const backToPhase1 =
+                suggestionPhase === 2 &&
+                node &&
+                paragraph &&
+                !paragraph.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
+              if (paragraph.endsWith('/ ')) {
+                // Reset suggestion when user adds incorrect character after /
+                this.resetSuggestions();
+              } else if (node) {
+                const where = this.getSuggestionCharacterPos(
+                  paragraph,
+                  cursor,
+                  suggestionChar
                 );
-              } else {
-                // phase 1
-                filterText = suggestionText;
+                suggestionText =
+                  where >= 0 ? paragraph.substring(where + 1, cursor) : '';
+                let filterText;
+                if (selectedSuggestion.board) {
+                  // phase 2
+                  filterText = suggestionText.substring(
+                    selectedSuggestion.board.name.length + 1
+                  );
+                } else {
+                  // phase 1
+                  filterText = suggestionText;
+                }
+                filterText = filterText.toLowerCase();
+                filteredSuggestions = suggestions
+                  .filter(s => {
+                    return s[this.getSuggestionProperty()]
+                      .toLowerCase()
+                      .includes(filterText);
+                  })
+                  .slice(0, MAX_SUGGESTIONS);
               }
-              filterText = filterText.toLowerCase();
-              filteredSuggestions = suggestions
-                .filter(s => {
-                  return s[this.getSuggestionProperty()]
-                    .toLowerCase()
-                    .includes(filterText);
-                })
-                .slice(0, MAX_SUGGESTIONS);
-            }
-            onChange(state.doc, this.saveChanges);
-            this.updateDoc();
-            if (backToPhase1) {
-              this.requestSuggestionPhase1(suggestionPos);
+              onChange(state.doc, this.saveChanges);
+              this.updateDoc();
+              if (backToPhase1) {
+                this.requestSuggestionPhase1(suggestionPos);
+              }
             }
           } else {
             onChange(state.doc, this.saveChanges);
@@ -499,11 +506,10 @@ Still | renders | nicely
 
   requestCommandSuggestion(state, cursor) {
     this.resetSuggestions(cursor);
-    const filteredSuggestions = COMMANDS.filter(
-      c => !c.disabled || !c.disabled(state)
-    ).slice(0, MAX_SUGGESTIONS);
+    const suggestions = COMMANDS.filter(c => !c.disabled || !c.disabled(state));
+    const filteredSuggestions = suggestions.slice(0, MAX_SUGGESTIONS);
     this.setState({
-      suggestions: filteredSuggestions,
+      suggestions,
       suggestionIndex: 0,
       suggestionChar: '/',
       filteredSuggestions
@@ -592,8 +598,8 @@ Still | renders | nicely
       }
     } else {
       // slash command
-      suggestion.onSelect(suggestionPos - 1, from, state, dispatch, from);
       this.resetSuggestions();
+      suggestion.onSelect(suggestionPos - 1, from, state, dispatch, from);
     }
   }
 

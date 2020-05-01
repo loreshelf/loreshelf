@@ -9,6 +9,7 @@ import {
   ellipsis,
   InputRule
 } from 'prosemirror-inputrules';
+import MarkdownIcons from '../components/MarkdownIcons';
 
 // : (NodeType) → InputRule
 // Given a blockquote node type, returns an input rule that turns `"> "`
@@ -57,6 +58,10 @@ export function headingRule(nodeType, maxLevel) {
   );
 }
 
+function escapeRegExp(stringToGoIntoTheRegex) {
+  return stringToGoIntoTheRegex.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 // : (Schema) → Plugin
 // A set of input rules for creating the basic block quotes, lists,
 // code blocks, and heading.
@@ -78,7 +83,7 @@ export function buildInputRules(schema) {
   if ((type = schema.marks.link)) {
     rules.push(
       new InputRule(imageUrlRegexp, (state, match, start, end) => {
-        const src = encodeURI(match[1]).trim();
+        const src = encodeURI(match[1].trim());
         const insert = schema.nodes.image.create({
           src,
           alt: 'WebImage'
@@ -114,5 +119,18 @@ export function buildInputRules(schema) {
       })
     );
   }
+
+  MarkdownIcons.forEach(mdi => {
+    const regExp = new RegExp(escapeRegExp(mdi.code));
+    rules.push(
+      new InputRule(regExp, (state, match, start, end) => {
+        const insert = schema.nodes.image.create({
+          src: mdi.icon,
+          alt: 'Icon'
+        });
+        return state.tr.replaceWith(start, end, insert);
+      })
+    );
+  });
   return inputRules({ rules });
 }

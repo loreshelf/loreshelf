@@ -9,6 +9,7 @@ import Menu from './Menu';
 import Board from './Board';
 import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
+import MarkdownIcons from './MarkdownIcons';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -64,6 +65,10 @@ const SORTING_METHODS = {
     return 0;
   }
 };
+
+function escapeRegExp(stringToGoIntoTheRegex) {
+  return stringToGoIntoTheRegex.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
 
 class Home extends Component {
   constructor() {
@@ -250,7 +255,12 @@ class Home extends Component {
     const cards = bd.cards.map(
       c => `# ${c.title}\n\n${serializeMarkdown(c.doc).trim()}`
     );
-    return cards.join('\n\n');
+    let boardMd = cards.join('\n\n');
+    MarkdownIcons.forEach(mdi => {
+      const regExp = new RegExp(`\\!\\[Icon\\]\\(${mdi.icon}\\)`, 'g');
+      boardMd = boardMd.replace(regExp, mdi.code);
+    });
+    return boardMd;
   }
 
   setHome() {
@@ -407,7 +417,12 @@ class Home extends Component {
 
   // eslint-disable-next-line class-methods-use-this
   toBoardData(boardMeta, text, stats) {
-    const mdCards = text.split(/^(?=# )/gm);
+    let newText = text;
+    MarkdownIcons.forEach(mdi => {
+      const regExp = new RegExp(escapeRegExp(mdi.code), 'g');
+      newText = newText.replace(regExp, `![Icon](${mdi.icon})`);
+    });
+    const mdCards = newText.split(/^(?=# )/gm);
     const cards = [];
     mdCards.forEach(md => {
       let title = md.match(/# (.*)\n/);
