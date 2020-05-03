@@ -11,7 +11,7 @@ import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
-import { ipcRenderer, clipboard, shell } from 'electron';
+import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
 import plugins from './plugins';
@@ -20,6 +20,32 @@ import { schema } from './schema';
 import COMMANDS from './SlashCommands';
 
 const MAX_SUGGESTIONS = 7;
+
+/**
+ * Converts an image to a base-64 encoded string.
+ *
+ * @param  {String} url           The image URL
+ * @param  {Function} callback    A callback that will be invoked with the result
+ * @param  {String} outputFormat  The image format to use, defaults to 'image/png'
+ */
+function convertImageToBase64(url, callback, outputFormat = 'image/png') {
+  let canvas = document.createElement('CANVAS');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.crossOrigin = 'Anonymous';
+
+  img.onload = () => {
+    canvas.height = img.height;
+    canvas.width = img.width;
+    ctx.drawImage(img, 0, 0);
+
+    const dataURL = canvas.toDataURL(outputFormat);
+    canvas = null;
+    callback(dataURL);
+  };
+
+  img.src = url;
+}
 
 class Editor extends React.Component {
   constructor(props) {
@@ -36,7 +62,13 @@ Still | renders | nicely
     console.log(a); */
 
     this.editorRef = React.createRef();
-    const { attributes, nodeViews, doc, onStartSpooling } = this.props;
+    const {
+      attributes,
+      nodeViews,
+      doc,
+      onStartSpooling,
+      onOpenImage
+    } = this.props;
     this.saveChanges = true;
     this.originalDoc = doc;
 
@@ -199,6 +231,60 @@ Still | renders | nicely
                 return openUrl();
               }
             }
+          } else if (node.type === schema.nodes.image) {
+            const openImage = () => {
+              view.onOpenImage(node.attrs.src);
+              return true;
+            };
+            if (event.which === 3) {
+              // Right click for context menu
+              const menu = React.createElement(
+                Menu,
+                {}, // empty props
+                React.createElement(MenuItem, {
+                  onClick: openImage,
+                  text: 'Open'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    clipboard.writeText(node.attrs.src);
+                  },
+                  text: 'Copy image url'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    convertImageToBase64(node.attrs.src, dataURL =>
+                      clipboard.writeImage(
+                        nativeImage.createFromDataURL(dataURL)
+                      )
+                    );
+                  },
+                  text: 'Copy image'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    view.dispatch(
+                      view.state.tr.delete(nodePos, nodePos + node.nodeSize)
+                    );
+                  },
+                  text: 'Remove'
+                })
+              );
+
+              // mouse position is available on event
+              ContextMenu.show(
+                menu,
+                { left: event.clientX, top: event.clientY },
+                () => {
+                  // menu was closed; callback optional
+                },
+                true
+              );
+              return true;
+            }
+            if (isCTRL) {
+              openImage();
+            }
           }
           return isCTRL;
         }
@@ -347,6 +433,7 @@ Still | renders | nicely
     });
 
     this.view.onStartSpooling = onStartSpooling;
+    this.view.onOpenImage = onOpenImage;
 
     this.selectSuggestion = this.selectSuggestion.bind(this);
     this.onUndo = this.onUndo.bind(this);
@@ -369,7 +456,7 @@ Still | renders | nicely
   }
 
   componentDidUpdate() {
-    const { doc, onStartSpooling } = this.props;
+    const { doc, onStartSpooling, onOpenImage } = this.props;
     if (this.originalDoc !== doc) {
       this.view.updateState(
         EditorState.create({
@@ -378,6 +465,7 @@ Still | renders | nicely
         })
       );
       this.view.onStartSpooling = onStartSpooling;
+      this.view.onOpenImage = onOpenImage;
       this.originalDoc = doc;
     }
   }

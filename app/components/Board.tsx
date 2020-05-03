@@ -1,7 +1,16 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-import { Button, Intent, NonIdealState } from '@blueprintjs/core';
+import {
+  Button,
+  Intent,
+  NonIdealState,
+  Classes,
+  Dialog,
+  Overlay
+} from '@blueprintjs/core';
 import Card from './Card';
 import styles from './Board.css';
 
@@ -10,11 +19,13 @@ class Board extends Component {
     super(props);
 
     this.boardRef = React.createRef();
-    this.state = { dividerIndex: -1, dividerLeft: false };
+    this.state = { dividerIndex: -1, dividerLeft: false, imageSrc: null };
     // const { boardData } = this.props;
     // this.numCards = boardData ? boardData.cards.length : 0;
     this.addCardRef = this.addCardRef.bind(this);
     this.updateDivider = this.updateDivider.bind(this);
+    this.openImage = this.openImage.bind(this);
+    this.closeImage = this.closeImage.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -50,6 +61,14 @@ class Board extends Component {
     });
   }
 
+  openImage(imageSrc) {
+    this.setState({ imageSrc });
+  }
+
+  closeImage() {
+    this.setState({ imageSrc: null });
+  }
+
   render() {
     const {
       boardData,
@@ -64,7 +83,7 @@ class Board extends Component {
       onStopSpooling
     } = this.props;
     this.cardRefs = [];
-    const { dividerIndex, dividerLeft } = this.state;
+    const { dividerIndex, dividerLeft, imageSrc } = this.state;
     const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
@@ -112,6 +131,7 @@ class Board extends Component {
                 onRequestBoardsAsync={onRequestBoardsAsync}
                 onRequestBoardDataAsync={onRequestBoardDataAsync}
                 onStopSpooling={onStopSpooling}
+                onOpenImage={this.openImage}
               />
             ))}
             {cardData.length === dividerIndex && (
@@ -124,6 +144,31 @@ class Board extends Component {
                 }}
               />
             )}
+            <Overlay
+              className={Classes.DARK}
+              isOpen={imageSrc !== null}
+              onClose={this.closeImage}
+            >
+              <div
+                style={{ width: '100%', height: '100%', margin: '0' }}
+                onClick={this.closeImage}
+              >
+                <img
+                  src={imageSrc}
+                  alt=""
+                  style={{
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    bottom: '0',
+                    right: '0',
+                    margin: 'auto',
+                    padding: '5px',
+                    background: '#30404d'
+                  }}
+                />
+              </div>
+            </Overlay>
           </>
         ) : (
           <NonIdealState

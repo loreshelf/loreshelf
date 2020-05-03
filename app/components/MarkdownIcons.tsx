@@ -36,7 +36,7 @@ const MARKDOWN_ICONS = [
   },
   {
     code: '[+]',
-    name: 'pinned',
+    name: 'pin',
     icon: 'pin',
     intent: Intent.PRIMARY
   },

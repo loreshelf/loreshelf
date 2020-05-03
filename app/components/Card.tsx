@@ -51,7 +51,8 @@ const Card: React.FC<CardProps> = forwardRef(
       onEditTitle,
       onRequestBoardsAsync,
       onRequestBoardDataAsync,
-      onStopSpooling
+      onStopSpooling,
+      onOpenImage
     },
     ref
   ) => {
@@ -303,6 +304,7 @@ const Card: React.FC<CardProps> = forwardRef(
                   cardName
                 );
               }}
+              onOpenImage={onOpenImage}
               className={styles.editor}
             />
           </BlueCard>
