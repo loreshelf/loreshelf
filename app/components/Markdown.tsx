@@ -168,14 +168,15 @@ const markdownSerializer = new MarkdownSerializer(
     },
     table_head(state, node) {
       const headers = node.content.content[0].content.content;
-      let heads = '|';
+      state.write('|');
       let divider = '|';
       headers.forEach(h => {
-        const { text } = h.content.content[0];
-        heads += ` ${text} |`;
-        divider += ` ${'-'.repeat(text.length)} |`;
+        state.write(' ');
+        state.renderInline(h);
+        state.write(' |');
+        divider += ' --- |';
       });
-      state.write(`${heads}\n${divider}\n`);
+      state.write(`\n${divider}\n`);
     }
   },
   {

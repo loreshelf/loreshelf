@@ -161,7 +161,7 @@ Still | renders | nicely
           const isCTRL = /Mac/.test(navigator.platform)
             ? event.metaKey
             : event.ctrlKey;
-          if (node.type.name === 'paragraph') {
+          if (node.type.name === 'paragraph' && node.firstChild) {
             const marks = node.firstChild.marks.filter(
               m => m.attrs.href !== undefined
             );
