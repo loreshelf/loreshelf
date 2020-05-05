@@ -356,10 +356,15 @@ Still | renders | nicely
             }
           } else if (suggestionPos >= 0) {
             const diff = currentCursor - suggestionPos;
-            if (diff < 0) {
+            if (
+              diff < 0 ||
+              (suggestionChar === '/' &&
+                step.slice.content.content[0].text === ' ')
+            ) {
+              // reset when user removes the suggestionChar
+              // reset commands when user adds a space
               onChange(state.doc, this.saveChanges);
               this.updateDoc();
-              // should reset
             } else {
               const { $cursor } = transaction.selection;
               const cursor = $cursor.parentOffset;
@@ -696,7 +701,10 @@ Still | renders | nicely
     let pos = 0;
     let transaction = this.view.state.tr;
     this.view.state.doc.content.content.forEach(element => {
-      if (!searchText || element.textContent.includes(searchText)) {
+      if (
+        !searchText ||
+        element.textContent.toLowerCase().includes(searchText)
+      ) {
         const { attrs } = element;
         if (!searchText) {
           transaction = transaction.setNodeMarkup(pos, undefined, {

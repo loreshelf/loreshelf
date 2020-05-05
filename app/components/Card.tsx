@@ -150,9 +150,12 @@ const Card: React.FC<CardProps> = forwardRef(
 
     useImperativeHandle(ref, () => ({
       highlightSearchedLines(searchText) {
-        if (searchText && card.doc.textContent.includes(searchText)) {
+        if (
+          searchText &&
+          card.doc.textContent.toLowerCase().includes(searchText.toLowerCase())
+        ) {
           blueRef.current.style.display = 'block';
-          editorRef.current.highlightSearchedLines(searchText);
+          editorRef.current.highlightSearchedLines(searchText.toLowerCase());
         } else if (!searchText) {
           blueRef.current.style.display = 'block';
           editorRef.current.highlightSearchedLines(searchText);
@@ -226,7 +229,7 @@ const Card: React.FC<CardProps> = forwardRef(
               )}
               <Tooltip
                 content={card.title}
-                disabled={card.title.length <= 23}
+                disabled={card.title.length <= 22}
                 position={Position.BOTTOM}
                 inheritDarkTheme
               >
@@ -250,7 +253,7 @@ const Card: React.FC<CardProps> = forwardRef(
                   }}
                 />
               </Tooltip>
-              {card.title.length > 23 && (
+              {card.title.length > 22 && (
                 <div style={{ marginLeft: '3px' }}>...</div>
               )}
             </h1>
