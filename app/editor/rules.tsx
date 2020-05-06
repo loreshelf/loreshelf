@@ -9,6 +9,7 @@ import {
   ellipsis,
   InputRule
 } from 'prosemirror-inputrules';
+import { TextSelection } from 'prosemirror-state';
 import MarkdownIcons from '../components/MarkdownIcons';
 
 // : (NodeType) → InputRule
@@ -93,28 +94,17 @@ export function buildInputRules(schema) {
     );
     rules.push(
       new InputRule(linkRegexp, (state, match, start, end) => {
-        let insert = 'Web address';
-        let newStart = start;
-        let url = match[0];
+        const newStart = start;
+        let url = match[0].trim();
         if (url.startsWith('www.')) {
           url = `https://${url}`;
         }
-        if (match[1]) {
-          const offset = match[0].lastIndexOf(match[1]);
-          insert += match[0].slice(offset + match[1].length);
-          newStart += offset;
-          const cutOff = newStart - end;
-          if (cutOff > 0) {
-            insert = match[0].slice(offset - cutOff, offset) + insert;
-            newStart = end;
-          }
-        }
         return state.tr
-          .insertText(insert, newStart, end)
+          .insertText(url, newStart, end)
           .addMark(
             newStart,
-            newStart + insert.length,
-            schema.marks.link.create({ href: url.trim() })
+            newStart + url.length,
+            schema.marks.link.create({ href: url })
           );
       })
     );

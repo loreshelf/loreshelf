@@ -314,7 +314,7 @@ export const schema = new Schema({
     link: {
       attrs: {
         href: {},
-        title: { default: null }
+        title: { default: undefined }
       },
       inclusive: false,
       parseDOM: [
@@ -332,7 +332,8 @@ export const schema = new Schema({
         return [
           'a',
           {
-            ...node.attrs,
+            href: node.attrs.href,
+            title: node.attrs.title !== 'null' ? node.attrs.title : undefined,
             ...{
               class: node.attrs.href.startsWith('@') ? 'cardLink' : 'regular'
             }

@@ -168,7 +168,8 @@ p a:hover {
 }
 
 .searchLine {
-  margin-left: -19px;
+  margin-left: -15px;
+  padding-left: 15px;
 }
 
 h2.searchLine {
@@ -178,8 +179,8 @@ h2.searchLine {
 h2.searchLine::before {
   color: #ffb366;
   font-weight: 900;
-  margin-left: -25px;
-  margin-right: 12px;
+  margin-left: -31px;
+  margin-right: 7px;
   font-family: 'Font Awesome\ 5 Free', sans-serif;
   display: inline-block;
   content: ' \f3c5';
@@ -189,6 +190,7 @@ h2.searchLine::before {
   color: #ffb366;
   font-weight: 900;
   margin-right: 6px;
+  margin-left: -15px;
   font-family: 'Font Awesome\ 5 Free', sans-serif;
   display: inline-block;
   content: ' \f3c5';
@@ -196,7 +198,7 @@ h2.searchLine::before {
 
 ol.searchLine,
 ul.searchLine {
-  margin-left: -5px;
+  margin-left: 0;
   padding-left: 20px;
 }
 

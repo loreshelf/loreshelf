@@ -44,7 +44,7 @@ const markdownParser = new MarkdownParser(
       mark: 'link',
       getAttrs: tok => ({
         href: decodeURI(tok.attrGet('href')),
-        title: decodeURI(tok.attrGet('title')) || null
+        title: tok.attrGet('title') || undefined
       })
     },
     code_inline: { mark: 'code' },
