@@ -87,7 +87,7 @@ class Board extends Component {
     const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
-        Add new block
+        Add new notecard
       </Button>
     );
     const moveCard = (sourceIndex, left) => {
@@ -174,7 +174,7 @@ class Board extends Component {
           <NonIdealState
             icon="new-layer"
             title="Empty Notebook"
-            description="Start with adding a new block. Blocks contain key information that you want to remember next to the other related blocks within the notebook."
+            description="Start with adding a new notecard. Notecards contain key information that you want to remember next to the other related notecards within the notebook."
             action={NewCard}
           />
         )}

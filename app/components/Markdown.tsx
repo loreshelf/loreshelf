@@ -155,7 +155,7 @@ const markdownSerializer = new MarkdownSerializer(
       state.write(`|`);
       cells.forEach(c => {
         state.write(` `);
-        state.renderContent(c);
+        state.renderInline(c);
         state.write(` |`);
       });
       state.write(`\n`);
@@ -164,7 +164,7 @@ const markdownSerializer = new MarkdownSerializer(
       state.renderContent(node);
     },
     table_cell(state, node) {
-      state.renderContent(node);
+      state.renderInline(node);
     },
     table_head(state, node) {
       const headers = node.content.content[0].content.content;

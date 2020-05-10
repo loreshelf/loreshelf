@@ -70,7 +70,7 @@ function MenuBar(props) {
             onRemoveCard();
           }}
           minimal
-          title="Remove the block"
+          title="Remove the notecard"
         >
           <Icon icon="trash" style={{ color: '#ff7373' }} />
         </Button>

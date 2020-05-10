@@ -3,7 +3,7 @@
 /* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { Menu, MenuItem, ContextMenu } from '@blueprintjs/core';
+import { Menu, MenuItem, ContextMenu, Intent } from '@blueprintjs/core';
 import path from 'path';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -11,6 +11,17 @@ import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
+import {
+  selectedRect,
+  addRow,
+  addRowAfter,
+  addColumnAfter,
+  deleteRow,
+  isInTable,
+  selectionCell,
+  findNextCell,
+  deleteColumn
+} from 'prosemirror-tables';
 import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
@@ -161,78 +172,95 @@ Still | renders | nicely
           const isCTRL = /Mac/.test(navigator.platform)
             ? event.metaKey
             : event.ctrlKey;
-          if (node.type.name === 'paragraph' && node.firstChild) {
-            const marks = node.firstChild.marks.filter(
-              m => m.attrs.href !== undefined
-            );
-            const url =
-              marks && marks.length > 0 ? marks[0].attrs.href : undefined;
-            if (url) {
-              const openUrl = () => {
-                if (url.startsWith('file') || url.startsWith('.')) {
-                  const baseURI = document.getElementById('baseURI');
-                  shell.openItem(path.normalize(path.join(baseURI.href, url)));
+          if (
+            node.type === schema.nodes.paragraph ||
+            node.type === schema.nodes.table_cell
+          ) {
+            const dom = view.domAtPos(pos);
+            const parent = dom.node.parentNode;
+            if (parent && parent.href) {
+              const url = parent.href;
+              if (url) {
+                const openUrl = () => {
+                  if (url.startsWith('file') || url.startsWith('.')) {
+                    const { baseURI } = dom.node;
+                    shell.openItem(path.normalize(path.join(baseURI, url)));
+                    return true;
+                  }
+                  if (url.startsWith('@')) {
+                    const separatorIndex = url.lastIndexOf(path.sep);
+                    const boardPath = decodeURI(
+                      url.substring(1, separatorIndex)
+                    );
+                    const cardName = decodeURI(
+                      url.substring(separatorIndex + 1)
+                    );
+                    view.onStartSpooling(boardPath, cardName);
+                    return true;
+                  }
+                  window.open(url, '_blank');
                   return true;
-                }
-                if (url.startsWith('@')) {
-                  const separatorIndex = url.lastIndexOf(path.sep);
-                  const boardPath = decodeURI(url.substring(1, separatorIndex));
-                  const cardName = decodeURI(url.substring(separatorIndex + 1));
-                  view.onStartSpooling(boardPath, cardName);
-                  return true;
-                }
-                window.open(url, '_blank');
-                return true;
-              };
-              if (event.which === 3) {
-                // Right click for context menu
-                const menu = React.createElement(
-                  Menu,
-                  {}, // empty props
-                  React.createElement(MenuItem, {
-                    onClick: openUrl,
-                    text: 'Open'
-                  }),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      if (url.startsWith('file')) {
-                        const baseURI = document.getElementById('baseURI');
-                        clipboard.writeText(
-                          path.normalize(path.join(baseURI.href, url))
+                };
+                if (event.which === 3) {
+                  // Right click for context menu
+                  const menu = React.createElement(
+                    Menu,
+                    {}, // empty props
+                    React.createElement(MenuItem, {
+                      onClick: openUrl,
+                      text: 'Open'
+                    }),
+                    React.createElement(MenuItem, {
+                      onClick: () => {
+                        if (url.startsWith('file')) {
+                          const { baseURI } = dom.node;
+                          clipboard.writeText(
+                            path.normalize(path.join(baseURI, url))
+                          );
+                        } else {
+                          clipboard.writeText(url);
+                        }
+                      },
+                      text: 'Copy to clipboard'
+                    }),
+                    React.createElement(MenuItem, {
+                      onClick: () => {
+                        const linkNode = view.state.doc.nodeAt(pos);
+                        const len = node.content.content.length;
+                        let startPos = nodePos + 1;
+                        for (let i = 0; i < len; i += 1) {
+                          const child = node.content.content[i];
+                          if (child === linkNode) {
+                            break;
+                          }
+                          startPos += child.nodeSize;
+                        }
+                        view.dispatch(
+                          view.state.tr.delete(
+                            startPos,
+                            startPos + linkNode.nodeSize
+                          )
                         );
-                      } else {
-                        clipboard.writeText(url);
-                      }
-                    },
-                    text: 'Copy to clipboard'
-                  }),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      view.dispatch(
-                        view.state.tr.removeMark(
-                          nodePos,
-                          node.nodeSize,
-                          schema.marks.link
-                        )
-                      );
-                    },
-                    text: 'Remove'
-                  })
-                );
+                      },
+                      intent: Intent.DANGER,
+                      text: 'Remove link'
+                    })
+                  );
 
-                // mouse position is available on event
-                ContextMenu.show(
-                  menu,
-                  { left: event.clientX, top: event.clientY },
-                  () => {
-                    // menu was closed; callback optional
-                  },
-                  true
-                );
-                return true;
-              }
-              if (isCTRL) {
-                return openUrl();
+                  // mouse position is available on event
+                  ContextMenu.show(
+                    menu,
+                    { left: event.clientX, top: event.clientY },
+                    () => {
+                      // menu was closed; callback optional
+                    },
+                    true
+                  );
+                  return true;
+                }
+                if (isCTRL) {
+                  return openUrl();
+                }
               }
             }
           } else if (node.type === schema.nodes.image) {
@@ -271,7 +299,8 @@ Still | renders | nicely
                       view.state.tr.delete(nodePos, nodePos + node.nodeSize)
                     );
                   },
-                  text: 'Remove'
+                  intent: Intent.DANGER,
+                  text: 'Remove image'
                 })
               );
 
@@ -289,6 +318,44 @@ Still | renders | nicely
             if (isCTRL) {
               openImage();
             }
+          } else if (node.type === schema.nodes.table && event.which === 3) {
+            // Right click for context menu
+            const menu = React.createElement(
+              Menu,
+              {}, // empty props
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  addRowAfter(view.state, view.dispatch);
+                },
+                text: 'Add row after'
+              }),
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  deleteRow(view.state, view.dispatch);
+                },
+                text: 'Delete row'
+              }),
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  view.dispatch(
+                    view.state.tr.delete(nodePos, nodePos + node.nodeSize)
+                  );
+                },
+                intent: Intent.DANGER,
+                text: 'Remove table'
+              })
+            );
+
+            // mouse position is available on event
+            ContextMenu.show(
+              menu,
+              { left: event.clientX, top: event.clientY },
+              () => {
+                // menu was closed; callback optional
+              },
+              true
+            );
+            return true;
           }
           return isCTRL;
         }
@@ -688,7 +755,7 @@ Still | renders | nicely
             suggestionPos + cardName.length,
             schema.marks.link.create({
               href: `@${boardPath}/${cardName}`,
-              title: `Open '${cardName}' block from '${boardName}' notebook`
+              title: `Open '${cardName}' notecard from '${boardName}' notebook`
             })
           )
         );

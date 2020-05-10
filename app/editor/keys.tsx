@@ -20,8 +20,7 @@ import {
   addRow,
   deleteRow,
   isInTable,
-  selectionCell,
-  findNextCell
+  selectionCell
 } from 'prosemirror-tables';
 import {
   wrapInList,

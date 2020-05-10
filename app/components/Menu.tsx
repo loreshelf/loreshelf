@@ -379,7 +379,7 @@ class Menu extends Component {
               }}
               intent={Intent.PRIMARY}
               onClick={onNewCard}
-              title="Add a new block"
+              title="Add a new notecard"
               icon="plus"
             />
             <Button
@@ -529,7 +529,7 @@ class Menu extends Component {
                 className="bp3-input"
                 style={{ borderRadius: '0px', paddingRight: '0px' }}
                 type="search"
-                placeholder="Search in blocks"
+                placeholder="Search in notecards"
                 onKeyPress={e => {
                   if (e.key === 'Enter') {
                     onSearchText(e.target.value);
