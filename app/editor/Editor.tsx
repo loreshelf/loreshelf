@@ -11,17 +11,7 @@ import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
-import {
-  selectedRect,
-  addRow,
-  addRowAfter,
-  addColumnAfter,
-  deleteRow,
-  isInTable,
-  selectionCell,
-  findNextCell,
-  deleteColumn
-} from 'prosemirror-tables';
+import { addRowAfter, deleteRow } from 'prosemirror-tables';
 import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
@@ -83,16 +73,14 @@ Still | renders | nicely
     this.saveChanges = true;
     this.originalDoc = doc;
 
-    this.state = {
-      suggestionPos: -1,
-      suggestions: [],
-      filteredSuggestions: [],
-      suggestionPhase: 1,
-      suggestionChar: undefined,
-      selectedSuggestion: {},
-      suggestionIndex: 0,
-      cursor: undefined
-    };
+    this.suggestionPos = -1;
+    this.suggestions = [];
+    this.filteredSuggestions = [];
+    this.suggestionPhase = 1;
+    this.suggestionChar = undefined;
+    this.selectedSuggestion = {};
+    this.suggestionIndex = 0;
+    this.cursor = undefined;
 
     // Keyboard plugin
 
@@ -102,61 +90,71 @@ Still | renders | nicely
           this.view.root.activeElement.blur();
         },
         ArrowUp: () => {
-          const {
-            suggestionPos,
-            suggestionIndex,
-            filteredSuggestions
-          } = this.state;
-          if (suggestionPos >= 0) {
+          if (this.suggestionPos >= 0) {
             this.cancelTransaction = true;
-            let selectedIndex = suggestionIndex - 1;
+            let selectedIndex = this.suggestionIndex - 1;
             if (selectedIndex < 0) {
-              selectedIndex = filteredSuggestions.length - 1;
+              selectedIndex = this.filteredSuggestions.length - 1;
             }
-            this.setState({ suggestionIndex: selectedIndex });
+            this.suggestionIndex = selectedIndex;
+            this.updateDoc();
           }
         },
         ArrowDown: () => {
-          const {
-            suggestionPos,
-            suggestionIndex,
-            filteredSuggestions
-          } = this.state;
-          if (suggestionPos >= 0) {
+          if (this.suggestionPos >= 0) {
             this.cancelTransaction = true;
-            let selectedIndex = suggestionIndex + 1;
-            if (selectedIndex >= filteredSuggestions.length) {
+            let selectedIndex = this.suggestionIndex + 1;
+            if (selectedIndex >= this.filteredSuggestions.length) {
               selectedIndex = 0;
             }
-            this.setState({ suggestionIndex: selectedIndex });
+            this.suggestionIndex = selectedIndex;
+            this.updateDoc();
           }
         },
         Enter: (state, dispatch) => {
-          const {
-            suggestionPos,
-            suggestionIndex,
-            filteredSuggestions
-          } = this.state;
-          if (suggestionPos >= 0) {
+          if (this.suggestionPos >= 0) {
             this.cancelTransaction = true;
             setTimeout(() => {
               this.selectSuggestion(
-                filteredSuggestions[suggestionIndex],
-                state,
-                dispatch
+                this.filteredSuggestions[this.suggestionIndex]
               );
-            }, 100);
+            }, 200);
           }
         },
         'Mod-Space': state => {
           const transaction = state.tr;
-          let isSuggestion = this.isTextSuggestion(transaction, '@');
-          if (isSuggestion) {
-            this.requestSuggestionPhase1(transaction.selection.from);
+          const { $cursor } = transaction.selection;
+          const cursor = $cursor.parentOffset;
+          const node = $cursor.nodeBefore;
+          const paragraph = node.text;
+          let where = this.getSuggestionCharacterPos(paragraph, cursor, '@');
+          if (where >= 0) {
+            const suggestionText =
+              where >= 0 ? paragraph.substring(where + 1, cursor) : '';
+            this.requestSuggestionPhase1(
+              transaction.selection.from - suggestionText.length
+            );
+            this.filteredSuggestions = this.getFilteredSuggestions(
+              this.selectedSuggestion,
+              this.suggestions,
+              suggestionText
+            );
+            this.updateDoc();
           } else {
-            isSuggestion = this.isTextSuggestion(transaction, '/');
-            if (isSuggestion) {
-              this.requestCommandSuggestion(state, transaction.selection.from);
+            where = this.getSuggestionCharacterPos(paragraph, cursor, '/');
+            const suggestionText =
+              where >= 0 ? paragraph.substring(where + 1, cursor) : '';
+            if (where >= 0) {
+              this.requestCommandSuggestion(
+                state,
+                transaction.selection.from - suggestionText.length
+              );
+              this.filteredSuggestions = this.getFilteredSuggestions(
+                this.selectedSuggestion,
+                this.suggestions,
+                suggestionText
+              );
+              this.updateDoc();
             }
           }
         }
@@ -186,16 +184,20 @@ Still | renders | nicely
                     window.open(url, '_blank');
                     return true;
                   }
-                  if (url.startsWith('@')) {
-                    const separatorIndex = url.lastIndexOf(path.sep);
-                    const boardPath = decodeURI(
-                      url.substring(1, separatorIndex)
-                    );
-                    const cardName = decodeURI(
-                      url.substring(separatorIndex + 1)
-                    );
-                    view.onStartSpooling(boardPath, cardName);
-                    return true;
+                  if (url.includes('@')) {
+                    const linkNode = view.state.doc.nodeAt(pos);
+                    const gatewayUrl = linkNode.marks[0].attrs.href;
+                    if (gatewayUrl.startsWith('@')) {
+                      const separatorIndex = gatewayUrl.lastIndexOf(path.sep);
+                      const boardPath = decodeURI(
+                        gatewayUrl.substring(1, separatorIndex)
+                      );
+                      const cardName = decodeURI(
+                        gatewayUrl.substring(separatorIndex + 1)
+                      );
+                      view.onStartSpooling(boardPath, cardName);
+                      return true;
+                    }
                   }
                   shell.openItem(url);
                   return true;
@@ -377,13 +379,6 @@ Still | renders | nicely
         const { state, transactions } = this.view.state.applyTransaction(
           transaction
         );
-        const {
-          suggestionPos,
-          suggestions,
-          selectedSuggestion,
-          suggestionPhase,
-          suggestionChar
-        } = this.state;
 
         this.view.updateState(state);
 
@@ -397,7 +392,7 @@ Still | renders | nicely
 
           const step = transaction.steps[0];
           if (
-            suggestionPos < 0 &&
+            this.suggestionPos < 0 &&
             step.from === step.to &&
             step.slice.content.content[0].text === '@' &&
             license === 'PREMIUM'
@@ -410,7 +405,7 @@ Still | renders | nicely
               this.requestSuggestionPhase1(selection.from);
             }
           } else if (
-            suggestionPos < 0 &&
+            this.suggestionPos < 0 &&
             step.from === step.to &&
             step.slice.content.content[0].text === '/'
           ) {
@@ -424,11 +419,12 @@ Still | renders | nicely
                 selection.from
               );
             }
-          } else if (suggestionPos >= 0) {
-            const diff = currentCursor - suggestionPos;
+          } else if (this.suggestionPos >= 0) {
+            const diff = currentCursor - this.suggestionPos;
             if (
               diff < 0 ||
-              (suggestionChar === '/' &&
+              (this.suggestionChar === '/' &&
+                step.slice.content.content[0] &&
                 step.slice.content.content[0].text === ' ')
             ) {
               // reset when user removes the suggestionChar
@@ -441,44 +437,33 @@ Still | renders | nicely
               const node = $cursor.nodeBefore;
               const paragraph = node ? node.text : '';
               const backToPhase1 =
-                suggestionPhase === 2 &&
+                this.suggestionPhase === 2 &&
                 node &&
                 paragraph &&
-                !paragraph.startsWith(`@${selectedSuggestion.board.name}/`); // removed / so return to phase 1
-              if (paragraph.endsWith('/ ')) {
+                !paragraph.startsWith(
+                  `@${this.selectedSuggestion.board.name}/`
+                ); // removed / so return to phase 1
+              if (paragraph && paragraph.endsWith('/ ')) {
                 // Reset suggestion when user adds incorrect character after /
                 this.resetSuggestions();
-              } else if (node) {
+              } else if (paragraph && node) {
                 const where = this.getSuggestionCharacterPos(
                   paragraph,
                   cursor,
-                  suggestionChar
+                  this.suggestionChar
                 );
                 suggestionText =
                   where >= 0 ? paragraph.substring(where + 1, cursor) : '';
-                let filterText;
-                if (selectedSuggestion.board) {
-                  // phase 2
-                  filterText = suggestionText.substring(
-                    selectedSuggestion.board.name.length + 1
-                  );
-                } else {
-                  // phase 1
-                  filterText = suggestionText;
-                }
-                filterText = filterText.toLowerCase();
-                filteredSuggestions = suggestions
-                  .filter(s => {
-                    return s[this.getSuggestionProperty()]
-                      .toLowerCase()
-                      .includes(filterText);
-                  })
-                  .slice(0, MAX_SUGGESTIONS);
+                filteredSuggestions = this.getFilteredSuggestions(
+                  this.selectedSuggestion,
+                  this.suggestions,
+                  suggestionText
+                );
               }
               onChange(state.doc, this.saveChanges);
               this.updateDoc();
               if (backToPhase1) {
-                this.requestSuggestionPhase1(suggestionPos);
+                this.requestSuggestionPhase1(this.suggestionPos);
               }
             }
           } else {
@@ -491,17 +476,16 @@ Still | renders | nicely
           }
         }
 
-        if (suggestionPos >= 0) {
-          const diff = currentCursor - suggestionPos;
+        if (this.suggestionPos >= 0) {
+          const diff = currentCursor - this.suggestionPos;
           if (diff < 0 || diff > suggestionText.length + 1) {
             this.resetSuggestions();
           }
         }
 
-        this.setState({
-          cursor: currentCursor,
-          filteredSuggestions
-        });
+        this.cursor = currentCursor;
+        this.filteredSuggestions = filteredSuggestions;
+        this.updateDoc();
       },
       attributes,
       nodeViews
@@ -599,13 +583,34 @@ Still | renders | nicely
     return defaultMarkdownSerializer.serialize(this.view.state.doc);
   }
 
+  getFilteredSuggestions(selectedSuggestion, suggestions, suggestionText) {
+    let filterText;
+    if (selectedSuggestion.board) {
+      // phase 2
+      filterText = suggestionText.substring(
+        selectedSuggestion.board.name.length + 1
+      );
+    } else {
+      // phase 1
+      filterText = suggestionText;
+    }
+    filterText = filterText.toLowerCase();
+    const filteredSuggestions = suggestions
+      .filter(s => {
+        return s[this.getSuggestionProperty()]
+          .toLowerCase()
+          .includes(filterText);
+      })
+      .slice(0, MAX_SUGGESTIONS);
+    return filteredSuggestions;
+  }
+
   getSuggestionProperty() {
-    const { suggestionPhase, suggestionChar } = this.state;
     let textProperty;
-    if (suggestionChar === '@') {
-      if (suggestionPhase === 1) {
+    if (this.suggestionChar === '@') {
+      if (this.suggestionPhase === 1) {
         textProperty = 'name'; // boardMeta.name
-      } else if (suggestionPhase === 2) {
+      } else if (this.suggestionPhase === 2) {
         textProperty = 'title'; // boardData.cards.title
       }
     } else {
@@ -651,12 +656,10 @@ Still | renders | nicely
       this.resetSuggestions(cursor);
       onRequestBoardsAsync()
         .then(newBoards => {
-          this.setState({
-            suggestions: newBoards,
-            suggestionIndex: 0,
-            suggestionChar: '@',
-            filteredSuggestions: newBoards.slice(0, MAX_SUGGESTIONS)
-          });
+          this.suggestions = newBoards;
+          this.suggestionIndex = 0;
+          this.suggestionChar = '@';
+          this.filteredSuggestions = newBoards.slice(0, MAX_SUGGESTIONS);
         })
         .catch(error => {
           console.log(error);
@@ -670,35 +673,25 @@ Still | renders | nicely
     this.resetSuggestions(cursor);
     const suggestions = COMMANDS.filter(c => !c.disabled || !c.disabled(state));
     const filteredSuggestions = suggestions.slice(0, MAX_SUGGESTIONS);
-    this.setState({
-      suggestions,
-      suggestionIndex: 0,
-      suggestionChar: '/',
-      filteredSuggestions
-    });
+    this.suggestions = suggestions;
+    this.suggestionIndex = 0;
+    this.suggestionChar = '/';
+    this.filteredSuggestions = filteredSuggestions;
     return filteredSuggestions;
   }
 
   resetSuggestions(suggestionPos?) {
-    this.setState({
-      suggestionPos: suggestionPos || -1,
-      suggestions: [],
-      filteredSuggestions: [],
-      suggestionPhase: 1,
-      suggestionIndex: 0,
-      suggestionChar: undefined,
-      selectedSuggestion: {}
-    });
+    this.suggestionPos = suggestionPos || -1;
+    this.suggestions = [];
+    this.filteredSuggestions = [];
+    this.suggestionPhase = 1;
+    this.suggestionChar = undefined;
+    this.selectedSuggestion = {};
+    this.suggestionIndex = 0;
+    this.cursor = undefined;
   }
 
   selectSuggestion(suggestion, state?, dispatch?) {
-    const {
-      suggestionPhase,
-      suggestionPos,
-      selectedSuggestion,
-      suggestionChar,
-      cursor
-    } = this.state;
     // const { state, dispatch } = this.view;
     if (!state) {
       // eslint-disable-next-line no-param-reassign
@@ -710,32 +703,28 @@ Still | renders | nicely
     }
     const { onRequestBoardDataAsync } = this.props;
 
-    let from = cursor;
+    let from = this.cursor;
     if (!from) {
       from = state.selection.from;
     }
 
-    if (suggestionChar === '@') {
-      if (suggestionPhase === 1) {
+    if (this.suggestionChar === '@') {
+      if (this.suggestionPhase === 1) {
         dispatch(
-          state.tr.insertText(`${suggestion.name}/`, suggestionPos, from)
+          state.tr.insertText(`${suggestion.name}/`, this.suggestionPos, from)
         );
-        this.setState({
-          suggestionPhase: 2,
-          suggestions: [],
-          suggestionIndex: 0,
-          filteredSuggestions: [],
-          selectedSuggestion: { board: suggestion }
-        });
+        this.suggestionPhase = 2;
+        this.suggestions = [];
+        this.suggestionIndex = 0;
+        this.filteredSuggestions = [];
+        this.selectedSuggestion = { board: suggestion };
         onRequestBoardDataAsync(suggestion.path)
           .then(spoolingBoardData => {
-            this.setState({
-              suggestions: spoolingBoardData.cards,
-              filteredSuggestions: spoolingBoardData.cards.slice(
-                0,
-                MAX_SUGGESTIONS
-              )
-            });
+            this.suggestions = spoolingBoardData.cards;
+            this.filteredSuggestions = spoolingBoardData.cards.slice(
+              0,
+              MAX_SUGGESTIONS
+            );
           })
           .catch(error => {
             console.log(error);
@@ -744,13 +733,13 @@ Still | renders | nicely
       } else {
         // replace with link
         // [board.name/card](@board.name/card "board.name/card")
-        const boardName = selectedSuggestion.board.name;
-        const boardPath = selectedSuggestion.board.path;
+        const boardName = this.selectedSuggestion.board.name;
+        const boardPath = this.selectedSuggestion.board.path;
         const cardName = suggestion.title;
         dispatch(
-          state.tr.insertText(cardName, suggestionPos - 1, from).addMark(
-            suggestionPos - 1,
-            suggestionPos + cardName.length,
+          state.tr.insertText(cardName, this.suggestionPos - 1, from).addMark(
+            this.suggestionPos - 1,
+            this.suggestionPos + cardName.length,
             schema.marks.link.create({
               href: `@${boardPath}/${cardName}`,
               title: `Open '${cardName}' notecard from '${boardName}' notebook`
@@ -760,8 +749,9 @@ Still | renders | nicely
       }
     } else {
       // slash command
+      const pos = this.suggestionPos - 1;
       this.resetSuggestions();
-      suggestion.onSelect(suggestionPos - 1, from, state, dispatch, from);
+      suggestion.onSelect(pos, from, state, dispatch, from);
     }
   }
 
@@ -803,9 +793,8 @@ Still | renders | nicely
   render() {
     const { onRemoveCard } = this.props;
     const { state } = this.view;
-    const { filteredSuggestions, suggestionPos, suggestionIndex } = this.state;
 
-    const isSuggestion = suggestionPos >= 0;
+    const isSuggestion = this.suggestionPos >= 0;
     let position;
     let textProperty;
     if (isSuggestion) {
@@ -827,8 +816,8 @@ Still | renders | nicely
         />
         {isSuggestion && (
           <SuggestionsPopup
-            suggestions={filteredSuggestions}
-            suggestionIndex={suggestionIndex}
+            suggestions={this.filteredSuggestions}
+            suggestionIndex={this.suggestionIndex}
             position={position}
             textProperty={textProperty}
             onSelectSuggestion={this.selectSuggestion}

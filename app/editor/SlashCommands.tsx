@@ -74,6 +74,9 @@ const COMMANDS = [
       const tbody = schema.nodes.table_body.createChecked(null, rows);
       const table = schema.nodes.table.createChecked(null, [thead, tbody]);
       // dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
+      console.log('table');
+      console.log(start - 1);
+      console.log(end + 1);
       const tr = state.tr.replaceWith(start - 1, end + 1, table);
       tr.setSelection(Selection.near(tr.doc.resolve(start)));
       dispatch(tr);
