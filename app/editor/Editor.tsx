@@ -182,9 +182,8 @@ Still | renders | nicely
               const url = parent.href;
               if (url) {
                 const openUrl = () => {
-                  if (url.startsWith('file') || url.startsWith('.')) {
-                    const { baseURI } = dom.node;
-                    shell.openItem(path.normalize(path.join(baseURI, url)));
+                  if (url.startsWith('http') || url.startsWith('www.')) {
+                    window.open(url, '_blank');
                     return true;
                   }
                   if (url.startsWith('@')) {
@@ -198,7 +197,7 @@ Still | renders | nicely
                     view.onStartSpooling(boardPath, cardName);
                     return true;
                   }
-                  window.open(url, '_blank');
+                  shell.openItem(url);
                   return true;
                 };
                 if (event.which === 3) {
@@ -564,8 +563,7 @@ Still | renders | nicely
         ipcRenderer.sendSync('file-link', baseURI.href)
       );
       if (filePath) {
-        const label = 'Local file';
-        console.log(filePath);
+        const label = filePath.substring(filePath.lastIndexOf('/') + 1);
         const cursorPos = state.selection.from;
         let tr = state.tr.insertText(label);
         tr = tr.addMark(

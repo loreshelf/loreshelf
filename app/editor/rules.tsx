@@ -46,19 +46,6 @@ export function codeBlockRule(nodeType) {
   return textblockTypeInputRule(/^```$/, nodeType);
 }
 
-// : (NodeType, number) → InputRule
-// Given a node type and a maximum level, creates an input rule that
-// turns up to that number of `#` characters followed by a space at
-// the start of a textblock into a heading whose level corresponds to
-// the number of `#` signs.
-export function headingRule(nodeType, maxLevel) {
-  return textblockTypeInputRule(
-    new RegExp(`^(#{1,${maxLevel}})\\s$`),
-    nodeType,
-    match => ({ level: match[1].length })
-  );
-}
-
 function escapeRegExp(stringToGoIntoTheRegex) {
   return stringToGoIntoTheRegex.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
@@ -73,7 +60,13 @@ export function buildInputRules(schema) {
   if ((type = schema.nodes.ordered_list)) rules.push(orderedListRule(type));
   if ((type = schema.nodes.bullet_list)) rules.push(bulletListRule(type));
   if ((type = schema.nodes.code_block)) rules.push(codeBlockRule(type));
-  if ((type = schema.nodes.heading)) rules.push(headingRule(type, 2));
+  if ((type = schema.nodes.heading))
+    rules.push(
+      textblockTypeInputRule(new RegExp(`^(#{2,2})\\s$`), type, match => ({
+        level: match[1].length,
+        class: 'property'
+      }))
+    );
   const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+ )$/;
   const imageUrlRegexp = /((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif) )$/;
 
