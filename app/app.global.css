@@ -69,6 +69,7 @@ p a:hover {
 
 .property {
   font-size: small;
+  min-height: 24px;
   padding: 4px;
   margin: 3px -5px;
   border-left: 7px solid hsl(207, 23%, 37%);
@@ -186,6 +187,11 @@ h2.searchLine::before {
   content: ' \f3c5';
 }
 
+h6 {
+  font-size: 30px;
+  text-align: center;
+}
+
 .searchLine::before {
   color: #ffb366;
   font-weight: 900;
@@ -250,6 +256,15 @@ blockquote::after {
   text-indent: -2px;
   width: 1em;
   margin-top: -0.5em;
+}
+
+hr {
+  border-width: 0;
+  border-bottom: 2px dashed hsl(207, 23%, 37%);
+  margin-left: -5px;
+  margin-right: -5px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* width */

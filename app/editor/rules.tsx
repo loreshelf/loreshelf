@@ -5,7 +5,6 @@ import {
   wrappingInputRule,
   textblockTypeInputRule,
   smartQuotes,
-  emDash,
   ellipsis,
   InputRule
 } from 'prosemirror-inputrules';
@@ -54,7 +53,7 @@ function escapeRegExp(stringToGoIntoTheRegex) {
 // A set of input rules for creating the basic block quotes, lists,
 // code blocks, and heading.
 export function buildInputRules(schema) {
-  const rules = smartQuotes.concat(ellipsis, emDash);
+  const rules = smartQuotes.concat(ellipsis);
   let type;
   if ((type = schema.nodes.blockquote)) rules.push(blockQuoteRule(type));
   if ((type = schema.nodes.ordered_list)) rules.push(orderedListRule(type));

@@ -848,7 +848,7 @@ class Home extends Component {
       clearTimeout(saveTimer);
     }
     if (shouldSave) {
-      this.saveBoard(boardData);
+      this.saveBoard();
     } else if (!immediatelyWhenNeeded) {
       boardData.status = 'Saving...';
       saveTimer = setTimeout(() => {

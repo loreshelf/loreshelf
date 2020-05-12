@@ -73,10 +73,6 @@ const COMMANDS = [
       const thead = schema.nodes.table_head.createChecked(null, headerRows);
       const tbody = schema.nodes.table_body.createChecked(null, rows);
       const table = schema.nodes.table.createChecked(null, [thead, tbody]);
-      // dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
-      console.log('table');
-      console.log(start - 1);
-      console.log(end + 1);
       const tr = state.tr.replaceWith(start - 1, end + 1, table);
       tr.setSelection(Selection.near(tr.doc.resolve(start)));
       dispatch(tr);
@@ -87,6 +83,28 @@ const COMMANDS = [
     disabled: isNotInline,
     onSelect: (start, end, state, dispatch) => {
       const insert = schema.nodes.blockquote.createAndFill();
+      const tr = state.tr.replaceWith(start - 1, end + 1, insert);
+      tr.setSelection(Selection.near(tr.doc.resolve(start - 1)));
+      dispatch(tr);
+    }
+  },
+  {
+    name: 'large',
+    disabled: isNotInline,
+    onSelect: (start, end, state, dispatch) => {
+      const insert = schema.nodes.heading.createAndFill({
+        level: 6
+      });
+      const tr = state.tr.replaceWith(start - 1, end + 1, insert);
+      tr.setSelection(Selection.near(tr.doc.resolve(start - 1)));
+      dispatch(tr);
+    }
+  },
+  {
+    name: 'rule',
+    disabled: isNotInline,
+    onSelect: (start, end, state, dispatch) => {
+      const insert = schema.nodes.horizontal_rule.create();
       const tr = state.tr.replaceWith(start - 1, end + 1, insert);
       tr.setSelection(Selection.near(tr.doc.resolve(start - 1)));
       dispatch(tr);
