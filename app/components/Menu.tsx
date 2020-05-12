@@ -529,7 +529,7 @@ class Menu extends Component {
                 className="bp3-input"
                 style={{ borderRadius: '0px', paddingRight: '0px' }}
                 type="search"
-                placeholder="Search in notecards"
+                placeholder="Search here"
                 onKeyPress={e => {
                   if (e.key === 'Enter') {
                     onSearchText(e.target.value);

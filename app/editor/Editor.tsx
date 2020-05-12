@@ -82,6 +82,8 @@ Still | renders | nicely
     this.suggestionIndex = 0;
     this.cursor = undefined;
 
+    this.state = { empty: true };
+
     // Keyboard plugin
 
     plugins.unshift(
@@ -118,7 +120,7 @@ Still | renders | nicely
               this.selectSuggestion(
                 this.filteredSuggestions[this.suggestionIndex]
               );
-            }, 200);
+            }, 100);
           }
         },
         'Mod-Space': state => {
@@ -132,14 +134,9 @@ Still | renders | nicely
             const suggestionText =
               where >= 0 ? paragraph.substring(where + 1, cursor) : '';
             this.requestSuggestionPhase1(
-              transaction.selection.from - suggestionText.length
-            );
-            this.filteredSuggestions = this.getFilteredSuggestions(
-              this.selectedSuggestion,
-              this.suggestions,
+              transaction.selection.from - suggestionText.length,
               suggestionText
             );
-            this.updateDoc();
           } else {
             where = this.getSuggestionCharacterPos(paragraph, cursor, '/');
             const suggestionText =
@@ -594,15 +591,17 @@ Still | renders | nicely
       // phase 1
       filterText = suggestionText;
     }
-    filterText = filterText.toLowerCase();
-    const filteredSuggestions = suggestions
-      .filter(s => {
-        return s[this.getSuggestionProperty()]
-          .toLowerCase()
-          .includes(filterText);
-      })
-      .slice(0, MAX_SUGGESTIONS);
-    return filteredSuggestions;
+    if (filterText) {
+      filterText = filterText.toLowerCase();
+      return suggestions
+        .filter(s => {
+          return s[this.getSuggestionProperty()]
+            .toLowerCase()
+            .includes(filterText);
+        })
+        .slice(0, MAX_SUGGESTIONS);
+    }
+    return suggestions.slice(0, MAX_SUGGESTIONS);
   }
 
   getSuggestionProperty() {
@@ -633,8 +632,10 @@ Still | renders | nicely
   }
 
   updateDoc() {
-    // eslint-disable-next-line react/no-access-state-in-setstate
-    this.setState({ state: this.state });
+    if (this.state) {
+      // eslint-disable-next-line react/no-access-state-in-setstate
+      this.setState({ state: this.state });
+    }
   }
 
   isTextSuggestion(transaction, suggestionChar) {
@@ -650,7 +651,7 @@ Still | renders | nicely
     return where >= 0;
   }
 
-  requestSuggestionPhase1(cursor) {
+  requestSuggestionPhase1(cursor, suggestionText?) {
     const { onRequestBoardsAsync, license } = this.props;
     if (license === 'PREMIUM') {
       this.resetSuggestions(cursor);
@@ -659,7 +660,12 @@ Still | renders | nicely
           this.suggestions = newBoards;
           this.suggestionIndex = 0;
           this.suggestionChar = '@';
-          this.filteredSuggestions = newBoards.slice(0, MAX_SUGGESTIONS);
+          this.filteredSuggestions = this.getFilteredSuggestions(
+            this.selectedSuggestion,
+            this.suggestions,
+            suggestionText
+          );
+          this.updateDoc();
         })
         .catch(error => {
           console.log(error);
@@ -693,6 +699,9 @@ Still | renders | nicely
 
   selectSuggestion(suggestion, state?, dispatch?) {
     // const { state, dispatch } = this.view;
+    if (!suggestion) {
+      return;
+    }
     if (!state) {
       // eslint-disable-next-line no-param-reassign
       state = this.view.state;
@@ -725,6 +734,7 @@ Still | renders | nicely
               0,
               MAX_SUGGESTIONS
             );
+            this.updateDoc();
           })
           .catch(error => {
             console.log(error);
