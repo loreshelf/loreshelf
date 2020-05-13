@@ -12,6 +12,7 @@ import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
 import { addRowAfter, deleteRow } from 'prosemirror-tables';
+import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
 import MenuBar from './MenuBar';
@@ -122,6 +123,14 @@ Still | renders | nicely
               );
             }, 100);
           }
+        },
+        Tab: (state, dispatch) => {
+          sinkListItem(schema.nodes.list_item)(state, dispatch);
+          return true;
+        },
+        'Shift-Tab': (state, dispatch) => {
+          liftListItem(schema.nodes.list_item)(state, dispatch);
+          return true;
         },
         'Mod-Space': state => {
           const transaction = state.tr;
