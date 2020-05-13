@@ -267,6 +267,10 @@ hr {
   margin-bottom: 0;
 }
 
+pre code {
+  display: none;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

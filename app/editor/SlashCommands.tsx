@@ -109,6 +109,20 @@ const COMMANDS = [
       tr.setSelection(Selection.near(tr.doc.resolve(start - 1)));
       dispatch(tr);
     }
+  },
+  {
+    name: 'strike',
+    disabled: isNotInline,
+    onSelect: (start, end, state, dispatch, cursor) => {
+      const label = 'strike out';
+      let tr = state.tr.insertText(label, start, cursor);
+      tr = tr.addMark(
+        start,
+        start + label.length,
+        schema.marks.strikethrough.create()
+      );
+      dispatch(tr);
+    }
   }
 ];
 

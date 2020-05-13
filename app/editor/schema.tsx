@@ -297,6 +297,19 @@ export const schema = new Schema({
       }
     },
 
+    strikethrough: {
+      parseDOM: [
+        {
+          tag: 'span',
+          style: 'text-decoration',
+          getAttrs: value => value === 'line-through' && null
+        }
+      ],
+      toDOM() {
+        return ['span', { style: 'text-decoration: line-through' }];
+      }
+    },
+
     strong: {
       parseDOM: [
         { tag: 'b' },

@@ -37,7 +37,7 @@ const markdownParser = new MarkdownParser(
       })
     },
     hardbreak: { node: 'hard_break' },
-
+    s: { mark: 'strikethrough' },
     em: { mark: 'em' },
     strong: { mark: 'strong' },
     link: {
@@ -183,6 +183,12 @@ const markdownSerializer = new MarkdownSerializer(
     em: {
       open: '*',
       close: '*',
+      mixable: true,
+      expelEnclosingWhitespace: true
+    },
+    strikethrough: {
+      open: '~~',
+      close: '~~',
       mixable: true,
       expelEnclosingWhitespace: true
     },
