@@ -147,6 +147,14 @@ class Home extends Component {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
+    ipcRenderer.on('start', (event, boardPath) => {
+      const workspacePath = boardPath.substring(
+        0,
+        boardPath.lastIndexOf(nodePath.sep)
+      );
+      self.loadWorkspace(workspacePath, true, boardPath);
+    });
+
     ipcRenderer.on(
       'workspace-add-callback',
       (event, workspacePath, files, stats) => {

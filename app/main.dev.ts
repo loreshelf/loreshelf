@@ -246,7 +246,12 @@ const createWindow = async () => {
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
 
-  console.log(process.argv);
+  if (process.argv.length > 1) {
+    setTimeout(() => {
+      log.info(`Request to start Loreshelf with ${process.argv[1]}`);
+      mainWindow.webContents.send('start', process.argv[1]);
+    }, 500);
+  }
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
@@ -268,6 +273,7 @@ app.on('window-all-closed', () => {
 app.on('open-file', (event, filePath) => {
   event.preventDefault();
   console.log(filePath);
+  log.info(`filePath: ${filePath}`);
 });
 
 app.on('ready', createWindow);
