@@ -5,6 +5,7 @@
 import React from 'react';
 import { Menu, MenuItem, ContextMenu, Intent } from '@blueprintjs/core';
 import path from 'path';
+import fs from 'fs';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
@@ -20,6 +21,7 @@ import plugins from './plugins';
 import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 import COMMANDS from './SlashCommands';
+import AppToaster from '../components/AppToaster';
 
 const MAX_SUGGESTIONS = 7;
 
@@ -205,7 +207,14 @@ Still | renders | nicely
                       return true;
                     }
                   }
-                  shell.openItem(url);
+                  if (fs.existsSync(url)) {
+                    shell.openItem(url);
+                  } else {
+                    AppToaster.show({
+                      message: `Cannot find and open '${decodeURI(url)}' file`,
+                      intent: Intent.DANGER
+                    });
+                  }
                   return true;
                 };
                 if (event.which === 3) {
@@ -576,8 +585,7 @@ Still | renders | nicely
       if (filePath) {
         const insert = schema.nodes.image.create({
           src: filePath,
-          title: filePath,
-          alt: filePath
+          alt: filePath.substring(filePath.lastIndexOf(path.sep) + 1)
         });
         const tr = state.tr.replaceSelectionWith(insert);
         dispatch(tr);

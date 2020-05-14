@@ -16,14 +16,7 @@ function ImageNode(props) {
       </>
     );
   }
-  return (
-    <img
-      src={src}
-      title={title}
-      alt={alt}
-      style={{ width: 'calc(100% + 10px)', margin: '-5px' }}
-    />
-  );
+  return <img src={src} title={title} alt={alt} />;
 }
 
 export default ImageNode;

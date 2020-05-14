@@ -200,16 +200,20 @@ const createWindow = async () => {
   ipcMain.on(
     'board-spooling-load',
     (event, boardPath, spoolingCardIndex?, cardName?) => {
-      const boardContent = fs.readFileSync(boardPath, 'utf8');
-      const stats = fs.statSync(boardPath);
-      event.reply(
-        'board-spooling-data',
-        boardPath,
-        boardContent,
-        stats,
-        spoolingCardIndex,
-        cardName
-      );
+      if (fs.existsSync(boardPath)) {
+        const boardContent = fs.readFileSync(boardPath, 'utf8');
+        const stats = fs.statSync(boardPath);
+        event.reply(
+          'board-spooling-data',
+          boardPath,
+          boardContent,
+          stats,
+          spoolingCardIndex,
+          cardName
+        );
+      } else {
+        event.reply('board-spooling-data', boardPath, null, null, null, null);
+      }
     }
   );
 

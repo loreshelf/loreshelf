@@ -10,6 +10,7 @@ import Board from './Board';
 import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
+import AppToaster from './AppToaster';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -754,6 +755,14 @@ class Home extends Component {
     spoolingCardIndex?,
     cardName?
   ) {
+    if (boardContent === null) {
+      // spooling board file does not exist
+      AppToaster.show({
+        message: `Cannot find and open '${decodeURI(boardPath)}' notebook`,
+        intent: Intent.DANGER
+      });
+      return;
+    }
     const spoolingBoardMeta = {
       path: boardPath,
       name: this.boardPathToName(boardPath)
@@ -768,6 +777,13 @@ class Home extends Component {
       const cardIndex = spoolingBoardData.cards.findIndex(card => {
         return card.title === cardName;
       });
+      if (cardIndex < 0) {
+        AppToaster.show({
+          message: `Cannot find and open '${cardName}' cardnote in '${boardPath}' notebook`,
+          intent: Intent.DANGER
+        });
+        return;
+      }
       if (spoolingCardIndex >= 0) {
         const { boardData } = this.state;
         boardData.cards[spoolingCardIndex].spooling = {

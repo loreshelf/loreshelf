@@ -8,7 +8,7 @@ import {
   ellipsis,
   InputRule
 } from 'prosemirror-inputrules';
-import { TextSelection } from 'prosemirror-state';
+import path from 'path';
 import MarkdownIcons from '../components/MarkdownIcons';
 
 // : (NodeType) → InputRule
@@ -76,10 +76,12 @@ export function buildInputRules(schema) {
   if ((type = schema.marks.link)) {
     rules.push(
       new InputRule(imageUrlRegexp, (state, match, start, end) => {
-        const src = encodeURI(match[1].trim());
+        const bareUrl = match[1].trim();
+        const src = encodeURI(bareUrl);
+        const alt = bareUrl.substring(bareUrl.lastIndexOf(path.sep) + 1);
         const insert = schema.nodes.image.create({
           src,
-          alt: 'WebImage'
+          alt
         });
         return state.tr.replaceWith(start, end, insert);
       })
