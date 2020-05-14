@@ -8,7 +8,13 @@ function ImageNode(props) {
   if (alt === 'Icon') {
     const mdi = findMarkdownIcon(src);
     const intent = mdi?.intent;
-    return <Icon icon={src} intent={intent} />;
+    return (
+      <>
+        &nbsp;
+        <Icon icon={src} intent={intent} />
+        &nbsp;
+      </>
+    );
   }
   return (
     <img
