@@ -21,7 +21,7 @@ function MenuBar(props) {
           background: '#30404d',
           boxShadow:
             '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)',
-          border: '1px solid #137cbd'
+          border: '1px solid #0081c9'
         }}
       >
         <Button

@@ -21,6 +21,7 @@ import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 import { SortOption, renderSort } from './SortBySelect';
 import BoardItem from './MenuItem';
+import brand from '../resources/brand.png';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 const SortSelect = Select.ofType<SortOption>();
@@ -185,6 +186,7 @@ class Menu extends Component {
       boardStatus,
       knownWorkspaces,
       workspace,
+      homeBoard,
       onNewBoard,
       onDuplicateBoard,
       onSelectBoard,
@@ -197,7 +199,6 @@ class Menu extends Component {
       onOpenHomeBoard,
       onSetHome,
       onNewCard,
-      homeBoard,
       sortBy,
       onSortSelect,
       searchText,
@@ -240,59 +241,25 @@ class Menu extends Component {
     return (
       <div className={styles.menu}>
         <ButtonGroup vertical fill>
-          {license === 'PREMIUM' ? (
-            <Button
-              minimal
-              icon="crown"
+          <ButtonGroup vertical>
+            <div
               style={{
-                textAlign: 'center',
-                cursor: 'default',
-                fontWeight: 'bolder',
-                backgroundColor: '#394b59',
+                width: '100%',
+                backgroundColor: '#30404d',
                 boxShadow:
                   '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
               }}
             >
-              PREMIUM
-            </Button>
-          ) : license === 'FREE' ? (
-            <Button
-              intent={Intent.WARNING}
-              icon="issue"
-              style={{
-                textAlign: 'center',
-                fontWeight: 'bolder',
-                boxShadow:
-                  '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
-              }}
-              onClick={this.licensePopupOpen}
-            >
-              FREE VERSION
-            </Button>
-          ) : (
-            <Button
-              minimal
-              style={{
-                textAlign: 'center',
-                cursor: 'default',
-                fontWeight: 'bolder',
-                backgroundColor: '#394b59',
-                boxShadow:
-                  '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
-              }}
-            >
-              CHECKING...
-            </Button>
-          )}
-          <ButtonGroup
-            style={{
-              marginBottom: '12px',
-              width: '100%',
-              backgroundColor: '#30404d',
-              boxShadow:
-                '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
-            }}
-          >
+              <Button
+                style={{
+                  textAlign: 'center',
+                  width: '180px'
+                }}
+                onClick={this.licensePopupOpen}
+              >
+                <img src={brand} alt="Logo" />
+              </Button>
+            </div>
             <Button
               key="homeBoard"
               title={
@@ -302,77 +269,75 @@ class Menu extends Component {
               }
               onClick={onOpenHomeBoard}
               disabled={!homeBoard}
-              icon="home"
+              intent={
+                homeBoard && homeBoard.endsWith(`${boardName}.md`)
+                  ? Intent.PRIMARY
+                  : Intent.NONE
+              }
+              outlined={homeBoard && homeBoard.endsWith(`${boardName}.md`)}
+              icon="book"
               style={{
-                maxWidth: '75px',
-                height: '40px',
-                minWidth: '75px'
+                maxWidth: '60px',
+                height: '30px',
+                minWidth: '60px',
+                backgroundColor: '#30404d',
+                marginBottom: '12px',
+                marginLeft: '120px'
               }}
-            />
-            {homeBoard && homeBoard.endsWith(`${boardName}.md`) && (
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '18px',
-                  top: '65px',
-                  width: '40px',
-                  height: '3px',
-                  background: '#92f8e6',
-                  zIndex: 10
-                }}
-              />
-            )}
-            <Button
-              key="openWorkspace"
-              title="Add and open new workspace"
-              onClick={onAddWorkspace}
-              icon="folder-open"
-              style={{ maxWidth: '75px', minWidth: '75px' }}
             />
           </ButtonGroup>
           <ButtonGroup
             vertical
             alignText="right"
             style={{
-              minWidth: '150px',
-              maxWidth: '150px',
+              minWidth: '180px',
+              maxWidth: '180px',
               backgroundColor: '#30404d',
               marginBottom: '10px',
               boxShadow:
                 '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
             }}
           >
-            <WorkspaceSelect
-              items={knownWorkspaces}
-              noResults={noResults}
-              itemPredicate={workspaceSelectProps.itemPredicate}
-              itemRenderer={workspaceSelectProps.itemRenderer}
-              onItemSelect={(selectedWorkspace, actionMeta) => {
-                if (actionMeta && actionMeta.action === 'close') {
-                  onCloseWorkspace(actionMeta.workspacePath);
-                } else {
-                  onSwitchWorkspace(selectedWorkspace);
-                }
-              }}
-              resetOnClose
-              resetOnSelect
-              popoverProps={{ minimal: true }}
-            >
-              <Button
-                rightIcon="caret-down"
-                alignText="left"
-                text={workspaceName}
-                style={{
-                  minWidth: '150px',
-                  maxWidth: '150px'
+            <ButtonGroup>
+              <WorkspaceSelect
+                items={knownWorkspaces}
+                noResults={noResults}
+                itemPredicate={workspaceSelectProps.itemPredicate}
+                itemRenderer={workspaceSelectProps.itemRenderer}
+                onItemSelect={(selectedWorkspace, actionMeta) => {
+                  if (actionMeta && actionMeta.action === 'close') {
+                    onCloseWorkspace(actionMeta.workspacePath);
+                  } else {
+                    onSwitchWorkspace(selectedWorkspace);
+                  }
                 }}
+                resetOnClose
+                resetOnSelect
+                popoverProps={{ minimal: true }}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  alignText="left"
+                  text={workspaceName}
+                  style={{
+                    minWidth: '140px',
+                    maxWidth: '140px'
+                  }}
+                />
+              </WorkspaceSelect>
+              <Button
+                key="addWorkspace"
+                title="Add new workspace"
+                onClick={onAddWorkspace}
+                icon="cube-add"
+                style={{ maxWidth: '40px', minWidth: '40px' }}
               />
-            </WorkspaceSelect>
+            </ButtonGroup>
             <Button
               style={{
                 width: '30px',
                 marginTop: '30px',
-                marginLeft: '150px',
+                marginLeft: '180px',
                 position: 'absolute',
                 borderRadius: '0 15px 15px 0',
                 zIndex: 10
@@ -457,8 +422,8 @@ class Menu extends Component {
             fill
             alignText="right"
             style={{
-              minWidth: '150px',
-              maxWidth: '150px',
+              minWidth: '180px',
+              maxWidth: '180px',
               backgroundColor: '#30404d',
               boxShadow:
                 '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'

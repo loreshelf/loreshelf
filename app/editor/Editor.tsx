@@ -402,15 +402,14 @@ Still | renders | nicely
         let filteredSuggestions = [];
 
         if (transactions.some(tr => tr.docChanged)) {
-          const { onChange, license } = this.props;
+          const { onChange } = this.props;
           const { selection } = state;
 
           const step = transaction.steps[0];
           if (
             this.suggestionPos < 0 &&
             step.from === step.to &&
-            step.slice.content.content[0].text === '@' &&
-            license === 'PREMIUM'
+            step.slice.content.content[0].text === '@'
           ) {
             // Start @ card link suggestion
             onChange(state.doc, this.saveChanges);
@@ -669,27 +668,23 @@ Still | renders | nicely
   }
 
   requestSuggestionPhase1(cursor, suggestionText?) {
-    const { onRequestBoardsAsync, license } = this.props;
-    if (license === 'PREMIUM') {
-      this.resetSuggestions(cursor);
-      onRequestBoardsAsync()
-        .then(newBoards => {
-          this.suggestions = newBoards;
-          this.suggestionIndex = 0;
-          this.suggestionChar = '@';
-          this.filteredSuggestions = this.getFilteredSuggestions(
-            this.selectedSuggestion,
-            this.suggestions,
-            suggestionText
-          );
-          this.updateDoc();
-        })
-        .catch(error => {
-          console.log(error);
-        });
-    } else {
-      this.resetSuggestions();
-    }
+    const { onRequestBoardsAsync } = this.props;
+    this.resetSuggestions(cursor);
+    onRequestBoardsAsync()
+      .then(newBoards => {
+        this.suggestions = newBoards;
+        this.suggestionIndex = 0;
+        this.suggestionChar = '@';
+        this.filteredSuggestions = this.getFilteredSuggestions(
+          this.selectedSuggestion,
+          this.suggestions,
+          suggestionText
+        );
+        this.updateDoc();
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
   requestCommandSuggestion(state, cursor) {

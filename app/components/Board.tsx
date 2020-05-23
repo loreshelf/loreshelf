@@ -72,7 +72,6 @@ class Board extends Component {
   render() {
     const {
       boardData,
-      license,
       onEditCard,
       onNewCard,
       onRemoveCard,
@@ -116,7 +115,6 @@ class Board extends Component {
                 ref={this.addCardRef}
                 key={`${c.title}-${cardData.indexOf(c)}`}
                 card={c}
-                license={license}
                 index={cardData.indexOf(c)}
                 dividerIndex={dividerIndex}
                 dividerLeft={dividerLeft}
@@ -132,6 +130,12 @@ class Board extends Component {
                 onRequestBoardDataAsync={onRequestBoardDataAsync}
                 onStopSpooling={onStopSpooling}
                 onOpenImage={this.openImage}
+                onMoveToTop={() => {
+                  onReorderCards(cardData.indexOf(c), 0);
+                }}
+                onMoveToBottom={() => {
+                  onReorderCards(cardData.indexOf(c), cardData.length - 1);
+                }}
               />
             ))}
             {cardData.length === dividerIndex && (

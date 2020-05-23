@@ -1,7 +1,7 @@
 .title {
   font-size: medium;
   width: 100% !important;
-  background: #137cbd;
+  background: #0081c9;
   padding: 5px;
   position: sticky;
   top: 0;
@@ -11,7 +11,7 @@
 
 .card {
   margin: 5px;
-  font-size: small;
+  font-size: 14px;
   min-width: 220px;
   width: 220px;
   max-width: 220px;
@@ -26,7 +26,7 @@
   text-align: center;
   font-weight: bold;
   width: 50%;
-  background: #137cbd;
+  background: #0081c9;
   border: 5px solid #30404d;
 }
 

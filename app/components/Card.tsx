@@ -8,10 +8,13 @@ import {
   DragPreviewImage
 } from 'react-dnd';
 import {
+  ContextMenu,
   Card as BlueCard,
   Elevation,
   Icon,
   EditableText,
+  Menu,
+  MenuItem,
   Button,
   Tooltip,
   Position
@@ -39,7 +42,6 @@ const Card: React.FC<CardProps> = forwardRef(
   (
     {
       card,
-      license,
       dividerIndex,
       dividerLeft,
       index,
@@ -52,7 +54,9 @@ const Card: React.FC<CardProps> = forwardRef(
       onRequestBoardsAsync,
       onRequestBoardDataAsync,
       onStopSpooling,
-      onOpenImage
+      onOpenImage,
+      onMoveToTop,
+      onMoveToBottom
     },
     ref
   ) => {
@@ -223,13 +227,50 @@ const Card: React.FC<CardProps> = forwardRef(
                 <div ref={drag}>
                   <Icon
                     icon="drag-handle-vertical"
-                    style={{ cursor: 'grab', minWidth: '20px' }}
+                    style={{
+                      cursor: 'grab',
+                      minWidth: '20px'
+                    }}
+                    onContextMenu={e => {
+                      e.preventDefault();
+                      let parent = e.target;
+                      const rect = parent.getBoundingClientRect();
+                      if (parent.tagName !== 'BUTTON') {
+                        parent = e.target.offsetParent;
+                      }
+                      const boardContextMenu = React.createElement(
+                        Menu,
+                        {},
+                        React.createElement(MenuItem, {
+                          onClick: onMoveToTop,
+                          icon: 'double-chevron-up',
+                          text: 'Move to the top'
+                        }),
+                        React.createElement(MenuItem, {
+                          onClick: onMoveToBottom,
+                          icon: 'double-chevron-down',
+                          text: 'Move to the bottom'
+                        })
+                      );
+
+                      ContextMenu.show(
+                        boardContextMenu,
+                        {
+                          left: rect.left - 5,
+                          top: rect.bottom + 7
+                        },
+                        () => {
+                          // menu was closed; callback optional
+                        },
+                        true
+                      );
+                    }}
                   />
                 </div>
               )}
               <Tooltip
                 content={card.title}
-                disabled={card.title.length <= 22}
+                disabled={card.title.length <= 19}
                 position={Position.BOTTOM}
                 inheritDarkTheme
               >
@@ -253,7 +294,7 @@ const Card: React.FC<CardProps> = forwardRef(
                   }}
                 />
               </Tooltip>
-              {card.title.length > 22 && (
+              {card.title.length > 19 && (
                 <div style={{ marginLeft: '3px' }}>...</div>
               )}
             </h1>
@@ -292,7 +333,6 @@ const Card: React.FC<CardProps> = forwardRef(
               ref={editorRef}
               doc={cardData.doc}
               index={index}
-              license={license}
               onChange={(doc, saveChanges) => {
                 onEditCard(index, doc, saveChanges);
               }}

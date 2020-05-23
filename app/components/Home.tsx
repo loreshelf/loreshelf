@@ -4,6 +4,7 @@ import nodePath from 'path';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
+import fs from 'fs';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -11,6 +12,7 @@ import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
 import AppToaster from './AppToaster';
+import JSZip from '../utils/jszip';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -44,8 +46,8 @@ enum CONFIG {
 
 const SORTING_METHODS = {
   NAME: (a, b, asc) => {
-    const aname = a.name.toUpperCase();
-    const bname = b.name.toUpperCase();
+    const aname = a.name;
+    const bname = b.name;
     if (aname > bname) {
       return asc ? 1 : -1;
     }
@@ -256,6 +258,39 @@ class Home extends Component {
     }
     this.setState({ homeWorkspace, homeBoard });
     ipcRenderer.send('deviceId');
+    /**
+    const file = '/home/ibek/Temp/ProtectedTest.md.zip';
+    fs.readFile(file, (err, data) => {
+      if (err) throw err;
+      JSZip.loadAsync(data, { password: 'heslo' })
+        .then(zip => {
+          return zip.file('Test.md').async('string');
+        })
+        // eslint-disable-next-line promise/always-return
+        .then(content => {
+          console.log(content);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    });
+
+    const zip = new JSZip();
+    zip.file('sifrovany.md', '#header\ntest');
+    zip
+      .generateAsync({
+        type: 'arraybuffer',
+        password: '1234',
+        encryptStrength: 3
+      })
+      // eslint-disable-next-line promise/always-return
+      .then(zipFile => {
+        const data = Buffer.from(zipFile);
+        fs.writeFileSync('/home/ibek/Temp/sifrovany.md.zip', data, 'binary');
+      })
+      .catch(error => {
+        console.error(error);
+      }); */
   }
 
   getCurrentBoardMd(data?) {
@@ -631,6 +666,7 @@ class Home extends Component {
       }
     }
     cards.splice(to, 0, cards.splice(from, 1)[0]);
+    this.boardRef.forceUpdate();
     this.autoSave();
   }
 
@@ -997,7 +1033,6 @@ class Home extends Component {
                 }}
                 boardData={boardData}
                 searchText={searchText}
-                license={license}
                 onEditTitle={this.editTitle}
                 onEditCard={this.editCard}
                 onNewCard={this.newCard}

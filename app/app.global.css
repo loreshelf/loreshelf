@@ -20,7 +20,7 @@ body {
     transparent 6px
   );
   background-size: 4px 4px;
-  font-family: Arial, Helvetica, Helvetica Neue, serif;
+  font-family: sans-serif;
   overflow-y: hidden;
   overflow-x: hidden;
 }
@@ -68,7 +68,7 @@ p a:hover {
 }
 
 .property {
-  font-size: small;
+  font-size: 15px;
   min-height: 24px;
   padding: 4px;
   margin: 3px -5px;
@@ -90,7 +90,7 @@ p a:hover {
 }
 
 .ProseMirror-focused {
-  border: 1px solid #137cbd !important;
+  border: 1px solid #0081c9 !important;
   outline: none;
 }
 
