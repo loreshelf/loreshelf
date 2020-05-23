@@ -117,23 +117,25 @@ class Menu extends Component {
   }
 
   duplicateBoardOpen() {
+    const { boardData } = this.props;
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'DuplicateNotebook.md',
+      newBoardName: `${boardData.name}(copy).md`,
       newBoardType: NewBoardType.DUPLICATE
     });
   }
 
   renameBoardOpen() {
+    const { boardData } = this.props;
     this.setState({
       newBoardOpen: true,
-      newBoardName: 'RenamedNotebook.md',
+      newBoardName: `${boardData.name}.md`,
       newBoardType: NewBoardType.RENAME
     });
   }
 
   newBoardClose() {
-    this.setState({ newBoardOpen: false });
+    this.setState({ newBoardOpen: false, newBoardIntent: Intent.NONE });
   }
 
   licensePopupClose() {
@@ -144,9 +146,8 @@ class Menu extends Component {
     this.setState({ licenseActivatedOpen: false });
   }
 
-  handleNameChange(event, workspacePath) {
+  handleNameChange(newBoardName, workspacePath) {
     // Check if board already exists
-    const newBoardName = `${event.target.value}.md`;
     let newBoardIntent;
     if (fs.existsSync(`${workspacePath}/${newBoardName}`)) {
       newBoardIntent = Intent.DANGER;
@@ -154,6 +155,7 @@ class Menu extends Component {
       newBoardIntent = Intent.NONE;
     }
     this.setState({ newBoardName, newBoardIntent });
+    return newBoardIntent;
   }
 
   handleLicenseKeyChange(event) {
@@ -549,7 +551,9 @@ class Menu extends Component {
                 : ''}
             </p>
             <InputGroup
-              onChange={e => this.handleNameChange(e, workspacePath)}
+              onChange={e => {
+                this.handleNameChange(`${e.target.value}.md`, workspacePath);
+              }}
               intent={newBoardIntent}
               placeholder="Enter new name..."
             />
@@ -560,7 +564,11 @@ class Menu extends Component {
               <Button
                 intent={Intent.PRIMARY}
                 onClick={() => {
-                  if (newBoardIntent === Intent.NONE) {
+                  const status = this.handleNameChange(
+                    newBoardName,
+                    workspacePath
+                  );
+                  if (status === Intent.NONE) {
                     if (newBoardType === NewBoardType.CREATE) {
                       onNewBoard(newBoardName);
                     } else if (newBoardType === NewBoardType.DUPLICATE) {
