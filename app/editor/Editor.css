@@ -3,4 +3,5 @@
   flex-direction: row;
   height: calc(100% - 30px);
   min-height: calc(100% - 30px);
+  user-select: all;
 }

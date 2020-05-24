@@ -14,7 +14,8 @@ import {
   Dialog,
   Icon,
   Label,
-  Card
+  Card,
+  Tag
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -67,7 +68,7 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardStatus, searchText, homeBoard, license } = this.props;
+    const { boardStatus, searchText, homeBoard, pro } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -78,7 +79,7 @@ class Menu extends Component {
     if (boardStatus !== nextProps.boardStatus) {
       return true;
     }
-    if (license !== nextProps.license) {
+    if (pro !== nextProps.pro) {
       return true;
     }
     if (searchText !== nextProps.searchText) {
@@ -219,7 +220,7 @@ class Menu extends Component {
       onSortSelect,
       searchText,
       onSearchText,
-      license,
+      pro,
       deviceId,
       onLicenseActivated
     } = this.props;
@@ -530,15 +531,25 @@ class Menu extends Component {
           >
             <div
               style={{
-                textAlign: 'center',
+                textAlign: 'left',
                 fontSize: 'small',
                 width: '100%',
-                color: '#a7b6c2'
+                color: '#a7b6c2',
+                cursor: 'default',
+                paddingTop: '5px',
+                paddingLeft: '10px'
               }}
             >
-              v1.0
-              <br />
-              PROFESSIONAL
+              v1.0&nbsp;
+              {pro ? (
+                <Tag round intent={Intent.PRIMARY}>
+                  Pro
+                </Tag>
+              ) : (
+                <Tag round intent={Intent.WARNING}>
+                  Basic
+                </Tag>
+              )}
             </div>
             <Button
               icon="cog"
@@ -625,62 +636,32 @@ class Menu extends Component {
             >
               <Card
                 interactive
-                style={{
-                  minWidth: '200px',
-                  maxWidth: '200px',
-                  padding: '15px',
-                  paddingTop: '5px',
-                  margin: '3px'
-                }}
+                className={styles.addWorkspaceCard}
                 onClick={() => {
                   this.addWorkspaceClose();
                   onAddWorkspace();
                 }}
               >
-                <h3>Local folder</h3>
+                <h3>Folder</h3>
                 <p>
-                  Open local file folder where notebooks (.md) files will be
-                  stored.
+                  Open local folder where notebooks (.md) files will be stored
+                  as a workspace.
                 </p>
               </Card>
-              <Card
-                interactive
-                style={{
-                  minWidth: '200px',
-                  maxWidth: '200px',
-                  padding: '15px',
-                  paddingTop: '5px',
-                  margin: '3px'
-                }}
-              >
-                <h3>My secured workspace</h3>
-                <p>Open AES-encrypted zip archive with your notebooks.</p>
+              <Card interactive className={styles.addWorkspaceCard}>
+                <h3>My vault</h3>
+                <p>
+                  Open AES-encrypted zip archive with your notebooks as a
+                  workspace.
+                </p>
               </Card>
-              <Card
-                interactive
-                style={{
-                  minWidth: '200px',
-                  maxWidth: '200px',
-                  padding: '15px',
-                  paddingTop: '5px',
-                  margin: '3px'
-                }}
-              >
+              <Card interactive className={styles.addWorkspaceCard}>
                 <h3>GitHub repository</h3>
                 <p>Open location in your GitHub repository as a workspace.</p>
               </Card>
-              <Card
-                interactive
-                style={{
-                  minWidth: '200px',
-                  maxWidth: '200px',
-                  padding: '15px',
-                  paddingTop: '5px',
-                  margin: '3px'
-                }}
-              >
-                <h3>New secured workspace</h3>
-                <p>Create new AES-encrypted zip archive.</p>
+              <Card interactive className={styles.addWorkspaceCard}>
+                <h3>New vault</h3>
+                <p>Create new AES-encrypted zip archive as a workspace.</p>
               </Card>
             </div>
           </div>

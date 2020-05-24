@@ -325,11 +325,9 @@ class Home extends Component {
     const hashString = hash.toString();
     const originalHash = SLV_STORE.get('hash');
     if (hashString === originalHash) {
-      const license = 'PREMIUM';
-      this.setState({ license, deviceId });
+      this.setState({ pro: true, deviceId });
     } else {
-      const license = 'FREE';
-      this.setState({ license, deviceId });
+      this.setState({ pro: false, deviceId });
       setTimeout(() => {
         if (this.menuRef.current) {
           this.menuRef.current.licensePopupOpen();
@@ -966,8 +964,8 @@ class Home extends Component {
       homeBoard,
       sortBy,
       searchText,
-      license,
-      deviceId
+      deviceId,
+      pro
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -1006,7 +1004,7 @@ class Home extends Component {
               homeBoard={homeBoard}
               sortBy={sortBy}
               searchText={searchText}
-              license={license}
+              pro={pro}
               deviceId={deviceId}
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}

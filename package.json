@@ -2,7 +2,7 @@
   "name": "loreshelf",
   "productName": "Loreshelf",
   "version": "1.0.0",
-  "description": "Line up lasting notes in Markdown.",
+  "description": "Concise notes, secure and lasting.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -94,7 +94,7 @@
     },
     "linux": {
       "icon": "icon.icns",
-      "synopsis": "Knowledge databank",
+      "synopsis": "Reduce your information noise and display the scoped view of quickly accessible knowledge data.",
       "target": [
         "deb"
       ],
