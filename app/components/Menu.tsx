@@ -243,51 +243,22 @@ class Menu extends Component {
     return (
       <div className={styles.menu}>
         <ButtonGroup vertical fill>
-          <ButtonGroup vertical>
-            <div
-              style={{
-                width: '100%',
-                backgroundColor: '#30404d',
-                boxShadow:
-                  '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
-              }}
-            >
-              <Button
-                style={{
-                  textAlign: 'center',
-                  width: '180px'
-                }}
-                onClick={this.licensePopupOpen}
-              >
-                <img src={brand} alt="Logo" />
-              </Button>
-            </div>
-            <Button
-              key="homeBoard"
-              title={
-                homeBoard
-                  ? 'Open the home notebook'
-                  : 'Set home notebook in the context menu of your current notebook'
-              }
-              onClick={onOpenHomeBoard}
-              disabled={!homeBoard}
-              intent={
-                homeBoard && homeBoard.endsWith(`${boardName}.md`)
-                  ? Intent.PRIMARY
-                  : Intent.NONE
-              }
-              outlined={homeBoard && homeBoard.endsWith(`${boardName}.md`)}
-              icon="book"
-              style={{
-                maxWidth: '60px',
-                height: '30px',
-                minWidth: '60px',
-                backgroundColor: '#30404d',
-                marginBottom: '12px',
-                marginLeft: '120px'
-              }}
+          <div
+            style={{
+              width: '180px',
+              backgroundColor: '#30404d',
+              textAlign: 'center',
+              padding: '5px',
+              boxShadow:
+                '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)'
+            }}
+          >
+            <img
+              src={brand}
+              alt="Logo"
+              style={{ width: '150px', margin: '0 auto' }}
             />
-          </ButtonGroup>
+          </div>
           <ButtonGroup
             vertical
             alignText="right"
@@ -379,8 +350,8 @@ class Menu extends Component {
                     onClick: () => {
                       onSetHome();
                     },
-                    icon: 'home',
-                    text: 'Set Home'
+                    icon: 'log-in',
+                    text: 'Open on startup'
                   }),
                   React.createElement(MenuDivider),
                   React.createElement(MenuItem, {
@@ -531,6 +502,39 @@ class Menu extends Component {
                 })}
               </ButtonGroup>
             </div>
+          </ButtonGroup>
+          <ButtonGroup
+            style={{
+              minWidth: '180px',
+              maxWidth: '180px',
+              backgroundColor: '#30404d',
+              boxShadow:
+                '0 0 0 1px rgba(16, 22, 26, 0.2), 0 1px 1px rgba(16, 22, 26, 0.4), 0 2px 6px rgba(16, 22, 26, 0.4)',
+              marginTop: '10px'
+            }}
+          >
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: 'small',
+                width: '100%'
+              }}
+            >
+              v1.0
+              <br />
+              PROFESSIONAL
+            </div>
+            <Button
+              icon="cog"
+              style={{
+                minWidth: '50px',
+                width: '50px',
+                maxWidth: '50px'
+              }}
+              onClick={() => {
+                this.licensePopupOpen();
+              }}
+            />
           </ButtonGroup>
         </ButtonGroup>
         <Dialog
