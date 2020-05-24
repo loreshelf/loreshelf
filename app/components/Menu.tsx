@@ -13,7 +13,8 @@ import {
   Intent,
   Dialog,
   Icon,
-  Label
+  Label,
+  Card
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -40,6 +41,7 @@ class Menu extends Component {
       newBoardName: 'Notebook.md',
       newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE,
+      addWorkspaceOpen: false,
       licensePopupOpen: false,
       licenseActivatePopupOpen: false,
       licenseEmail: '',
@@ -54,6 +56,8 @@ class Menu extends Component {
     this.newBoardOpen = this.newBoardOpen.bind(this);
     this.duplicateBoardOpen = this.duplicateBoardOpen.bind(this);
     this.newBoardClose = this.newBoardClose.bind(this);
+    this.addWorkspaceOpen = this.addWorkspaceOpen.bind(this);
+    this.addWorkspaceClose = this.addWorkspaceClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
     this.licensePopupOpen = this.licensePopupOpen.bind(this);
     this.licensePopupClose = this.licensePopupClose.bind(this);
@@ -110,6 +114,12 @@ class Menu extends Component {
     });
   }
 
+  addWorkspaceOpen() {
+    this.setState({
+      addWorkspaceOpen: true
+    });
+  }
+
   licensePopupOpen() {
     this.setState({
       licensePopupOpen: true
@@ -136,6 +146,10 @@ class Menu extends Component {
 
   newBoardClose() {
     this.setState({ newBoardOpen: false, newBoardIntent: Intent.NONE });
+  }
+
+  addWorkspaceClose() {
+    this.setState({ addWorkspaceOpen: false });
   }
 
   licensePopupClose() {
@@ -214,6 +228,7 @@ class Menu extends Component {
       newBoardName,
       newBoardIntent,
       newBoardType,
+      addWorkspaceOpen,
       licensePopupOpen,
       licenseActivatePopupOpen,
       licenseKey,
@@ -301,7 +316,7 @@ class Menu extends Component {
               <Button
                 key="addWorkspace"
                 title="Add new workspace"
-                onClick={onAddWorkspace}
+                onClick={this.addWorkspaceOpen}
                 icon="cube-add"
                 style={{ maxWidth: '40px', minWidth: '40px' }}
               />
@@ -517,7 +532,8 @@ class Menu extends Component {
               style={{
                 textAlign: 'center',
                 fontSize: 'small',
-                width: '100%'
+                width: '100%',
+                color: '#a7b6c2'
               }}
             >
               v1.0
@@ -586,6 +602,91 @@ class Menu extends Component {
               >
                 Confirm
               </Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="cube-add"
+          onClose={this.addWorkspaceClose}
+          isOpen={addWorkspaceOpen}
+          title="Add new workspace"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>Choose the source location of your new workspace.</p>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                width: '100%',
+                margin: '0 auto',
+                justifyContent: 'center'
+              }}
+            >
+              <Card
+                interactive
+                style={{
+                  minWidth: '200px',
+                  maxWidth: '200px',
+                  padding: '15px',
+                  paddingTop: '5px',
+                  margin: '3px'
+                }}
+                onClick={() => {
+                  this.addWorkspaceClose();
+                  onAddWorkspace();
+                }}
+              >
+                <h3>Local folder</h3>
+                <p>
+                  Open local file folder where notebooks (.md) files will be
+                  stored.
+                </p>
+              </Card>
+              <Card
+                interactive
+                style={{
+                  minWidth: '200px',
+                  maxWidth: '200px',
+                  padding: '15px',
+                  paddingTop: '5px',
+                  margin: '3px'
+                }}
+              >
+                <h3>My secured workspace</h3>
+                <p>Open AES-encrypted zip archive with your notebooks.</p>
+              </Card>
+              <Card
+                interactive
+                style={{
+                  minWidth: '200px',
+                  maxWidth: '200px',
+                  padding: '15px',
+                  paddingTop: '5px',
+                  margin: '3px'
+                }}
+              >
+                <h3>GitHub repository</h3>
+                <p>Open location in your GitHub repository as a workspace.</p>
+              </Card>
+              <Card
+                interactive
+                style={{
+                  minWidth: '200px',
+                  maxWidth: '200px',
+                  padding: '15px',
+                  paddingTop: '5px',
+                  margin: '3px'
+                }}
+              >
+                <h3>New secured workspace</h3>
+                <p>Create new AES-encrypted zip archive.</p>
+              </Card>
+            </div>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.addWorkspaceClose}>Cancel</Button>
             </div>
           </div>
         </Dialog>
