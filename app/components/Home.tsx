@@ -1,7 +1,13 @@
 import React, { Component } from 'react';
 import { ipcRenderer } from 'electron';
 import nodePath from 'path';
-import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
+import {
+  Classes,
+  NonIdealState,
+  Button,
+  Intent,
+  InputGroup
+} from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
 import JSZip from '../utils/jszip';
@@ -12,7 +18,6 @@ import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
 import AppToaster from './AppToaster';
-import PasswordPrompt from './PasswordPrompt';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -80,7 +85,6 @@ class Home extends Component {
     const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}], zip }}
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status, modified}
     const knownWorkspaces = []; // [workspace1, workspace2]
-    const securedWorkspace = undefined;
 
     const homeBoard = undefined; // = boardPath
     const deviceId = undefined;
@@ -107,8 +111,7 @@ class Home extends Component {
       homeBoard,
       sortBy,
       searchText,
-      deviceId,
-      securedWorkspace
+      deviceId
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -170,7 +173,32 @@ class Home extends Component {
     ipcRenderer.on(
       'workspace-add-zip-callback',
       (event, workspacePath, zipdata) => {
-        self.setState({ securedWorkspace: { workspacePath, zipdata } });
+        // eslint-disable-next-line promise/no-nesting
+        const workspace = self.addWorkspaceCallback(workspacePath, [], []);
+        workspace.zipdata = zipdata;
+        self.setState({ workspace });
+        /** JSZip.loadAsync(securedWorkspace.zipdata, { password })
+          // eslint-disable-next-line promise/always-return
+          .then(zip => {
+            const files = [];
+            const stats = [];
+            const zipFiles = Object.values(zip.files);
+            securedWorkspace.zip = zip;
+            zipFiles.forEach(zo => {
+              if (zo.name.endsWith('.md')) {
+                files.push(zo.name);
+                stats.push({ mtimeMs: zo.date });
+              }
+            });
+            this.addWorkspaceCallback(
+              securedWorkspace.workspacePath,
+              files,
+              stats
+            );
+          })
+          .catch(error => {
+            console.error(error);
+          }); */
       }
     );
 
@@ -456,6 +484,7 @@ class Home extends Component {
       });
       this.menuRef.current.forceUpdate();
     }
+    return workspace;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -513,17 +542,15 @@ class Home extends Component {
   }
 
   loadBoard(boardMetaIndex) {
-    const { workspace, securedWorkspace } = this.state;
+    const { workspace } = this.state;
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
-    if (securedWorkspace) {
-      console.log(boardMeta);
-      console.log(securedWorkspace);
-      const zipObject = securedWorkspace.zip.file(`${boardMeta.name}.md`);
+    if (workspace.zip) {
+      const zipObject = workspace.zip.file(`${boardMeta.name}.md`);
       // eslint-disable-next-line promise/catch-or-return
       zipObject.async('string').then(content => {
         this.loadBoardCallback(boardMeta, content, {
-          mtimeMs: new Date() - zipObject.date
+          mtimeMs: boardMeta.modified
         });
         return true;
       });
@@ -987,8 +1014,7 @@ class Home extends Component {
       sortBy,
       searchText,
       deviceId,
-      pro,
-      securedWorkspace
+      pro
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -1009,6 +1035,103 @@ class Home extends Component {
     );
 
     const boardStatus = boardData && boardData.status ? boardData.status : '';
+
+    let mainContent;
+
+    if (workspace) {
+      if (boardData) {
+        mainContent = (
+          <Board
+            key="board"
+            // eslint-disable-next-line no-return-assign
+            ref={el => {
+              this.boardRef = el;
+            }}
+            boardData={boardData}
+            searchText={searchText}
+            onEditTitle={this.editTitle}
+            onEditCard={this.editCard}
+            onNewCard={this.newCard}
+            onReorderCards={this.reorderCards}
+            onRemoveCard={this.removeCard}
+            onRequestBoardsAsync={this.requestBoardsAsync}
+            onRequestBoardDataAsync={this.requestBoardDataAsync}
+            onStopSpooling={this.stopSpooling}
+          />
+        );
+      } else if (workspace.zipdata && !workspace.password) {
+        // secured workspace without password
+        mainContent = (
+          <NonIdealState
+            key="locked-workspace"
+            icon="lock"
+            title="Locked Workspace"
+            description="This secured workspace is currently locked. Enter the password and load its notebooks."
+          >
+            <InputGroup
+              type="password"
+              leftIcon="lock"
+              autoFocus
+              placeholder="Enter password..."
+              inputRef={(pwdInput: HTMLInputElement) => {
+                this.pwdInput = pwdInput;
+              }}
+            />
+            <Button
+              intent={Intent.PRIMARY}
+              onClick={() => {
+                const password = this.pwdInput.value;
+                workspace.password = password;
+                JSZip.loadAsync(workspace.zipdata, { password })
+                  .then(zip => {
+                    const files = [];
+                    const stats = [];
+                    const zipFiles = Object.values(zip.files);
+                    workspace.zip = zip;
+                    const currDate = new Date();
+                    zipFiles.forEach(zo => {
+                      if (zo.name.endsWith('.md')) {
+                        files.push(zo.name);
+                        stats.push({
+                          mtimeMs: new Date(
+                            new Date(zo.date).getTime() +
+                              currDate.getTimezoneOffset() * 60000
+                          )
+                        });
+                      }
+                    });
+                    this.updateWorkspace(
+                      workspace.path,
+                      knownWorkspaces,
+                      files,
+                      stats
+                    );
+                    if (workspace.numBoards > 0) {
+                      this.loadBoard(0);
+                    }
+                    return true;
+                  })
+                  .catch(error => {
+                    console.log(error);
+                  });
+              }}
+            >
+              Unlock Workspace
+            </Button>
+          </NonIdealState>
+        );
+      } else {
+        mainContent = (
+          <NonIdealState
+            key="empty-workspace"
+            icon="grid-view"
+            title="Empty Workspace"
+            description="Start with creating a new notebook, the place where you will capture and analyze related information. For example 'Accounts', 'Insurances', 'Investments' in 'Finance' workspace. Every notebook will be stored as a standalone .md Markdown file in the current workspace."
+            action={CreateBoard}
+          />
+        );
+      }
+    }
 
     return (
       <div
@@ -1044,33 +1167,7 @@ class Home extends Component {
               onSearchText={this.searchText}
               onLicenseActivated={this.licenseActivated}
             />,
-            boardData ? (
-              <Board
-                key="board"
-                // eslint-disable-next-line no-return-assign
-                ref={el => {
-                  this.boardRef = el;
-                }}
-                boardData={boardData}
-                searchText={searchText}
-                onEditTitle={this.editTitle}
-                onEditCard={this.editCard}
-                onNewCard={this.newCard}
-                onReorderCards={this.reorderCards}
-                onRemoveCard={this.removeCard}
-                onRequestBoardsAsync={this.requestBoardsAsync}
-                onRequestBoardDataAsync={this.requestBoardDataAsync}
-                onStopSpooling={this.stopSpooling}
-              />
-            ) : (
-              <NonIdealState
-                key="empty-workspace"
-                icon="grid-view"
-                title="Empty Workspace"
-                description="Start with creating a new notebook, the place where you will capture and analyze related information. For example 'Accounts', 'Insurances', 'Investments' in 'Finance' workspace. Every notebook will be stored as a standalone .md Markdown file in the current workspace."
-                action={CreateBoard}
-              />
-            )
+            mainContent
           ]
         ) : (
           <NonIdealState
@@ -1080,40 +1177,6 @@ class Home extends Component {
             action={OpenWorkspace}
           />
         )}
-        <PasswordPrompt
-          isOpen={securedWorkspace && !securedWorkspace.password}
-          resolve={password => {
-            // eslint-disable-next-line promise/always-return
-            if (password) {
-              console.log(password);
-              securedWorkspace.password = password;
-              this.setState(securedWorkspace);
-              // eslint-disable-next-line promise/no-nesting
-              JSZip.loadAsync(securedWorkspace.zipdata, { password })
-                // eslint-disable-next-line promise/always-return
-                .then(zip => {
-                  const files = [];
-                  const stats = [];
-                  const zipFiles = Object.values(zip.files);
-                  securedWorkspace.zip = zip;
-                  zipFiles.forEach(zo => {
-                    if (zo.name.endsWith('.md')) {
-                      files.push(zo.name);
-                      stats.push({ mtimeMs: zo.date });
-                    }
-                  });
-                  this.addWorkspaceCallback(
-                    securedWorkspace.workspacePath,
-                    files,
-                    stats
-                  );
-                })
-                .catch(error => {
-                  console.error(error);
-                });
-            }
-          }}
-        />
       </div>
     );
   }
