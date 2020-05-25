@@ -207,9 +207,8 @@ Still | renders | nicely
                       return true;
                     }
                   }
-                  if (fs.existsSync(url)) {
-                    shell.openItem(url);
-                  } else {
+                  if (!shell.openItem(url)) {
+                    // currently doesn't work but in Electron 9 the API changes (openPath)
                     AppToaster.show({
                       message: `Cannot find and open '${decodeURI(url)}' file`,
                       intent: Intent.DANGER
@@ -579,7 +578,9 @@ Still | renders | nicely
       const { state, dispatch } = this.view;
       const baseURI = document.getElementById('baseURI');
       const filePath = path.normalize(
-        ipcRenderer.sendSync('file-link', baseURI.href)
+        ipcRenderer.sendSync('file-link', baseURI.href, [
+          { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'svg', 'gif'] }
+        ])
       );
       if (filePath) {
         const insert = schema.nodes.image.create({

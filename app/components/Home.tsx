@@ -4,7 +4,7 @@ import nodePath from 'path';
 import { Classes, NonIdealState, Button, Intent } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
-import fs from 'fs';
+import JSZip from '../utils/jszip';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -12,7 +12,7 @@ import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
 import AppToaster from './AppToaster';
-import JSZip from '../utils/jszip';
+import PasswordPrompt from './PasswordPrompt';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -77,9 +77,10 @@ class Home extends Component {
   constructor() {
     super();
 
-    const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}] }}
+    const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}], zip }}
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status, modified}
     const knownWorkspaces = []; // [workspace1, workspace2]
+    const securedWorkspace = undefined;
 
     const homeBoard = undefined; // = boardPath
     const deviceId = undefined;
@@ -106,7 +107,8 @@ class Home extends Component {
       homeBoard,
       sortBy,
       searchText,
-      deviceId
+      deviceId,
+      securedWorkspace
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -162,6 +164,13 @@ class Home extends Component {
       'workspace-add-callback',
       (event, workspacePath, files, stats) => {
         self.addWorkspaceCallback(workspacePath, files, stats);
+      }
+    );
+
+    ipcRenderer.on(
+      'workspace-add-zip-callback',
+      (event, workspacePath, zipdata) => {
+        self.setState({ securedWorkspace: { workspacePath, zipdata } });
       }
     );
 
@@ -504,10 +513,23 @@ class Home extends Component {
   }
 
   loadBoard(boardMetaIndex) {
-    const { workspace } = this.state;
+    const { workspace, securedWorkspace } = this.state;
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
-    ipcRenderer.send('board-read', boardMeta);
+    if (securedWorkspace) {
+      console.log(boardMeta);
+      console.log(securedWorkspace);
+      const zipObject = securedWorkspace.zip.file(`${boardMeta.name}.md`);
+      // eslint-disable-next-line promise/catch-or-return
+      zipObject.async('string').then(content => {
+        this.loadBoardCallback(boardMeta, content, {
+          mtimeMs: new Date() - zipObject.date
+        });
+        return true;
+      });
+    } else {
+      ipcRenderer.send('board-read', boardMeta);
+    }
   }
 
   newBoard(newBoardName, content?) {
@@ -965,7 +987,8 @@ class Home extends Component {
       sortBy,
       searchText,
       deviceId,
-      pro
+      pro,
+      securedWorkspace
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -1012,7 +1035,6 @@ class Home extends Component {
               onDeleteBoard={this.deleteBoard}
               onRenameBoard={this.renameBoard}
               onMoveCardToBoard={this.moveCardToBoard}
-              onAddWorkspace={() => ipcRenderer.send('workspace-add')}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
               onOpenHomeBoard={this.openHomeBoard}
@@ -1058,6 +1080,40 @@ class Home extends Component {
             action={OpenWorkspace}
           />
         )}
+        <PasswordPrompt
+          isOpen={securedWorkspace && !securedWorkspace.password}
+          resolve={password => {
+            // eslint-disable-next-line promise/always-return
+            if (password) {
+              console.log(password);
+              securedWorkspace.password = password;
+              this.setState(securedWorkspace);
+              // eslint-disable-next-line promise/no-nesting
+              JSZip.loadAsync(securedWorkspace.zipdata, { password })
+                // eslint-disable-next-line promise/always-return
+                .then(zip => {
+                  const files = [];
+                  const stats = [];
+                  const zipFiles = Object.values(zip.files);
+                  securedWorkspace.zip = zip;
+                  zipFiles.forEach(zo => {
+                    if (zo.name.endsWith('.md')) {
+                      files.push(zo.name);
+                      stats.push({ mtimeMs: zo.date });
+                    }
+                  });
+                  this.addWorkspaceCallback(
+                    securedWorkspace.workspacePath,
+                    files,
+                    stats
+                  );
+                })
+                .catch(error => {
+                  console.error(error);
+                });
+            }
+          }}
+        />
       </div>
     );
   }

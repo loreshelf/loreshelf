@@ -19,6 +19,7 @@ import {
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
+import { ipcRenderer } from 'electron';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 import { SortOption, renderSort } from './SortBySelect';
@@ -639,7 +640,7 @@ class Menu extends Component {
                 className={styles.addWorkspaceCard}
                 onClick={() => {
                   this.addWorkspaceClose();
-                  onAddWorkspace();
+                  ipcRenderer.send('workspace-add');
                 }}
               >
                 <h3>Folder</h3>
@@ -648,7 +649,14 @@ class Menu extends Component {
                   as a workspace.
                 </p>
               </Card>
-              <Card interactive className={styles.addWorkspaceCard}>
+              <Card
+                interactive
+                className={styles.addWorkspaceCard}
+                onClick={() => {
+                  this.addWorkspaceClose();
+                  ipcRenderer.send('workspace-add-zip');
+                }}
+              >
                 <h3>My vault</h3>
                 <p>
                   Open AES-encrypted zip archive with your notebooks as a

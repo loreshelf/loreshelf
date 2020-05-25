@@ -141,6 +141,29 @@ const createWindow = async () => {
     });
   });
 
+  ipcMain.on('workspace-add-zip', event => {
+    const options = {
+      title: 'Add and open a secured workspace',
+      buttonLabel: 'Open workspace',
+      filters: [{ name: 'Archive', extensions: ['zip'] }],
+      properties: ['openFile']
+    };
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showOpenDialog(mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+      } else {
+        const workspacePath = data.filePaths[0];
+        fs.readFile(workspacePath, (err, zipdata) => {
+          if (!err) {
+            event.reply('workspace-add-zip-callback', workspacePath, zipdata);
+          }
+        });
+      }
+    });
+  });
+
   ipcMain.on(
     'workspace-load',
     (event, workspacePath, shouldSetWorkspace, openBoardPath) => {
@@ -217,11 +240,12 @@ const createWindow = async () => {
     }
   );
 
-  ipcMain.on('file-link', (event, baseHref) => {
+  ipcMain.on('file-link', (event, baseHref, filters?) => {
     const options = {
       title: 'Add file link',
       buttonLabel: 'Add file link',
-      properties: ['openFile']
+      properties: ['openFile'],
+      filters
     };
     // eslint-disable-next-line promise/catch-or-return
     dialog.showOpenDialog(mainWindow, options).then(data => {

@@ -12265,7 +12265,6 @@ sjcl.misc.pbkdf2 = function (password, salt, count, length, Prff) {
   }
 
   if (typeof password === "string") {
-    console.log(sjcl.codec);
     password = toBits(password);
   }
 
