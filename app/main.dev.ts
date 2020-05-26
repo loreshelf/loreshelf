@@ -186,6 +186,23 @@ const createWindow = async () => {
     }
   );
 
+  ipcMain.on(
+    'workspace-secured-load',
+    (event, workspacePath, shouldSetWorkspace, openBoardPath) => {
+      fs.readFile(workspacePath, (err, zipdata) => {
+        if (!err) {
+          event.reply(
+            'workspace-secured-load-callback',
+            workspacePath,
+            zipdata,
+            shouldSetWorkspace,
+            openBoardPath
+          );
+        }
+      });
+    }
+  );
+
   ipcMain.on('board-read', (event, boardMeta) => {
     const text = fs.readFileSync(boardMeta.path, 'utf8');
     const stats = fs.statSync(boardMeta.path);

@@ -173,32 +173,7 @@ class Home extends Component {
     ipcRenderer.on(
       'workspace-add-zip-callback',
       (event, workspacePath, zipdata) => {
-        // eslint-disable-next-line promise/no-nesting
-        const workspace = self.addWorkspaceCallback(workspacePath, [], []);
-        workspace.zipdata = zipdata;
-        self.setState({ workspace });
-        /** JSZip.loadAsync(securedWorkspace.zipdata, { password })
-          // eslint-disable-next-line promise/always-return
-          .then(zip => {
-            const files = [];
-            const stats = [];
-            const zipFiles = Object.values(zip.files);
-            securedWorkspace.zip = zip;
-            zipFiles.forEach(zo => {
-              if (zo.name.endsWith('.md')) {
-                files.push(zo.name);
-                stats.push({ mtimeMs: zo.date });
-              }
-            });
-            this.addWorkspaceCallback(
-              securedWorkspace.workspacePath,
-              files,
-              stats
-            );
-          })
-          .catch(error => {
-            console.error(error);
-          }); */
+        self.addSecuredWorkspaceCallback(workspacePath, zipdata);
       }
     );
 
@@ -216,6 +191,18 @@ class Home extends Component {
           workspacePath,
           files,
           stats,
+          shouldSetWorkspace,
+          openBoardPath
+        );
+      }
+    );
+
+    ipcRenderer.on(
+      'workspace-secured-load-callback',
+      (event, workspacePath, zipdata, shouldSetWorkspace, openBoardPath) => {
+        self.loadSecuredWorkspaceCallback(
+          workspacePath,
+          zipdata,
           shouldSetWorkspace,
           openBoardPath
         );
@@ -417,12 +404,35 @@ class Home extends Component {
 
   // eslint-disable-next-line class-methods-use-this
   loadWorkspace(workspacePath, shouldSetWorkspace, openBoardPath?) {
-    ipcRenderer.send(
-      'workspace-load',
-      workspacePath,
-      shouldSetWorkspace,
-      openBoardPath
-    );
+    if (workspacePath.endsWith('.zip')) {
+      const { knownWorkspaces } = this.state;
+      const newWorkspace = knownWorkspaces.find(
+        ws => ws.path === workspacePath
+      );
+      console.log(newWorkspace);
+      if (newWorkspace) {
+        this.loadSecuredWorkspaceCallback(
+          newWorkspace.path,
+          newWorkspace.zipdata,
+          shouldSetWorkspace,
+          openBoardPath
+        );
+      } else {
+        ipcRenderer.send(
+          'workspace-secured-load',
+          workspacePath,
+          shouldSetWorkspace,
+          openBoardPath
+        );
+      }
+    } else {
+      ipcRenderer.send(
+        'workspace-load',
+        workspacePath,
+        shouldSetWorkspace,
+        openBoardPath
+      );
+    }
   }
 
   loadWorkspaceCallback(
@@ -463,6 +473,76 @@ class Home extends Component {
     }
   }
 
+  loadSecuredWorkspaceCallback(
+    workspacePath,
+    zipdata,
+    shouldSetWorkspace,
+    openBoardPath?
+  ) {
+    const { knownWorkspaces } = this.state;
+    let workspace = this.updateWorkspace(
+      workspacePath,
+      knownWorkspaces,
+      [],
+      []
+    );
+    workspace.zipdata = zipdata;
+    if (workspace.password) {
+      JSZip.loadAsync(zipdata, { password: workspace.password })
+        .then(zip => {
+          const files = [];
+          const stats = [];
+          const zipFiles = Object.values(zip.files);
+          workspace.zip = zip;
+          const currDate = new Date();
+          zipFiles.forEach(zo => {
+            if (zo.name.endsWith('.md')) {
+              files.push(zo.name);
+              stats.push({
+                mtimeMs: new Date(
+                  new Date(zo.date).getTime() +
+                    currDate.getTimezoneOffset() * 60000
+                )
+              });
+            }
+          });
+          workspace = this.updateWorkspace(
+            workspacePath,
+            knownWorkspaces,
+            files,
+            stats
+          );
+          if (shouldSetWorkspace) {
+            if (workspace.numBoards > 0) {
+              if (!openBoardPath) {
+                this.loadBoard(0);
+              } else {
+                this.loadBoardWithPath(openBoardPath);
+              }
+            }
+          }
+          return true;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
+    if (shouldSetWorkspace) {
+      this.setState({
+        knownWorkspaces,
+        workspace
+      });
+      this.setState({
+        boardData: undefined
+      });
+      this.menuRef.current.forceUpdate();
+    } else {
+      this.setState({
+        knownWorkspaces
+      });
+    }
+  }
+
   addWorkspaceCallback(workspacePath, files, stats) {
     const { knownWorkspaces } = this.state;
     const workspace = this.updateWorkspace(
@@ -485,6 +565,12 @@ class Home extends Component {
       this.menuRef.current.forceUpdate();
     }
     return workspace;
+  }
+
+  addSecuredWorkspaceCallback(workspacePath, zipdata) {
+    const workspace = this.addWorkspaceCallback(workspacePath, [], []);
+    workspace.zipdata = zipdata;
+    this.setState({ workspace });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -1082,38 +1168,11 @@ class Home extends Component {
               onClick={() => {
                 const password = this.pwdInput.value;
                 workspace.password = password;
-                JSZip.loadAsync(workspace.zipdata, { password })
-                  .then(zip => {
-                    const files = [];
-                    const stats = [];
-                    const zipFiles = Object.values(zip.files);
-                    workspace.zip = zip;
-                    const currDate = new Date();
-                    zipFiles.forEach(zo => {
-                      if (zo.name.endsWith('.md')) {
-                        files.push(zo.name);
-                        stats.push({
-                          mtimeMs: new Date(
-                            new Date(zo.date).getTime() +
-                              currDate.getTimezoneOffset() * 60000
-                          )
-                        });
-                      }
-                    });
-                    this.updateWorkspace(
-                      workspace.path,
-                      knownWorkspaces,
-                      files,
-                      stats
-                    );
-                    if (workspace.numBoards > 0) {
-                      this.loadBoard(0);
-                    }
-                    return true;
-                  })
-                  .catch(error => {
-                    console.log(error);
-                  });
+                this.loadSecuredWorkspaceCallback(
+                  workspace.path,
+                  workspace.zipdata,
+                  true
+                );
               }}
             >
               Unlock Workspace
