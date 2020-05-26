@@ -411,6 +411,7 @@ class Home extends Component {
       );
       console.log(newWorkspace);
       if (newWorkspace) {
+        // ! We keep the zip state for the whole app life
         this.loadSecuredWorkspaceCallback(
           newWorkspace.path,
           newWorkspace.zipdata,
@@ -1156,7 +1157,7 @@ class Home extends Component {
           >
             <InputGroup
               type="password"
-              leftIcon="lock"
+              leftIcon="key"
               autoFocus
               placeholder="Enter password..."
               inputRef={(pwdInput: HTMLInputElement) => {

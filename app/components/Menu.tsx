@@ -240,13 +240,23 @@ class Menu extends Component {
       licenseActivatedOpen
     } = this.state;
     const noResults = <MenuItem text="No matching workspaces found" />;
-    const workspaceName =
+    let workspaceName =
       workspace && workspace.name ? workspace.name : '(No selection)';
+    if (workspaceName.endsWith('.zip')) {
+      workspaceName = workspaceName.substring(
+        0,
+        workspaceName.lastIndexOf('.zip')
+      );
+    }
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
     const boards = workspace && workspace.boards ? workspace.boards : [];
-    const boardName =
-      boardData && boardData.name ? boardData.name : 'No notebooks';
+    let boardName = 'No notebooks';
+    if (boardData && boardData.name) {
+      boardName = boardData.name;
+    } else if (workspace && workspace.zipdata && !workspace.password) {
+      boardName = 'Locked notebooks';
+    }
 
     let dialogTitle;
     if (newBoardType === NewBoardType.CREATE) {
@@ -394,18 +404,26 @@ class Menu extends Component {
             >
               {boardName}
             </Button>
-            {boardName && (
-              <div
-                style={{
-                  fontSize: 'small',
-                  paddingRight: '5px',
-                  paddingTop: '5px',
-                  paddingBottom: '5px'
-                }}
-              >
-                <div style={{ paddingLeft: '25px' }}>{boardStatus}</div>
-              </div>
-            )}
+            <ButtonGroup
+              style={{
+                fontSize: 'small',
+                paddingRight: '5px',
+                paddingTop: '5px',
+                paddingBottom: '5px'
+              }}
+            >
+              {workspace && workspace.zipdata && (
+                <Icon
+                  icon={workspace.password ? 'unlock' : 'lock'}
+                  style={{ paddingLeft: '10px', color: '#a7b6c2' }}
+                />
+              )}
+              {boardName && (
+                <div style={{ textAlign: 'right', width: '100%' }}>
+                  {boardStatus}
+                </div>
+              )}
+            </ButtonGroup>
           </ButtonGroup>
           <ButtonGroup
             vertical
