@@ -10,7 +10,7 @@ import {
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
-import JSZip from '../utils/jszip';
+import JSZip, { ZIP64_CENTRAL_DIRECTORY_END } from '../utils/jszip';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -409,7 +409,6 @@ class Home extends Component {
       const newWorkspace = knownWorkspaces.find(
         ws => ws.path === workspacePath
       );
-      console.log(newWorkspace);
       if (newWorkspace) {
         // ! We keep the zip state for the whole app life
         this.loadSecuredWorkspaceCallback(
@@ -637,7 +636,7 @@ class Home extends Component {
       // eslint-disable-next-line promise/catch-or-return
       zipObject.async('string').then(content => {
         this.loadBoardCallback(boardMeta, content, {
-          mtimeMs: boardMeta.modified
+          mtimeMs: boardMeta.modified || new Date()
         });
         return true;
       });
@@ -655,7 +654,14 @@ class Home extends Component {
     if (!addContent) {
       addContent = '';
     }
-    ipcRenderer.send('board-save', newBoardPath, addContent, true);
+    if (workspace.zipdata) {
+      const { zip } = workspace;
+      zip.file(newBoardName, addContent);
+      const bp = nodePath.join(workspace.path, newBoardName);
+      this.saveSecuredBoard(bp, true, false);
+    } else {
+      ipcRenderer.send('board-save', newBoardPath, addContent, true);
+    }
   }
 
   newBoardCallback(newBoardPath) {
@@ -748,7 +754,7 @@ class Home extends Component {
   }
 
   saveBoard(backgroundBoardData?) {
-    const { boardData, saveTimer } = this.state;
+    const { workspace, boardData, saveTimer } = this.state;
     let data = boardData;
     if (backgroundBoardData) {
       data = backgroundBoardData;
@@ -756,15 +762,51 @@ class Home extends Component {
     if (saveTimer || backgroundBoardData) {
       const boardPath = data.path;
       const boardContent = this.getCurrentBoardMd(data);
-      ipcRenderer.send(
-        'board-save',
-        boardPath,
-        boardContent,
-        false,
-        backgroundBoardData !== undefined
-      );
+      if (workspace.zipdata) {
+        const { zip } = workspace;
+        const fileName = `${boardData.name}.md`;
+        zip.file(fileName, boardContent);
+        const bp = nodePath.join(workspace.path, fileName);
+        this.saveSecuredBoard(bp, false, backgroundBoardData !== undefined);
+      } else {
+        ipcRenderer.send(
+          'board-save',
+          boardPath,
+          boardContent,
+          false,
+          backgroundBoardData !== undefined
+        );
+      }
       this.setState({ saveTimer: undefined });
     }
+  }
+
+  saveSecuredBoard(boardPath?, isNew?, inBackground?, deleted?) {
+    const { workspace } = this.state;
+    const { zip } = workspace;
+    zip
+      .generateAsync({
+        type: 'arraybuffer',
+        password: workspace.password,
+        encryptStrength: 3
+      })
+      // eslint-disable-next-line promise/always-return
+      .then(zipFile => {
+        const zipdata = Buffer.from(zipFile);
+        workspace.zipdata = zipdata;
+        ipcRenderer.send(
+          'board-secured-save',
+          workspace.path,
+          boardPath,
+          zipdata,
+          isNew,
+          inBackground,
+          deleted
+        );
+      })
+      .catch(error => {
+        console.error(error);
+      });
   }
 
   newCard() {
@@ -849,7 +891,7 @@ class Home extends Component {
   }
 
   deleteBoard() {
-    const { boardData } = this.state;
+    const { workspace, boardData } = this.state;
     const { path } = boardData;
     if (boardData) {
       const { saveTimer } = this.state;
@@ -857,7 +899,13 @@ class Home extends Component {
         clearTimeout(saveTimer);
         this.setState({ saveTimer: undefined });
       }
-      ipcRenderer.send('board-delete', path);
+      if (workspace.zipdata) {
+        const { zip } = workspace;
+        zip.remove(`${boardData.name}.md`);
+        this.saveSecuredBoard(path, false, false, true);
+      } else {
+        ipcRenderer.send('board-delete', path);
+      }
     }
   }
 

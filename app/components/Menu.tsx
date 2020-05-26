@@ -344,6 +344,7 @@ class Menu extends Component {
               }}
               intent={Intent.PRIMARY}
               onClick={onNewCard}
+              disabled={!boardData}
               title="Add a new notecard"
               icon="plus"
             />
@@ -472,6 +473,7 @@ class Menu extends Component {
                 key="newBoard"
                 title="Create a new notebook"
                 intent={Intent.PRIMARY}
+                disabled={workspace && workspace.zipdata && !workspace.password}
                 icon="plus"
                 onClick={this.newBoardOpen}
               />

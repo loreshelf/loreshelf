@@ -221,6 +221,28 @@ const createWindow = async () => {
     }
   );
 
+  ipcMain.on(
+    'board-secured-save',
+    (
+      event,
+      workspacePath,
+      boardPath,
+      zipdata,
+      isNew?,
+      isInBackground?,
+      deleted?
+    ) => {
+      fs.writeFileSync(workspacePath, zipdata, 'binary');
+      if (deleted) {
+        event.reply('board-delete-callback', boardPath);
+      } else if (isNew) {
+        event.reply('board-new-callback', boardPath);
+      } else if (!isInBackground) {
+        event.reply('board-save-callback');
+      }
+    }
+  );
+
   ipcMain.on('board-delete', (event, boardPath) => {
     fs.unlinkSync(boardPath);
     event.reply('board-delete-callback', boardPath);
