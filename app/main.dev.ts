@@ -164,6 +164,28 @@ const createWindow = async () => {
     });
   });
 
+  ipcMain.on('new-zip-select', event => {
+    const options = {
+      title: 'Create new secured workspace',
+      buttonLabel: 'Create workspace',
+      filters: [{ name: 'Archive (.zip)', extensions: ['zip'] }],
+      properties: ['createDirectory', 'showOverwriteConfirmation']
+    };
+    // eslint-disable-next-line promise/catch-or-return
+    dialog.showSaveDialog(mainWindow, options).then(data => {
+      // eslint-disable-next-line promise/always-return
+      if (data.canceled) {
+        console.log('No file selected');
+      } else {
+        let workspacePath = data.filePath;
+        if (!workspacePath?.endsWith('.zip')) {
+          workspacePath += '.zip';
+        }
+        event.reply('new-zip-select-callback', workspacePath);
+      }
+    });
+  });
+
   ipcMain.on(
     'workspace-load',
     (event, workspacePath, shouldSetWorkspace, openBoardPath) => {

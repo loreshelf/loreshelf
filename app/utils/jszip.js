@@ -2304,7 +2304,8 @@ AesWorker.prototype.processChunk = function (chunk) {
     } else {
         var passVerifyValue = this._crypto.codec.bytes.toBits(data.slice(this._saltLen, this._saltLen + this._passVerifyLen));
         if (!this._crypto.bitArray.equal(passVerifyValue, derivedPassVerifier)) {
-            throw new Error("Encrypted zip: incorrect password");
+            // throw new Error("Encrypted zip: incorrect password");
+            return;
         }
 
         var encryptedValue = this._crypto.codec.bytes.toBits(data.slice(this._saltLen + this._passVerifyLen, -10));

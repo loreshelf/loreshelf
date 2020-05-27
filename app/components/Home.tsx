@@ -136,6 +136,7 @@ class Home extends Component {
     this.selectSort = this.selectSort.bind(this);
     this.searchText = this.searchText.bind(this);
     this.licenseActivated = this.licenseActivated.bind(this);
+    this.newSecuredWorkspace = this.newSecuredWorkspace.bind(this);
 
     window.onkeydown = e => {
       if (e.ctrlKey) {
@@ -524,7 +525,7 @@ class Home extends Component {
           return true;
         })
         .catch(error => {
-          console.log(error);
+          console.error(error);
         });
     }
     if (shouldSetWorkspace) {
@@ -571,6 +572,30 @@ class Home extends Component {
     const workspace = this.addWorkspaceCallback(workspacePath, [], []);
     workspace.zipdata = zipdata;
     this.setState({ workspace });
+    return workspace;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  newSecuredWorkspace(workspacePath, password) {
+    const zip = new JSZip();
+    zip
+      .generateAsync({
+        type: 'arraybuffer',
+        password,
+        encryptStrength: 3
+      })
+      // eslint-disable-next-line promise/always-return
+      .then(zipFile => {
+        const data = Buffer.from(zipFile);
+        const workspace = this.addSecuredWorkspaceCallback(workspacePath, data);
+        workspace.password = password;
+        workspace.zip = zip;
+        workspace.zipdata = data;
+        this.setState({ workspace });
+      })
+      .catch(error => {
+        console.error(error);
+      });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -634,12 +659,21 @@ class Home extends Component {
     if (workspace.zip) {
       const zipObject = workspace.zip.file(`${boardMeta.name}.md`);
       // eslint-disable-next-line promise/catch-or-return
-      zipObject.async('string').then(content => {
-        this.loadBoardCallback(boardMeta, content, {
-          mtimeMs: boardMeta.modified || new Date()
+      zipObject
+        .async('string')
+        .then(content => {
+          workspace.wrongPassword = false;
+          this.loadBoardCallback(boardMeta, content, {
+            mtimeMs: boardMeta.modified || new Date()
+          });
+          return true;
+        })
+        .catch(error => {
+          console.log(error);
+          workspace.password = null;
+          workspace.wrongPassword = true;
+          this.setState({ workspace });
         });
-        return true;
-      });
     } else {
       ipcRenderer.send('board-read', boardMeta);
     }
@@ -1218,7 +1252,10 @@ class Home extends Component {
             onStopSpooling={this.stopSpooling}
           />
         );
-      } else if (workspace.zipdata && !workspace.password) {
+      } else if (
+        workspace.zipdata &&
+        (!workspace.password || workspace.wrongPassword !== false)
+      ) {
         // secured workspace without password
         mainContent = (
           <NonIdealState
@@ -1231,6 +1268,7 @@ class Home extends Component {
               type="password"
               leftIcon="key"
               autoFocus
+              intent={workspace.wrongPassword ? Intent.DANGER : Intent.NONE}
               placeholder="Enter password..."
               inputRef={(pwdInput: HTMLInputElement) => {
                 this.pwdInput = pwdInput;
@@ -1298,6 +1336,7 @@ class Home extends Component {
               onNewCard={this.newCard}
               onSearchText={this.searchText}
               onLicenseActivated={this.licenseActivated}
+              onNewSecuredWorkspace={this.newSecuredWorkspace}
             />,
             mainContent
           ]

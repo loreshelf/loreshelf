@@ -15,7 +15,8 @@ import {
   Icon,
   Label,
   Card,
-  Tag
+  Tag,
+  FileInput
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -44,6 +45,8 @@ class Menu extends Component {
       newBoardType: NewBoardType.CREATE,
       newBoardIntent: Intent.NONE,
       addWorkspaceOpen: false,
+      newVaultOpen: false,
+      newVaultPath: '',
       licensePopupOpen: false,
       licenseActivatePopupOpen: false,
       licenseEmail: '',
@@ -60,12 +63,23 @@ class Menu extends Component {
     this.newBoardClose = this.newBoardClose.bind(this);
     this.addWorkspaceOpen = this.addWorkspaceOpen.bind(this);
     this.addWorkspaceClose = this.addWorkspaceClose.bind(this);
+    this.newVaultOpen = this.newVaultOpen.bind(this);
+    this.newVaultClose = this.newVaultClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
     this.licensePopupOpen = this.licensePopupOpen.bind(this);
     this.licensePopupClose = this.licensePopupClose.bind(this);
     this.licenseActivatedClose = this.licenseActivatedClose.bind(this);
     this.handleLicenseKeyChange = this.handleLicenseKeyChange.bind(this);
     this.handleLicenseEmailChange = this.handleLicenseEmailChange.bind(this);
+  }
+
+  componentDidMount() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+
+    ipcRenderer.on('new-zip-select-callback', (event, workspacePath) => {
+      self.setState({ newVaultPath: workspacePath });
+    });
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -122,6 +136,13 @@ class Menu extends Component {
     });
   }
 
+  newVaultOpen() {
+    this.setState({
+      newVaultOpen: true,
+      newVaultPath: ''
+    });
+  }
+
   licensePopupOpen() {
     this.setState({
       licensePopupOpen: true
@@ -152,6 +173,10 @@ class Menu extends Component {
 
   addWorkspaceClose() {
     this.setState({ addWorkspaceOpen: false });
+  }
+
+  newVaultClose() {
+    this.setState({ newVaultOpen: false });
   }
 
   licensePopupClose() {
@@ -223,7 +248,8 @@ class Menu extends Component {
       onSearchText,
       pro,
       deviceId,
-      onLicenseActivated
+      onLicenseActivated,
+      onNewSecuredWorkspace
     } = this.props;
     const {
       newBoardOpen,
@@ -231,6 +257,8 @@ class Menu extends Component {
       newBoardIntent,
       newBoardType,
       addWorkspaceOpen,
+      newVaultOpen,
+      newVaultPath,
       licensePopupOpen,
       licenseActivatePopupOpen,
       licenseKey,
@@ -415,7 +443,11 @@ class Menu extends Component {
             >
               {workspace && workspace.zipdata && (
                 <Icon
-                  icon={workspace.password ? 'unlock' : 'lock'}
+                  icon={
+                    workspace.password && workspace.wrongPassword === false
+                      ? 'unlock'
+                      : 'lock'
+                  }
                   style={{ paddingLeft: '10px', color: '#a7b6c2' }}
                 />
               )}
@@ -687,7 +719,14 @@ class Menu extends Component {
                 <h3>GitHub repository</h3>
                 <p>Open location in your GitHub repository as a workspace.</p>
               </Card>
-              <Card interactive className={styles.addWorkspaceCard}>
+              <Card
+                interactive
+                className={styles.addWorkspaceCard}
+                onClick={() => {
+                  this.addWorkspaceClose();
+                  this.newVaultOpen();
+                }}
+              >
                 <h3>New vault</h3>
                 <p>Create new AES-encrypted zip archive as a workspace.</p>
               </Card>
@@ -696,6 +735,58 @@ class Menu extends Component {
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
               <Button onClick={this.addWorkspaceClose}>Cancel</Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="cube-add"
+          onClose={this.newVaultClose}
+          isOpen={newVaultOpen}
+          title="New vault workspace"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>Create new AES-encrypted zip archive as a workspace.</p>
+            <div style={{ width: '300px' }}>
+              <p>Choose the zip file location:</p>
+              <ButtonGroup>
+                <InputGroup
+                  type="text"
+                  placeholder="Choose file..."
+                  disabled
+                  value={newVaultPath}
+                />
+                <Button
+                  onClick={() => {
+                    ipcRenderer.send('new-zip-select');
+                  }}
+                >
+                  Browse
+                </Button>
+              </ButtonGroup>
+              <p>Protect the workspace with your password:</p>
+              <InputGroup
+                type="password"
+                leftIcon="key"
+                placeholder="Enter password..."
+                inputRef={(pwdInput: HTMLInputElement) => {
+                  this.pwdInput = pwdInput;
+                }}
+              />
+            </div>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.newVaultClose}>Close</Button>
+              <Button
+                intent={Intent.PRIMARY}
+                onClick={() => {
+                  this.newVaultClose();
+                  onNewSecuredWorkspace(newVaultPath, this.pwdInput.value);
+                }}
+              >
+                Create workspace
+              </Button>
             </div>
           </div>
         </Dialog>
