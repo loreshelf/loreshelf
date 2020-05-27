@@ -856,7 +856,22 @@ class Home extends Component {
 
     const cardContent = serializeMarkdown(card.doc);
     const boardPath = boardMeta.path;
-    ipcRenderer.send('board-move-card', boardPath, card.title, cardContent);
+    if (workspace.zipdata) {
+      const { zip } = workspace;
+      const fileName = `${boardMeta.name}.md`;
+      const zipObject = zip.file(fileName);
+      // eslint-disable-next-line promise/catch-or-return
+      zipObject.async('string').then(content => {
+        const newContent = `${content}\n\n# ${
+          card.title
+        }\n\n${cardContent.trim()}`;
+        zip.file(fileName, newContent);
+        this.saveSecuredBoard(boardPath, false, true, false);
+        return true;
+      });
+    } else {
+      ipcRenderer.send('board-move-card', boardPath, card.title, cardContent);
+    }
   }
 
   editTitle(cardId, newTitle) {
@@ -939,7 +954,16 @@ class Home extends Component {
     const { boardData, workspace } = this.state;
     const oldBoardPath = boardData.path;
     const newBoardPath = `${workspace.path}/${newBoardName}`;
-    ipcRenderer.send('board-rename', oldBoardPath, newBoardPath);
+    if (workspace.zipdata) {
+      const { zip } = workspace;
+      const mdFile = `${boardData.name}.md`;
+      zip.remove(mdFile);
+      zip.file(newBoardName, this.getCurrentBoardMd());
+      this.saveSecuredBoard(oldBoardPath, false, true, false);
+      this.renameBoardCallback(oldBoardPath, newBoardPath);
+    } else {
+      ipcRenderer.send('board-rename', oldBoardPath, newBoardPath);
+    }
   }
 
   renameBoardCallback(oldBoardPath, newBoardPath) {
