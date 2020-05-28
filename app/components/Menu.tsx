@@ -15,26 +15,60 @@ import {
   Icon,
   Label,
   Card,
-  Tag,
-  FileInput
+  Tag
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
+import moment from 'moment';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 import { SortOption, renderSort } from './SortBySelect';
 import BoardItem from './MenuItem';
 import brand from '../resources/brand.png';
+import { FilterOption, renderFilter } from './FilterBySelect';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 const SortSelect = Select.ofType<SortOption>();
+const FilterSelect = Select.ofType<FilterOption>();
 
 enum NewBoardType {
   CREATE = 1,
   DUPLICATE,
   RENAME
 }
+
+const FILTERING_METHODS = {
+  Today: modified => {
+    return moment(modified).isSameOrAfter(moment().startOf('day'));
+  },
+  Yesterday: modified => {
+    return moment(modified).isBetween(
+      moment()
+        .subtract(1, 'days')
+        .startOf('day'),
+      moment()
+        .subtract(1, 'days')
+        .endOf('day')
+    );
+  },
+  'Last 7 days': modified => {
+    return moment(modified).isBetween(
+      moment()
+        .subtract(7, 'days')
+        .startOf('day'),
+      moment()
+    );
+  },
+  'Last 30 days': modified => {
+    return moment(modified).isBetween(
+      moment()
+        .subtract(30, 'days')
+        .startOf('day'),
+      moment()
+    );
+  }
+};
 
 class Menu extends Component {
   constructor(props) {
@@ -53,7 +87,8 @@ class Menu extends Component {
       licenseKey: '',
       licenseEmailIntent: Intent.NONE,
       licenseKeyIntent: Intent.NONE,
-      licenseActivatedOpen: false
+      licenseActivatedOpen: false,
+      filterText: undefined
     };
 
     this.searchInputRef = React.createRef();
@@ -83,7 +118,7 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardStatus, searchText, homeBoard, pro } = this.props;
+    const { boardStatus, homeBoard, pro } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -95,9 +130,6 @@ class Menu extends Component {
       return true;
     }
     if (pro !== nextProps.pro) {
-      return true;
-    }
-    if (searchText !== nextProps.searchText) {
       return true;
     }
     if (homeBoard !== nextProps.homeBoard) {
@@ -244,8 +276,8 @@ class Menu extends Component {
       onNewCard,
       sortBy,
       onSortSelect,
-      searchText,
-      onSearchText,
+      filterBy,
+      onFilterSelect,
       pro,
       deviceId,
       onLicenseActivated,
@@ -265,7 +297,8 @@ class Menu extends Component {
       licenseKeyIntent,
       licenseEmail,
       licenseEmailIntent,
-      licenseActivatedOpen
+      licenseActivatedOpen,
+      filterText
     } = this.state;
     const noResults = <MenuItem text="No matching workspaces found" />;
     let workspaceName =
@@ -279,6 +312,17 @@ class Menu extends Component {
     const workspacePath =
       workspace && workspace.path ? workspace.path : 'unknown';
     const boards = workspace && workspace.boards ? workspace.boards : [];
+    let filteredBoards = boards;
+    if (filterText) {
+      filteredBoards = boards.filter(boardMeta =>
+        boardMeta.name.includes(filterText)
+      );
+    }
+    if (filterBy.name !== 'All') {
+      filteredBoards = filteredBoards.filter(boardMeta =>
+        FILTERING_METHODS[filterBy.name](boardMeta.modified)
+      );
+    }
     let boardName = 'No notebooks';
     if (boardData && boardData.name) {
       boardName = boardData.name;
@@ -491,9 +535,8 @@ class Menu extends Component {
                 popoverProps={{ minimal: true }}
               >
                 <Button
-                  rightIcon={sortBy.icon}
-                  alignText="right"
-                  title={`Sorting by ${sortBy.method.toLowerCase()}`}
+                  icon={sortBy.icon}
+                  title={`Sort by ${sortBy.method.toLowerCase()}`}
                   style={{
                     minWidth: '50px',
                     maxWidth: '50px',
@@ -509,42 +552,54 @@ class Menu extends Component {
                 icon="plus"
                 onClick={this.newBoardOpen}
               />
-              <Button
-                icon="reset"
-                disabled={!searchText}
-                style={{
-                  minWidth: '50px',
-                  width: '50px',
-                  maxWidth: '50px'
+              <FilterSelect
+                items={[
+                  {
+                    name: 'Today',
+                    icon: 'time'
+                  },
+                  {
+                    name: 'Yesterday',
+                    icon: 'history'
+                  },
+                  {
+                    name: 'Last 7 days',
+                    icon: 'clipboard'
+                  },
+                  {
+                    name: 'Last 30 days',
+                    icon: 'timeline-events'
+                  },
+                  { name: 'All', icon: 'calendar' }
+                ]}
+                itemRenderer={renderFilter}
+                filterable={false}
+                onItemSelect={selectedFilter => {
+                  this.shouldUpdate = true;
+                  onFilterSelect(selectedFilter.name, selectedFilter.icon);
                 }}
-                onClick={() => {
-                  this.searchInputRef.current.value = '';
-                  onSearchText(undefined);
-                }}
-                title="Reset search"
-              />
+                popoverProps={{ minimal: true }}
+              >
+                <Button
+                  icon={filterBy.icon}
+                  title={filterBy.name}
+                  style={{
+                    minWidth: '50px',
+                    maxWidth: '50px',
+                    fontSize: 'small'
+                  }}
+                />
+              </FilterSelect>
             </ButtonGroup>
-            <div
-              className={`bp3-input-group ${
-                searchText ? 'bp3-intent-warning' : ''
-              }`}
+            <InputGroup
+              type="text"
+              leftIcon="filter"
+              placeholder="Filter by name..."
+              onChange={e => {
+                this.setState({ filterText: e.target.value });
+              }}
               style={{ marginTop: '1px' }}
-            >
-              <Icon icon="search-text" />
-              <input
-                ref={this.searchInputRef}
-                className="bp3-input"
-                style={{ borderRadius: '0px', paddingRight: '0px' }}
-                type="search"
-                placeholder="Search here"
-                onKeyPress={e => {
-                  if (e.key === 'Enter') {
-                    onSearchText(e.target.value);
-                  }
-                }}
-                dir="auto"
-              />
-            </div>
+            />
             <div style={{ height: '100%', overflowY: 'auto' }}>
               <ButtonGroup
                 vertical
@@ -556,14 +611,16 @@ class Menu extends Component {
                   width: '100%'
                 }}
               >
-                {boards.map((boardMeta, id) => {
+                {filteredBoards.map((boardMeta, id) => {
                   return (
                     <BoardItem
                       // eslint-disable-next-line react/no-array-index-key
                       key={boardMeta.path}
                       disabled={boardMeta.name === boardName}
-                      onClick={() => onSelectBoard(id)}
-                      moveCard={cardIndex => onMoveCardToBoard(cardIndex, id)}
+                      onClick={() => onSelectBoard(boardMeta.path)}
+                      moveCard={cardIndex => {
+                        onMoveCardToBoard(cardIndex, boardMeta.path);
+                      }}
                     >
                       {boardMeta.name}
                     </BoardItem>

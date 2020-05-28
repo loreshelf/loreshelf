@@ -42,6 +42,7 @@ const Card: React.FC<CardProps> = forwardRef(
   (
     {
       card,
+      collapsed,
       dividerIndex,
       dividerLeft,
       index,
@@ -56,13 +57,13 @@ const Card: React.FC<CardProps> = forwardRef(
       onStopSpooling,
       onOpenImage,
       onMoveToTop,
-      onMoveToBottom
+      onMoveToBottom,
+      onToggleCollapse
     },
     ref
   ) => {
     const blueRef = useRef<BlueCard>(null);
     const titleRef = useRef<EditableText>(null);
-    const editorRef = useRef<Editor>(null);
 
     let cardData = card;
     let spoolingActive = '';
@@ -152,23 +153,6 @@ const Card: React.FC<CardProps> = forwardRef(
     const opacity = isDragging ? 0.5 : 1;
     drop(blueRef);
 
-    useImperativeHandle(ref, () => ({
-      highlightSearchedLines(searchText) {
-        if (
-          searchText &&
-          card.doc.textContent.toLowerCase().includes(searchText.toLowerCase())
-        ) {
-          blueRef.current.style.display = 'block';
-          editorRef.current.highlightSearchedLines(searchText.toLowerCase());
-        } else if (!searchText) {
-          blueRef.current.style.display = 'block';
-          editorRef.current.highlightSearchedLines(searchText);
-        } else {
-          blueRef.current.style.display = 'none';
-        }
-      }
-    }));
-
     const [, updateState] = React.useState();
     const forceUpdate = React.useCallback(() => updateState({}), []);
 
@@ -231,6 +215,7 @@ const Card: React.FC<CardProps> = forwardRef(
                       cursor: 'grab',
                       minWidth: '20px'
                     }}
+                    onDoubleClick={onToggleCollapse}
                     onContextMenu={e => {
                       e.preventDefault();
                       let parent = e.target;
@@ -279,17 +264,18 @@ const Card: React.FC<CardProps> = forwardRef(
                   placeholder="Edit title..."
                   alwaysRenderInput={!card.spooling}
                   disabled={card.spooling}
-                  confirmOnEnterKey
                   onConfirm={() => {
+                    titleRef.current.state.isEditing = false;
                     titleRef.current.inputElement.blur();
-                    setTimeout(() => {
-                      titleRef.current.inputElement.parentElement.parentElement.parentElement.parentElement.nextSibling.firstChild.focus();
-                    }, 100);
+                    // forceUpdate();
                   }}
                   value={card.title}
                   onChange={e => {
                     card.title = e;
                     onEditTitle(index, e);
+                    forceUpdate();
+                  }}
+                  onEdit={() => {
                     forceUpdate();
                   }}
                 />
@@ -329,27 +315,28 @@ const Card: React.FC<CardProps> = forwardRef(
                 {`@${cardData.title} from '${card.spooling.boardData.name}'`}
               </div>
             )}
-            <Editor
-              ref={editorRef}
-              doc={cardData.doc}
-              index={index}
-              onChange={(doc, saveChanges) => {
-                onEditCard(index, doc, saveChanges);
-              }}
-              onRemoveCard={() => onRemoveCard(index)}
-              onRequestBoardsAsync={onRequestBoardsAsync}
-              onRequestBoardDataAsync={onRequestBoardDataAsync}
-              onStartSpooling={(boardPath, cardName) => {
-                ipcRenderer.send(
-                  'board-spooling-load',
-                  boardPath,
-                  index,
-                  cardName
-                );
-              }}
-              onOpenImage={onOpenImage}
-              className={styles.editor}
-            />
+            {(!collapsed || titleRef.current.state.isEditing) && (
+              <Editor
+                doc={cardData.doc}
+                index={index}
+                onChange={(doc, saveChanges) => {
+                  onEditCard(index, doc, saveChanges);
+                }}
+                onRemoveCard={() => onRemoveCard(index)}
+                onRequestBoardsAsync={onRequestBoardsAsync}
+                onRequestBoardDataAsync={onRequestBoardDataAsync}
+                onStartSpooling={(boardPath, cardName) => {
+                  ipcRenderer.send(
+                    'board-spooling-load',
+                    boardPath,
+                    index,
+                    cardName
+                  );
+                }}
+                onOpenImage={onOpenImage}
+                className={styles.editor}
+              />
+            )}
           </BlueCard>
         </div>
       </>

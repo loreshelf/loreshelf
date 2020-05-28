@@ -29,6 +29,10 @@ h1 {
   margin: 0;
 }
 
+.bp3-dark .bp3-editable-text.bp3-editable-text-editing::before {
+  background-color: transparent;
+}
+
 h2 br {
   display: none;
 }
@@ -175,57 +179,9 @@ p a:hover {
   content: ' \f6d9';
 }
 
-.searchLine {
-  margin-left: -15px;
-  padding-left: 15px;
-}
-
-h2.searchLine {
-  margin-left: -5px;
-}
-
-h2.searchLine::before {
-  color: #ffb366;
-  font-weight: 900;
-  margin-left: -31px;
-  margin-right: 7px;
-  font-family: 'Font Awesome\ 5 Free', sans-serif;
-  display: inline-block;
-  content: ' \f3c5';
-}
-
 h6 {
   font-size: 30px;
   text-align: center;
-}
-
-.searchLine::before {
-  color: #ffb366;
-  font-weight: 900;
-  margin-right: 6px;
-  margin-left: -15px;
-  font-family: 'Font Awesome\ 5 Free', sans-serif;
-  display: inline-block;
-  content: ' \f3c5';
-}
-
-ol.searchLine,
-ul.searchLine {
-  margin-left: 0;
-  padding-left: 20px;
-}
-
-ol.searchLine::before,
-ul.searchLine::before {
-  color: #ffb366;
-  font-weight: 900;
-  margin-top: -17px;
-  margin-left: -31px;
-  margin-right: 18px;
-  font-family: 'Font Awesome\ 5 Free', sans-serif;
-  float: left;
-  width: 0;
-  content: ' \f3c5';
 }
 
 blockquote {
@@ -337,4 +293,8 @@ img::after {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.55);
+}
+
+.bp3-editable-text-input::-webkit-input-placeholder {
+  color: hsla(204, 33%, 97%, 1);
 }

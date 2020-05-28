@@ -36,6 +36,10 @@ const CONFIG_SCHEMA = {
     method: 'string',
     asc: 'boolean',
     icon: 'string'
+  },
+  filterBy: {
+    name: 'string',
+    icon: 'string'
   }
 };
 
@@ -46,7 +50,8 @@ enum CONFIG {
   WORKSPACES = 'workspaces',
   HOMEWORKSPACE = 'homeWorkspace',
   HOMEBOARD = 'homeBoard',
-  SORTBY = 'sortBy'
+  SORTBY = 'sortBy',
+  FILTERBY = 'filterBy'
 }
 
 const SORTING_METHODS = {
@@ -82,7 +87,7 @@ class Home extends Component {
   constructor() {
     super();
 
-    const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1}, {name2, path2}], zip }}
+    const workspace = undefined; // {selectedBoard:0, name, path, numBoards, boards:[{name1, path1, modified1}, {name2, path2}], zip }}
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status, modified}
     const knownWorkspaces = []; // [workspace1, workspace2]
 
@@ -94,7 +99,10 @@ class Home extends Component {
       asc: true,
       icon: 'sort-alphabetical'
     });
-    const searchText = undefined;
+    const filterBy = CONFIG_STORE.get(CONFIG.FILTERBY, {
+      name: 'All',
+      icon: 'calendar'
+    });
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
@@ -110,7 +118,7 @@ class Home extends Component {
       knownWorkspaces,
       homeBoard,
       sortBy,
-      searchText,
+      filterBy,
       deviceId
     };
     this.newCard = this.newCard.bind(this);
@@ -134,7 +142,7 @@ class Home extends Component {
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
     this.selectSort = this.selectSort.bind(this);
-    this.searchText = this.searchText.bind(this);
+    this.selectFilter = this.selectFilter.bind(this);
     this.licenseActivated = this.licenseActivated.bind(this);
     this.newSecuredWorkspace = this.newSecuredWorkspace.bind(this);
 
@@ -721,10 +729,10 @@ class Home extends Component {
     this.newBoard(newBoardName, this.getCurrentBoardMd());
   }
 
-  selectBoard(boardMetaIndex) {
+  selectBoard(boardPath) {
     // save board for unsaved changes
     this.autoSave(true);
-    this.loadBoard(boardMetaIndex);
+    this.loadBoardWithPath(boardPath);
   }
 
   loadBoardWithPath(boardPath) {
@@ -848,7 +856,7 @@ class Home extends Component {
     if (boardData) {
       const { cards } = boardData;
       const doc = parseMarkdown('');
-      cards.push({ doc, title: 'Edit Title...' });
+      cards.push({ doc, title: '' });
       this.autoSave();
       this.boardRef.forceUpdate();
 
@@ -880,31 +888,34 @@ class Home extends Component {
     this.autoSave();
   }
 
-  moveCardToBoard(cardIndex, boardId) {
+  moveCardToBoard(cardIndex, boardPath) {
     const { workspace, boardData } = this.state;
-    const card = boardData.cards[cardIndex];
-    boardData.cards.splice(cardIndex, 1);
-    const boardMeta = workspace.boards[boardId];
-    boardMeta.modified = Date.now();
-    this.autoSave();
-
-    const cardContent = serializeMarkdown(card.doc);
-    const boardPath = boardMeta.path;
-    if (workspace.zipdata) {
-      const { zip } = workspace;
-      const fileName = `${boardMeta.name}.md`;
-      const zipObject = zip.file(fileName);
-      // eslint-disable-next-line promise/catch-or-return
-      zipObject.async('string').then(content => {
-        const newContent = `${content}\n\n# ${
-          card.title
-        }\n\n${cardContent.trim()}`;
-        zip.file(fileName, newContent);
-        this.saveSecuredBoard(boardPath, false, true, false);
-        return true;
-      });
-    } else {
-      ipcRenderer.send('board-move-card', boardPath, card.title, cardContent);
+    const boardIndex = workspace.boards.findIndex(board => {
+      return board.path === boardPath;
+    });
+    if (boardIndex >= 0) {
+      const card = boardData.cards[cardIndex];
+      boardData.cards.splice(cardIndex, 1);
+      const boardMeta = workspace.boards[boardIndex];
+      boardMeta.modified = Date.now();
+      this.autoSave();
+      const cardContent = serializeMarkdown(card.doc);
+      if (workspace.zipdata) {
+        const { zip } = workspace;
+        const fileName = `${boardMeta.name}.md`;
+        const zipObject = zip.file(fileName);
+        // eslint-disable-next-line promise/catch-or-return
+        zipObject.async('string').then(content => {
+          const newContent = `${content}\n\n# ${
+            card.title
+          }\n\n${cardContent.trim()}`;
+          zip.file(fileName, newContent);
+          this.saveSecuredBoard(boardPath, false, true, false);
+          return true;
+        });
+      } else {
+        ipcRenderer.send('board-move-card', boardPath, card.title, cardContent);
+      }
     }
   }
 
@@ -1109,16 +1120,19 @@ class Home extends Component {
     CONFIG_STORE.set(CONFIG.SORTBY, sortBy);
   }
 
+  selectFilter(filterName, filterIcon) {
+    const { filterBy } = this.state;
+    filterBy.name = filterName;
+    filterBy.icon = filterIcon;
+    this.setState({ filterBy });
+    CONFIG_STORE.set(CONFIG.FILTERBY, filterBy);
+  }
+
   stopSpooling(spoolingCardIndex) {
     const { boardData } = this.state;
     this.autoSaveSpooling(spoolingCardIndex, true);
     boardData.cards[spoolingCardIndex].spooling = undefined;
     this.boardRef.forceUpdate();
-  }
-
-  searchText(newSearchText) {
-    this.boardRef.highlightSearchedLines(newSearchText);
-    this.setState({ searchText: newSearchText });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -1205,7 +1219,7 @@ class Home extends Component {
       boardData,
       homeBoard,
       sortBy,
-      searchText,
+      filterBy,
       deviceId,
       pro
     } = this.state;
@@ -1241,7 +1255,6 @@ class Home extends Component {
               this.boardRef = el;
             }}
             boardData={boardData}
-            searchText={searchText}
             onEditTitle={this.editTitle}
             onEditCard={this.editCard}
             onNewCard={this.newCard}
@@ -1319,7 +1332,7 @@ class Home extends Component {
               workspace={workspace}
               homeBoard={homeBoard}
               sortBy={sortBy}
-              searchText={searchText}
+              filterBy={filterBy}
               pro={pro}
               deviceId={deviceId}
               onNewBoard={this.newBoard}
@@ -1333,8 +1346,8 @@ class Home extends Component {
               onOpenHomeBoard={this.openHomeBoard}
               onSetHome={this.setHome}
               onSortSelect={this.selectSort}
+              onFilterSelect={this.selectFilter}
               onNewCard={this.newCard}
-              onSearchText={this.searchText}
               onLicenseActivated={this.licenseActivated}
               onNewSecuredWorkspace={this.newSecuredWorkspace}
             />,

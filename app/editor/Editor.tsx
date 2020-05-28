@@ -778,41 +778,6 @@ Still | renders | nicely
     }
   }
 
-  highlightSearchedLines(searchText) {
-    this.saveChanges = false; // don't automatically save notebook
-    let pos = 0;
-    let transaction = this.view.state.tr;
-    this.view.state.doc.content.content.forEach(element => {
-      if (
-        !searchText ||
-        element.textContent.toLowerCase().includes(searchText)
-      ) {
-        const { attrs } = element;
-        if (!searchText) {
-          transaction = transaction.setNodeMarkup(pos, undefined, {
-            class: attrs.class
-              ? attrs.class.replace(' searchLine', '')
-              : undefined,
-            level: attrs.level,
-            order: attrs.order
-          });
-        } else if (
-          attrs &&
-          (!attrs.class || !attrs.class.includes('searchLine'))
-        ) {
-          transaction = transaction.setNodeMarkup(pos, undefined, {
-            class: `${attrs.class} searchLine`,
-            level: attrs.level,
-            order: attrs.order
-          });
-        }
-      }
-      pos += element.nodeSize;
-    });
-    transaction = transaction.setMeta('addToHistory', false);
-    this.view.dispatch(transaction);
-  }
-
   render() {
     const { onRemoveCard } = this.props;
     const { state } = this.view;

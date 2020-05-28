@@ -19,10 +19,14 @@ class Board extends Component {
     super(props);
 
     this.boardRef = React.createRef();
-    this.state = { dividerIndex: -1, dividerLeft: false, imageSrc: null };
+    this.state = {
+      dividerIndex: -1,
+      dividerLeft: false,
+      imageSrc: null,
+      collapsed: false
+    };
     // const { boardData } = this.props;
     // this.numCards = boardData ? boardData.cards.length : 0;
-    this.addCardRef = this.addCardRef.bind(this);
     this.updateDivider = this.updateDivider.bind(this);
     this.openImage = this.openImage.bind(this);
     this.closeImage = this.closeImage.bind(this);
@@ -49,18 +53,6 @@ class Board extends Component {
     this.setState({ dividerIndex: newIndex, dividerLeft: left });
   }
 
-  addCardRef(node) {
-    this.cardRefs = [...this.cardRefs, node];
-  }
-
-  highlightSearchedLines(searchText) {
-    this.cardRefs.forEach(cardRef => {
-      if (cardRef) {
-        cardRef.highlightSearchedLines(searchText);
-      }
-    });
-  }
-
   openImage(imageSrc) {
     this.setState({ imageSrc });
   }
@@ -81,8 +73,7 @@ class Board extends Component {
       onRequestBoardDataAsync,
       onStopSpooling
     } = this.props;
-    this.cardRefs = [];
-    const { dividerIndex, dividerLeft, imageSrc } = this.state;
+    const { dividerIndex, dividerLeft, imageSrc, collapsed } = this.state;
     const cardData = boardData && boardData.cards ? boardData.cards : [];
     const NewCard = (
       <Button intent={Intent.PRIMARY} onClick={onNewCard}>
@@ -112,9 +103,9 @@ class Board extends Component {
           <>
             {cardData.map((c, id) => (
               <Card
-                ref={this.addCardRef}
                 key={`${c.title}-${cardData.indexOf(c)}`}
                 card={c}
+                collapsed={collapsed}
                 index={cardData.indexOf(c)}
                 dividerIndex={dividerIndex}
                 dividerLeft={dividerLeft}
@@ -135,6 +126,9 @@ class Board extends Component {
                 }}
                 onMoveToBottom={() => {
                   onReorderCards(cardData.indexOf(c), cardData.length - 1);
+                }}
+                onToggleCollapse={() => {
+                  this.setState({ collapsed: !collapsed });
                 }}
               />
             ))}
