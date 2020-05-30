@@ -6,7 +6,6 @@
   position: sticky;
   top: 0;
   display: flex;
-  z-index: 2;
 }
 
 .card {
@@ -15,6 +14,14 @@
   min-width: 220px;
   width: 220px;
   max-width: 220px;
+}
+
+.spoolingCard {
+  margin: 5px;
+  font-size: 14px;
+  min-width: 440px;
+  width: 440px;
+  max-width: 440px;
 }
 
 .card table {
@@ -37,31 +44,8 @@
   padding-left: 5px;
 }
 
-@keyframes up-right {
-  0% {
-    transform: scale(1);
-    opacity: 0.25;
-  }
-  50% {
-    transform: scale (1, 5);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.25;
-  }
-}
-
 .spoolingStatus {
-  color: #92f8e6;
-  margin-right: 5px;
-}
-
-.active {
-  color: #ffb366;
-  opacity: 0.25;
-  -webkit-animation: up-right 1s infinite;
-  -moz-animation: up-right 1s infinite;
-  -o-animation: up-right 1s infinite;
-  animation: up-right 1s infinite;
+  background-color: #92f8e6;
+  height: 3px;
+  width: 100%;
 }

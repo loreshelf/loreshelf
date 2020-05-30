@@ -17,7 +17,8 @@ import {
   MenuItem,
   Button,
   Tooltip,
-  Position
+  Position,
+  ButtonGroup
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
 import { ipcRenderer } from 'electron';
@@ -66,11 +67,8 @@ const Card: React.FC<CardProps> = forwardRef(
     const titleRef = useRef<EditableText>(null);
 
     let cardData = card;
-    let spoolingActive = '';
     if (card.spooling) {
       cardData = card.spooling.boardData.cards[card.spooling.cardIndex];
-      spoolingActive =
-        card.spooling.boardData.status === 'Saving...' ? styles.active : '';
     }
 
     const [, drop] = useDrop({
@@ -158,56 +156,48 @@ const Card: React.FC<CardProps> = forwardRef(
 
     return (
       <>
-        <div
-          ref={blueRef}
-          className={`${styles.card}`}
-          style={{
-            opacity
-          }}
+        <ButtonGroup
+          className={`${card.spooling ? styles.spoolingCard : styles.card}`}
         >
-          <DragPreviewImage connect={preview} src={cardPreview} />
-          {dividerIndex === index && dividerLeft && (
-            <div
-              style={{
-                borderLeft: '1px solid hsl(206, 24%, 64%)',
-                float: 'left',
-                maxWidth: '0px',
-                height: '100%',
-                width: '0px',
-                marginLeft: '-5px'
-              }}
-            />
-          )}
-          {dividerIndex === index && !dividerLeft && (
-            <div
-              style={{
-                borderRight: '1px solid hsl(206, 24%, 64%)',
-                float: 'right',
-                maxWidth: '0px',
-                height: '100%',
-                width: '0px',
-                marginRight: '-5px'
-              }}
-            />
-          )}
-          <BlueCard
-            // eslint-disable-next-line react/no-array-index-key
-            elevation={Elevation.TWO}
+          <div
+            ref={blueRef}
+            style={{
+              opacity,
+              minWidth: '220px',
+              width: '220px',
+              maxWidth: '220px'
+            }}
           >
-            <h1 className={styles.title}>
-              {card.spooling ? (
-                <Button
-                  icon="chevron-left"
-                  minimal
-                  title="Close gateway"
-                  style={{
-                    padding: '0px',
-                    minWidth: '20px',
-                    minHeight: '20px'
-                  }}
-                  onClick={() => onStopSpooling(index)}
-                />
-              ) : (
+            <DragPreviewImage connect={preview} src={cardPreview} />
+            {dividerIndex === index && dividerLeft && (
+              <div
+                style={{
+                  borderLeft: '1px solid hsl(206, 24%, 64%)',
+                  float: 'left',
+                  maxWidth: '0px',
+                  height: '100%',
+                  width: '0px',
+                  marginLeft: '-5px'
+                }}
+              />
+            )}
+            {dividerIndex === index && !dividerLeft && (
+              <div
+                style={{
+                  borderRight: '1px solid hsl(206, 24%, 64%)',
+                  float: 'right',
+                  maxWidth: '0px',
+                  height: '100%',
+                  width: '0px',
+                  marginRight: '-5px'
+                }}
+              />
+            )}
+            <BlueCard
+              // eslint-disable-next-line react/no-array-index-key
+              elevation={Elevation.TWO}
+            >
+              <h1 className={styles.title}>
                 <div ref={drag}>
                   <Icon
                     icon="drag-handle-vertical"
@@ -252,75 +242,107 @@ const Card: React.FC<CardProps> = forwardRef(
                     }}
                   />
                 </div>
-              )}
-              <Tooltip
-                content={card.title}
-                disabled={card.title.length <= 19}
-                position={Position.BOTTOM}
-                inheritDarkTheme
-              >
-                <EditableText
-                  ref={titleRef}
-                  placeholder="Edit title..."
-                  alwaysRenderInput={!card.spooling}
-                  disabled={card.spooling}
-                  onConfirm={() => {
-                    titleRef.current.state.isEditing = false;
-                    titleRef.current.inputElement.blur();
-                    // forceUpdate();
+                <Tooltip
+                  content={card.title}
+                  disabled={card.title.length <= 19}
+                  position={Position.BOTTOM}
+                  inheritDarkTheme
+                >
+                  <EditableText
+                    ref={titleRef}
+                    placeholder="Edit title..."
+                    alwaysRenderInput={!card.spooling}
+                    disabled={card.spooling}
+                    onConfirm={() => {
+                      titleRef.current.state.isEditing = false;
+                      titleRef.current.inputElement.blur();
+                      // forceUpdate();
+                    }}
+                    value={card.title}
+                    onChange={e => {
+                      card.title = e;
+                      onEditTitle(index, e);
+                      forceUpdate();
+                    }}
+                    onEdit={() => {
+                      forceUpdate();
+                    }}
+                  />
+                </Tooltip>
+                {card.title.length > 19 && (
+                  <div style={{ marginLeft: '3px' }}>...</div>
+                )}
+              </h1>
+              {(!collapsed ||
+                (titleRef.current && titleRef.current.state.isEditing)) && (
+                <Editor
+                  doc={card.doc}
+                  index={index}
+                  onChange={(doc, saveChanges) => {
+                    onEditCard(index, doc, saveChanges);
                   }}
-                  value={card.title}
-                  onChange={e => {
-                    card.title = e;
-                    onEditTitle(index, e);
-                    forceUpdate();
+                  onRemoveCard={() => onRemoveCard(index)}
+                  onRequestBoardsAsync={onRequestBoardsAsync}
+                  onRequestBoardDataAsync={onRequestBoardDataAsync}
+                  onStartSpooling={(boardPath, cardName) => {
+                    ipcRenderer.send(
+                      'board-spooling-load',
+                      boardPath,
+                      index,
+                      cardName
+                    );
                   }}
-                  onEdit={() => {
-                    forceUpdate();
-                  }}
+                  onOpenImage={onOpenImage}
+                  className={styles.editor}
                 />
-              </Tooltip>
-              {card.title.length > 19 && (
-                <div style={{ marginLeft: '3px' }}>...</div>
               )}
-            </h1>
-            {card.spooling && (
-              <div
-                style={{
-                  minHeight: '30px',
-                  padding: '5px',
-                  background: '#202b33',
-                  cursor: 'default',
-                  textIndent: '-20px',
-                  paddingLeft: '25px'
-                }}
-                title="Gateway status"
-              >
+            </BlueCard>
+          </div>
+          {card.spooling && (
+            <BlueCard
+              // eslint-disable-next-line react/no-array-index-key
+              elevation={Elevation.TWO}
+              style={{
+                marginTop: '30px',
+                minWidth: '220px',
+                width: '220px',
+                maxWidth: '220px'
+              }}
+            >
+              <div id={`subnote-${index}`} className={styles.spoolingStatus} />
+              <h1 className={styles.title}>
                 <Button
-                  icon="cross"
+                  icon="chevron-left"
                   minimal
                   title="Close gateway"
                   style={{
                     padding: '0px',
                     minWidth: '20px',
-                    minHeight: '20px',
-                    float: 'right'
+                    minHeight: '20px'
                   }}
                   onClick={() => onStopSpooling(index)}
                 />
-                <Icon
-                  icon="exchange"
-                  className={`${styles.spoolingStatus} ${spoolingActive}`}
-                />
-                {`@${cardData.title} from '${card.spooling.boardData.name}'`}
-              </div>
-            )}
-            {(!collapsed || titleRef.current.state.isEditing) && (
+                <Tooltip
+                  content={cardData.title}
+                  disabled={cardData.title.length <= 19}
+                  position={Position.BOTTOM}
+                  inheritDarkTheme
+                >
+                  <EditableText
+                    placeholder="Edit title..."
+                    disabled
+                    value={cardData.title}
+                  />
+                </Tooltip>
+                {cardData.title.length > 19 && (
+                  <div style={{ marginLeft: '3px' }}>...</div>
+                )}
+              </h1>
               <Editor
                 doc={cardData.doc}
                 index={index}
                 onChange={(doc, saveChanges) => {
-                  onEditCard(index, doc, saveChanges);
+                  onEditCard(index, doc, saveChanges, true);
                 }}
                 onRemoveCard={() => onRemoveCard(index)}
                 onRequestBoardsAsync={onRequestBoardsAsync}
@@ -336,9 +358,9 @@ const Card: React.FC<CardProps> = forwardRef(
                 onOpenImage={onOpenImage}
                 className={styles.editor}
               />
-            )}
-          </BlueCard>
-        </div>
+            </BlueCard>
+          )}
+        </ButtonGroup>
       </>
     );
   }

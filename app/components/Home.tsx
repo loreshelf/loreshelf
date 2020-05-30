@@ -106,6 +106,7 @@ class Home extends Component {
 
     const saveTimer = undefined;
     const spoolingTimer = undefined;
+    const spoolingSavingCardIndex = undefined;
 
     this.menuRef = React.createRef();
     this.boardRef = React.createRef();
@@ -115,6 +116,7 @@ class Home extends Component {
       boardData,
       saveTimer,
       spoolingTimer,
+      spoolingSavingCardIndex,
       knownWorkspaces,
       homeBoard,
       sortBy,
@@ -925,11 +927,11 @@ class Home extends Component {
     this.autoSave();
   }
 
-  editCard(cardId, doc, saveChanges) {
+  editCard(cardId, doc, saveChanges, spoolingDoc?) {
     const { boardData } = this.state;
     const card = boardData.cards[cardId];
     const { spooling } = card;
-    if (spooling) {
+    if (spoolingDoc) {
       const spoolingBoardData = spooling.boardData;
       spoolingBoardData.cards[spooling.cardIndex].doc = doc;
       if (saveChanges) {
@@ -1049,6 +1051,10 @@ class Home extends Component {
         intent: Intent.DANGER
       });
       return;
+    }
+    const { spoolingSavingCardIndex } = this.state;
+    if (spoolingSavingCardIndex) {
+      this.autoSaveSpooling(spoolingSavingCardIndex, true);
     }
     const spoolingBoardMeta = {
       path: boardPath,
@@ -1174,32 +1180,45 @@ class Home extends Component {
 
   autoSaveSpooling(spoolingCardIndex, immediatelyWhenNeeded?) {
     const { boardData } = this.state;
-    let { spoolingTimer } = this.state;
+    const { spoolingTimer, spoolingSavingCardIndex } = this.state;
     const shouldSave =
       immediatelyWhenNeeded !== undefined &&
       immediatelyWhenNeeded &&
-      spoolingTimer !== undefined;
-    if (spoolingTimer) {
-      clearTimeout(spoolingTimer);
-    }
-    const spoolingBoardData =
-      boardData.cards[spoolingCardIndex].spooling.boardData;
-    if (shouldSave) {
+      spoolingSavingCardIndex !== undefined;
+    const saveSpoolingBoard = cardIndex => {
+      const spoolingBoardData = boardData.cards[cardIndex].spooling.boardData;
       this.saveBoard(spoolingBoardData);
       spoolingBoardData.status = 'All changes saved';
-      this.setState({ spoolingTimer: undefined });
+      const status = document.getElementById(`subnote-${spoolingCardIndex}`);
+      status.classList.remove('subnote-active');
+      this.setState({ spoolingSavingCardIndex: undefined });
+    };
+    if (
+      spoolingSavingCardIndex &&
+      spoolingSavingCardIndex !== spoolingCardIndex
+    ) {
+      clearTimeout(spoolingTimer);
+      saveSpoolingBoard(spoolingSavingCardIndex);
+    } else if (spoolingTimer) {
+      clearTimeout(spoolingTimer);
+    }
+    if (shouldSave) {
+      saveSpoolingBoard(spoolingCardIndex);
     } else if (!immediatelyWhenNeeded) {
-      spoolingTimer = setTimeout(() => {
-        this.saveBoard(spoolingBoardData);
-        spoolingBoardData.status = 'All changes saved';
-        boardData.cards[
-          spoolingCardIndex
-        ].spooling.boardData = spoolingBoardData;
-      }, 1000);
+      const newSpoolingTimer = setTimeout(() => {
+        saveSpoolingBoard(spoolingCardIndex);
+      }, 3000);
+      const spoolingBoardData =
+        boardData.cards[spoolingCardIndex].spooling.boardData;
       if (spoolingBoardData.status !== 'Saving...') {
         spoolingBoardData.status = 'Saving...';
+        const status = document.getElementById(`subnote-${spoolingCardIndex}`);
+        status.classList.add('subnote-active');
       }
-      this.setState({ spoolingTimer });
+      this.setState({
+        spoolingTimer: newSpoolingTimer,
+        spoolingSavingCardIndex: spoolingCardIndex
+      });
     }
   }
 

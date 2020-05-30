@@ -203,6 +203,7 @@ Still | renders | nicely
                       const cardName = decodeURI(
                         gatewayUrl.substring(separatorIndex + 1)
                       );
+                      view.root.activeElement.blur();
                       view.onStartSpooling(boardPath, cardName);
                       return true;
                     }
