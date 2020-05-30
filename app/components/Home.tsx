@@ -135,6 +135,7 @@ class Home extends Component {
     this.deleteBoard = this.deleteBoard.bind(this);
     this.renameBoard = this.renameBoard.bind(this);
     this.openHomeBoard = this.openHomeBoard.bind(this);
+    this.openBoard = this.openBoard.bind(this);
     this.setHome = this.setHome.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
@@ -142,6 +143,7 @@ class Home extends Component {
     this.boardPathToName = this.boardPathToName.bind(this);
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
+    this.startSpooling = this.startSpooling.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
     this.selectSort = this.selectSort.bind(this);
     this.selectFilter = this.selectFilter.bind(this);
@@ -1134,11 +1136,35 @@ class Home extends Component {
     CONFIG_STORE.set(CONFIG.FILTERBY, filterBy);
   }
 
+  startSpooling(workspaceName, boardName, cardName, cardIndex) {
+    const { knownWorkspaces, workspace } = this.state;
+    const spoolingWorkspace = workspaceName
+      ? knownWorkspaces.find(w => w.name === workspaceName)
+      : workspace;
+    const boardMeta = spoolingWorkspace.boards.find(b => b.name === boardName);
+    if (boardMeta) {
+      ipcRenderer.send(
+        'board-spooling-load',
+        boardMeta.path,
+        cardIndex,
+        cardName
+      );
+    }
+  }
+
   stopSpooling(spoolingCardIndex) {
     const { boardData } = this.state;
     this.autoSaveSpooling(spoolingCardIndex, true);
     boardData.cards[spoolingCardIndex].spooling = undefined;
     this.boardRef.forceUpdate();
+  }
+
+  openBoard(boardPath) {
+    const workspacePath = boardPath.substring(
+      0,
+      boardPath.lastIndexOf(nodePath.sep)
+    );
+    this.loadWorkspace(workspacePath, true, boardPath);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -1274,6 +1300,7 @@ class Home extends Component {
               this.boardRef = el;
             }}
             boardData={boardData}
+            workspace={workspace}
             onEditTitle={this.editTitle}
             onEditCard={this.editCard}
             onNewCard={this.newCard}
@@ -1281,7 +1308,9 @@ class Home extends Component {
             onRemoveCard={this.removeCard}
             onRequestBoardsAsync={this.requestBoardsAsync}
             onRequestBoardDataAsync={this.requestBoardDataAsync}
+            onStartSpooling={this.startSpooling}
             onStopSpooling={this.stopSpooling}
+            onOpenBoard={this.openBoard}
           />
         );
       } else if (

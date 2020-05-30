@@ -18,7 +18,8 @@ import {
   Button,
   Tooltip,
   Position,
-  ButtonGroup
+  ButtonGroup,
+  Intent
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
 import { ipcRenderer } from 'electron';
@@ -43,6 +44,7 @@ const Card: React.FC<CardProps> = forwardRef(
   (
     {
       card,
+      workspace,
       collapsed,
       dividerIndex,
       dividerLeft,
@@ -55,11 +57,13 @@ const Card: React.FC<CardProps> = forwardRef(
       onEditTitle,
       onRequestBoardsAsync,
       onRequestBoardDataAsync,
+      onStartSpooling,
       onStopSpooling,
       onOpenImage,
       onMoveToTop,
       onMoveToBottom,
-      onToggleCollapse
+      onToggleCollapse,
+      onOpenBoard
     },
     ref
   ) => {
@@ -277,6 +281,7 @@ const Card: React.FC<CardProps> = forwardRef(
                 (titleRef.current && titleRef.current.state.isEditing)) && (
                 <Editor
                   doc={card.doc}
+                  workspace={workspace}
                   index={index}
                   onChange={(doc, saveChanges) => {
                     onEditCard(index, doc, saveChanges);
@@ -284,13 +289,8 @@ const Card: React.FC<CardProps> = forwardRef(
                   onRemoveCard={() => onRemoveCard(index)}
                   onRequestBoardsAsync={onRequestBoardsAsync}
                   onRequestBoardDataAsync={onRequestBoardDataAsync}
-                  onStartSpooling={(boardPath, cardName) => {
-                    ipcRenderer.send(
-                      'board-spooling-load',
-                      boardPath,
-                      index,
-                      cardName
-                    );
+                  onStartSpooling={(workspaceName, boardName, cardName) => {
+                    onStartSpooling(workspaceName, boardName, cardName, index);
                   }}
                   onOpenImage={onOpenImage}
                   className={styles.editor}
@@ -324,7 +324,7 @@ const Card: React.FC<CardProps> = forwardRef(
                 />
                 <Tooltip
                   content={cardData.title}
-                  disabled={cardData.title.length <= 19}
+                  disabled={cardData.title.length <= 18}
                   position={Position.BOTTOM}
                   inheritDarkTheme
                 >
@@ -334,12 +334,38 @@ const Card: React.FC<CardProps> = forwardRef(
                     value={cardData.title}
                   />
                 </Tooltip>
-                {cardData.title.length > 19 && (
-                  <div style={{ marginLeft: '3px' }}>...</div>
+                {cardData.title.length > 18 && (
+                  <div
+                    style={{
+                      marginLeft: '-19px',
+                      paddingLeft: '3px',
+                      paddingRight: '3px',
+                      backgroundColor: '#0081C9',
+                      zIndex: '2'
+                    }}
+                  >
+                    ...
+                  </div>
                 )}
+                <Button
+                  icon="fullscreen"
+                  minimal
+                  title="Open notebook"
+                  style={{
+                    marginLeft: '-5px',
+                    padding: '0px',
+                    minWidth: '30px',
+                    minHeight: '30px',
+                    marginTop: '-5px',
+                    backgroundColor: '#0081C9',
+                    marginBottom: '-5px'
+                  }}
+                  onClick={() => onOpenBoard(card.spooling.boardData.path)}
+                />
               </h1>
               <Editor
                 doc={cardData.doc}
+                workspace={workspace}
                 index={index}
                 onChange={(doc, saveChanges) => {
                   onEditCard(index, doc, saveChanges, true);
@@ -347,13 +373,8 @@ const Card: React.FC<CardProps> = forwardRef(
                 onRemoveCard={() => onRemoveCard(index)}
                 onRequestBoardsAsync={onRequestBoardsAsync}
                 onRequestBoardDataAsync={onRequestBoardDataAsync}
-                onStartSpooling={(boardPath, cardName) => {
-                  ipcRenderer.send(
-                    'board-spooling-load',
-                    boardPath,
-                    index,
-                    cardName
-                  );
+                onStartSpooling={(workspaceName, boardName, cardName) => {
+                  onStartSpooling(workspaceName, boardName, cardName, index);
                 }}
                 onOpenImage={onOpenImage}
                 className={styles.editor}

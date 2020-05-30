@@ -64,6 +64,7 @@ class Board extends Component {
   render() {
     const {
       boardData,
+      workspace,
       onEditCard,
       onNewCard,
       onRemoveCard,
@@ -71,7 +72,9 @@ class Board extends Component {
       onEditTitle,
       onRequestBoardsAsync,
       onRequestBoardDataAsync,
-      onStopSpooling
+      onStartSpooling,
+      onStopSpooling,
+      onOpenBoard
     } = this.props;
     const { dividerIndex, dividerLeft, imageSrc, collapsed } = this.state;
     const cardData = boardData && boardData.cards ? boardData.cards : [];
@@ -105,6 +108,7 @@ class Board extends Component {
               <Card
                 key={`${c.title}-${cardData.indexOf(c)}`}
                 card={c}
+                workspace={workspace}
                 collapsed={collapsed}
                 index={cardData.indexOf(c)}
                 dividerIndex={dividerIndex}
@@ -119,6 +123,7 @@ class Board extends Component {
                 onEditTitle={onEditTitle}
                 onRequestBoardsAsync={onRequestBoardsAsync}
                 onRequestBoardDataAsync={onRequestBoardDataAsync}
+                onStartSpooling={onStartSpooling}
                 onStopSpooling={onStopSpooling}
                 onOpenImage={this.openImage}
                 onMoveToTop={() => {
@@ -130,6 +135,7 @@ class Board extends Component {
                 onToggleCollapse={() => {
                   this.setState({ collapsed: !collapsed });
                 }}
+                onOpenBoard={onOpenBoard}
               />
             ))}
             {cardData.length === dividerIndex && (

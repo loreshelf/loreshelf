@@ -196,15 +196,23 @@ Still | renders | nicely
                     const linkNode = view.state.doc.nodeAt(pos);
                     const gatewayUrl = linkNode.marks[0].attrs.href;
                     if (gatewayUrl.startsWith('@')) {
-                      const separatorIndex = gatewayUrl.lastIndexOf(path.sep);
-                      const boardPath = decodeURI(
-                        gatewayUrl.substring(1, separatorIndex)
+                      const separatorIndex = gatewayUrl.indexOf('/');
+                      const workspaceName =
+                        separatorIndex >= 0
+                          ? decodeURI(gatewayUrl.substring(1, separatorIndex))
+                          : undefined;
+                      const separatorIndex2 = gatewayUrl.indexOf('#');
+                      const boardName = decodeURI(
+                        gatewayUrl.substring(
+                          separatorIndex >= 0 ? separatorIndex + 1 : 1,
+                          separatorIndex2
+                        )
                       );
                       const cardName = decodeURI(
-                        gatewayUrl.substring(separatorIndex + 1)
+                        gatewayUrl.substring(separatorIndex2 + 1)
                       );
                       view.root.activeElement.blur();
-                      view.onStartSpooling(boardPath, cardName);
+                      view.onStartSpooling(workspaceName, boardName, cardName);
                       return true;
                     }
                   }
@@ -757,16 +765,27 @@ Still | renders | nicely
       } else {
         // replace with link
         // [board.name/card](@board.name/card "board.name/card")
+        const { workspace } = this.props;
         const boardName = this.selectedSuggestion.board.name;
         const boardPath = this.selectedSuggestion.board.path;
+        const endWorkspaceName = boardPath.lastIndexOf(path.sep);
+        const startWorkspaceName =
+          boardPath.lastIndexOf(path.sep, endWorkspaceName - 1) + 1;
+        const workspaceName = boardPath.substring(
+          startWorkspaceName,
+          endWorkspaceName
+        );
+        const currentWorkspaceName = workspace.name;
+        const prefix =
+          currentWorkspaceName === workspaceName ? '' : `${workspaceName}/`;
         const cardName = suggestion.title;
         dispatch(
           state.tr.insertText(cardName, this.suggestionPos - 1, from).addMark(
             this.suggestionPos - 1,
             this.suggestionPos + cardName.length,
             schema.marks.link.create({
-              href: `@${boardPath}/${cardName}`,
-              title: `Open '${cardName}' notecard from '${boardName}' notebook`
+              href: `@${prefix}${boardName}#${cardName}`,
+              title: `Open from '${boardName}'`
             })
           )
         );

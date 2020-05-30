@@ -298,6 +298,7 @@ img::after {
   animation: up-right 1s infinite;
 }
 
+.bp3-icon-fullscreen,
 .bp3-icon-chevron-left {
   color: hsla(204, 33%, 97%, 1) !important;
 }
