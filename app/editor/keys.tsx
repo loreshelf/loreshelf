@@ -73,14 +73,13 @@ export function buildKeymap(schema) {
 
   bind('Mod-z', undo);
   bind('Shift-Mod-z', redo);
-  bind(
+  /** bind(
     'Backspace',
     chainCommands(
       liftListItem(schema.nodes.list_item),
       liftListItem(schema.nodes.bullet_list)
     )
-  );
-  // chainCommands(deleteSelection, joinBackward, selectNodeBackward)
+  ); */
   if (!mac) bind('Mod-y', redo);
 
   bind('Alt-ArrowUp', joinUp);

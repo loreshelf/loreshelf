@@ -210,6 +210,15 @@ const Card: React.FC<CardProps> = forwardRef(
                       minWidth: '20px'
                     }}
                     onDoubleClick={onToggleCollapse}
+                    onClick={() => {
+                      if (collapsed) {
+                        card.collapsed =
+                          card.collapsed === undefined
+                            ? false
+                            : !card.collapsed;
+                        forceUpdate();
+                      }
+                    }}
                     onContextMenu={e => {
                       e.preventDefault();
                       let parent = e.target;
@@ -258,7 +267,6 @@ const Card: React.FC<CardProps> = forwardRef(
                     alwaysRenderInput={!card.spooling}
                     disabled={card.spooling}
                     onConfirm={() => {
-                      titleRef.current.state.isEditing = false;
                       titleRef.current.inputElement.blur();
                       // forceUpdate();
                     }}
@@ -268,17 +276,13 @@ const Card: React.FC<CardProps> = forwardRef(
                       onEditTitle(index, e);
                       forceUpdate();
                     }}
-                    onEdit={() => {
-                      forceUpdate();
-                    }}
                   />
                 </Tooltip>
                 {card.title.length > 19 && (
                   <div style={{ marginLeft: '3px' }}>...</div>
                 )}
               </h1>
-              {(!collapsed ||
-                (titleRef.current && titleRef.current.state.isEditing)) && (
+              {(!collapsed || (collapsed && card.collapsed === false)) && (
                 <Editor
                   doc={card.doc}
                   workspace={workspace}
@@ -298,89 +302,94 @@ const Card: React.FC<CardProps> = forwardRef(
               )}
             </BlueCard>
           </div>
-          {card.spooling && (
-            <BlueCard
-              // eslint-disable-next-line react/no-array-index-key
-              elevation={Elevation.TWO}
-              style={{
-                marginTop: '30px',
-                minWidth: '220px',
-                width: '220px',
-                maxWidth: '220px'
-              }}
-            >
-              <div id={`subnote-${index}`} className={styles.spoolingStatus} />
-              <h1 className={styles.title}>
-                <Button
-                  icon="chevron-left"
-                  minimal
-                  title="Close gateway"
-                  style={{
-                    padding: '0px',
-                    minWidth: '20px',
-                    minHeight: '20px'
-                  }}
-                  onClick={() => onStopSpooling(index)}
+          {(!collapsed || (collapsed && card.collapsed === false)) &&
+            card.spooling && (
+              <BlueCard
+                // eslint-disable-next-line react/no-array-index-key
+                elevation={Elevation.TWO}
+                style={{
+                  marginTop: '30px',
+                  minWidth: '220px',
+                  width: '220px',
+                  maxWidth: '220px'
+                }}
+              >
+                <div
+                  id={`subnote-${index}`}
+                  className={styles.spoolingStatus}
+                  style={{ position: 'sticky', top: '0', zIndex: '1' }}
                 />
-                <Tooltip
-                  content={cardData.title}
-                  disabled={cardData.title.length <= 18}
-                  position={Position.BOTTOM}
-                  inheritDarkTheme
-                >
-                  <EditableText
-                    placeholder="Edit title..."
-                    disabled
-                    value={cardData.title}
-                  />
-                </Tooltip>
-                {cardData.title.length > 18 && (
-                  <div
+                <h1 className={styles.title}>
+                  <Button
+                    icon="chevron-left"
+                    minimal
+                    title="Close gateway"
                     style={{
-                      marginLeft: '-19px',
-                      paddingLeft: '3px',
-                      paddingRight: '3px',
-                      backgroundColor: '#0081C9',
-                      zIndex: '2'
+                      padding: '0px',
+                      minWidth: '20px',
+                      minHeight: '20px'
                     }}
+                    onClick={() => onStopSpooling(index)}
+                  />
+                  <Tooltip
+                    content={cardData.title}
+                    disabled={cardData.title.length <= 18}
+                    position={Position.BOTTOM}
+                    inheritDarkTheme
                   >
-                    ...
-                  </div>
-                )}
-                <Button
-                  icon="fullscreen"
-                  minimal
-                  title="Open notebook"
-                  style={{
-                    marginLeft: '-5px',
-                    padding: '0px',
-                    minWidth: '30px',
-                    minHeight: '30px',
-                    marginTop: '-5px',
-                    backgroundColor: '#0081C9',
-                    marginBottom: '-5px'
+                    <EditableText
+                      placeholder="Edit title..."
+                      disabled
+                      value={cardData.title}
+                    />
+                  </Tooltip>
+                  {cardData.title.length > 18 && (
+                    <div
+                      style={{
+                        marginLeft: '-19px',
+                        paddingLeft: '3px',
+                        paddingRight: '3px',
+                        backgroundColor: '#0081C9',
+                        zIndex: '2'
+                      }}
+                    >
+                      ...
+                    </div>
+                  )}
+                  <Button
+                    icon="fullscreen"
+                    minimal
+                    title="Open notebook"
+                    style={{
+                      marginLeft: '-5px',
+                      padding: '0px',
+                      minWidth: '30px',
+                      minHeight: '30px',
+                      marginTop: '-5px',
+                      backgroundColor: '#0081C9',
+                      marginBottom: '-5px'
+                    }}
+                    onClick={() => onOpenBoard(card.spooling.boardData.path)}
+                  />
+                </h1>
+                <Editor
+                  doc={cardData.doc}
+                  workspace={workspace}
+                  index={index}
+                  onChange={(doc, saveChanges) => {
+                    onEditCard(index, doc, saveChanges, true);
                   }}
-                  onClick={() => onOpenBoard(card.spooling.boardData.path)}
+                  onRemoveCard={() => onRemoveCard(index)}
+                  onRequestBoardsAsync={onRequestBoardsAsync}
+                  onRequestBoardDataAsync={onRequestBoardDataAsync}
+                  onStartSpooling={(workspaceName, boardName, cardName) => {
+                    onStartSpooling(workspaceName, boardName, cardName, index);
+                  }}
+                  onOpenImage={onOpenImage}
+                  className={styles.editor}
                 />
-              </h1>
-              <Editor
-                doc={cardData.doc}
-                workspace={workspace}
-                index={index}
-                onChange={(doc, saveChanges) => {
-                  onEditCard(index, doc, saveChanges, true);
-                }}
-                onRemoveCard={() => onRemoveCard(index)}
-                onRequestBoardsAsync={onRequestBoardsAsync}
-                onRequestBoardDataAsync={onRequestBoardDataAsync}
-                onStartSpooling={(workspaceName, boardName, cardName) => {
-                  onStartSpooling(workspaceName, boardName, cardName, index);
-                }}
-                onOpenImage={onOpenImage}
-                className={styles.editor}
-              />
-            </BlueCard>
-          )}
+              </BlueCard>
+            )}
         </ButtonGroup>
       </>
     );
