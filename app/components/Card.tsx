@@ -296,6 +296,7 @@ const Card: React.FC<CardProps> = forwardRef(
                   onStartSpooling={(workspaceName, boardName, cardName) => {
                     onStartSpooling(workspaceName, boardName, cardName, index);
                   }}
+                  onOpenBoard={onOpenBoard}
                   onOpenImage={onOpenImage}
                   className={styles.editor}
                 />
@@ -385,6 +386,7 @@ const Card: React.FC<CardProps> = forwardRef(
                   onStartSpooling={(workspaceName, boardName, cardName) => {
                     onStartSpooling(workspaceName, boardName, cardName, index);
                   }}
+                  onOpenBoard={onOpenBoard}
                   onOpenImage={onOpenImage}
                   className={styles.editor}
                 />

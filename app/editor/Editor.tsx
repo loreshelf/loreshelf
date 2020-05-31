@@ -71,6 +71,7 @@ Still | renders | nicely
       nodeViews,
       doc,
       onStartSpooling,
+      onOpenBoard,
       onOpenImage
     } = this.props;
     this.saveChanges = true;
@@ -215,6 +216,10 @@ Still | renders | nicely
                       view.onStartSpooling(workspaceName, boardName, cardName);
                       return true;
                     }
+                  }
+                  if (url.endsWith('.md')) {
+                    view.onOpenBoard(decodeURI(url.replace('file://', '')));
+                    return true;
                   }
                   if (!shell.openItem(url)) {
                     // currently doesn't work but in Electron 9 the API changes (openPath)
@@ -514,6 +519,7 @@ Still | renders | nicely
     });
 
     this.view.onStartSpooling = onStartSpooling;
+    this.view.onOpenBoard = onOpenBoard;
     this.view.onOpenImage = onOpenImage;
 
     this.selectSuggestion = this.selectSuggestion.bind(this);
@@ -537,7 +543,7 @@ Still | renders | nicely
   }
 
   componentDidUpdate() {
-    const { doc, onStartSpooling, onOpenImage } = this.props;
+    const { doc, onStartSpooling, onOpenImage, onOpenBoard } = this.props;
     if (this.originalDoc !== doc) {
       this.view.updateState(
         EditorState.create({
@@ -546,6 +552,7 @@ Still | renders | nicely
         })
       );
       this.view.onStartSpooling = onStartSpooling;
+      this.view.onOpenBoard = onOpenBoard;
       this.view.onOpenImage = onOpenImage;
       this.originalDoc = doc;
     }
