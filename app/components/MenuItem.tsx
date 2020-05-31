@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { useDrop } from 'react-dnd';
 import { Button } from '@blueprintjs/core';
 import DragItemTypes from '../utils/DragItemTypes';
+import styles from './Menu.css';
 
 const Card: React.FC = ({ disabled, onClick, moveCard, children }) => {
   const ref = useRef<Button>(null);
@@ -26,7 +27,12 @@ const Card: React.FC = ({ disabled, onClick, moveCard, children }) => {
   const active = isOver && !disabled;
   return (
     <div ref={ref}>
-      <Button active={active} disabled={disabled} onClick={onClick}>
+      <Button
+        className={disabled ? styles['menuItem-disabled'] : styles.menuItem}
+        active={active}
+        disabled={disabled}
+        onClick={onClick}
+      >
         {children}
       </Button>
     </div>

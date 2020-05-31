@@ -13,3 +13,11 @@
   padding-top: 5px !important;
   margin: 3px;
 }
+
+.menuItem {
+  color: rgb(167, 182, 194) !important;
+}
+
+.menuItem-disabled {
+  color: #f5f8fa !important;
+}
