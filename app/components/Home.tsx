@@ -275,6 +275,10 @@ class Home extends Component {
             e.preventDefault();
             this.newCard();
             break;
+          case 'n':
+            e.preventDefault();
+            this.menuRef.current.newBoardOpen();
+            break;
         }
       }
     });
@@ -365,11 +369,11 @@ class Home extends Component {
       this.setState({ pro: true, deviceId });
     } else {
       this.setState({ pro: false, deviceId });
-      setTimeout(() => {
+      /** setTimeout(() => {
         if (this.menuRef.current) {
           this.menuRef.current.licensePopupOpen();
         }
-      }, 2000);
+      }, 2000); */
     }
   }
 
@@ -1149,7 +1153,9 @@ class Home extends Component {
         cardIndex,
         cardName
       );
+      return true;
     }
+    return false;
   }
 
   stopSpooling(spoolingCardIndex) {

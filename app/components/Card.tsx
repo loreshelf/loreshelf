@@ -294,7 +294,12 @@ const Card: React.FC<CardProps> = forwardRef(
                   onRequestBoardsAsync={onRequestBoardsAsync}
                   onRequestBoardDataAsync={onRequestBoardDataAsync}
                   onStartSpooling={(workspaceName, boardName, cardName) => {
-                    onStartSpooling(workspaceName, boardName, cardName, index);
+                    return onStartSpooling(
+                      workspaceName,
+                      boardName,
+                      cardName,
+                      index
+                    );
                   }}
                   onOpenBoard={onOpenBoard}
                   onOpenImage={onOpenImage}
@@ -384,7 +389,12 @@ const Card: React.FC<CardProps> = forwardRef(
                   onRequestBoardsAsync={onRequestBoardsAsync}
                   onRequestBoardDataAsync={onRequestBoardDataAsync}
                   onStartSpooling={(workspaceName, boardName, cardName) => {
-                    onStartSpooling(workspaceName, boardName, cardName, index);
+                    return onStartSpooling(
+                      workspaceName,
+                      boardName,
+                      cardName,
+                      index
+                    );
                   }}
                   onOpenBoard={onOpenBoard}
                   onOpenImage={onOpenImage}

@@ -213,7 +213,18 @@ Still | renders | nicely
                         gatewayUrl.substring(separatorIndex2 + 1)
                       );
                       view.root.activeElement.blur();
-                      view.onStartSpooling(workspaceName, boardName, cardName);
+                      console.log(workspaceName);
+                      const started = view.onStartSpooling(
+                        workspaceName,
+                        boardName,
+                        cardName
+                      );
+                      if (!started) {
+                        AppToaster.show({
+                          message: `Cannot find and open the notebook '${boardName}'. Make sure the workspace is loaded: '${workspaceName}'`,
+                          intent: Intent.DANGER
+                        });
+                      }
                       return true;
                     }
                   }

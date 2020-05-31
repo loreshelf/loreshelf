@@ -24,11 +24,13 @@
   max-width: 440px;
 }
 
+.spoolingCard table,
 .card table {
   width: 100%;
   border-collapse: collapse;
 }
 
+.spoolingCard th,
 .card th {
   text-align: center;
   font-weight: bold;
@@ -37,6 +39,7 @@
   border: 5px solid #30404d;
 }
 
+.spoolingCard td,
 .card td {
   text-align: left;
   border-top: 1px solid hsl(206, 24%, 64%);
