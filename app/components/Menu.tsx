@@ -21,6 +21,7 @@ import { Select } from '@blueprintjs/select';
 import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import moment from 'moment';
+import path from 'path';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 import { SortOption, renderSort } from './SortBySelect';
@@ -222,7 +223,7 @@ class Menu extends Component {
   handleNameChange(newBoardName, workspacePath) {
     // Check if board already exists
     let newBoardIntent;
-    if (fs.existsSync(`${workspacePath}/${newBoardName}`)) {
+    if (fs.existsSync(`${workspacePath}${path.sep}${newBoardName}`)) {
       newBoardIntent = Intent.DANGER;
     } else {
       newBoardIntent = Intent.NONE;
@@ -684,7 +685,7 @@ class Menu extends Component {
           <div className={Classes.DIALOG_BODY}>
             <p>
               The new notebook will be stored at
-              <strong>{` ${workspacePath}/${newBoardName}`}</strong>
+              <strong>{` ${workspacePath}${path.sep}${newBoardName}`}</strong>
             </p>
             <p style={{ color: 'red' }}>
               {newBoardIntent === Intent.DANGER

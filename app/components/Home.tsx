@@ -695,7 +695,7 @@ class Home extends Component {
     const { workspace } = this.state;
     // save board for unsaved changes
     this.autoSave(true);
-    const newBoardPath = `${workspace.path}/${newBoardName}`;
+    const newBoardPath = `${workspace.path}${nodePath.sep}${newBoardName}`;
     let addContent = content;
     if (!addContent) {
       addContent = '';
@@ -872,7 +872,6 @@ class Home extends Component {
           n[n.length - 1].firstChild.firstChild.lastChild.firstChild.firstChild
             .firstElementChild;
         title.focus();
-        title.select();
       }, 100);
     }
   }
@@ -1002,7 +1001,7 @@ class Home extends Component {
   renameBoard(newBoardName) {
     const { boardData, workspace } = this.state;
     const oldBoardPath = boardData.path;
-    const newBoardPath = `${workspace.path}/${newBoardName}`;
+    const newBoardPath = `${workspace.path}${nodePath.sep}${newBoardName}`;
     if (workspace.zipdata) {
       const { zip } = workspace;
       const mdFile = `${boardData.name}.md`;
@@ -1104,9 +1103,10 @@ class Home extends Component {
 
   requestBoardsAsync() {
     return new Promise((resolve, reject) => {
-      const { boardData, workspace, knownWorkspaces } = this.state;
+      const { workspace, knownWorkspaces } = this.state;
       // get boards from the current workspace
-      let allBoards = workspace.boards.filter(b => b.path !== boardData.path);
+      let allBoards = [];
+      allBoards = allBoards.concat(workspace.boards);
       knownWorkspaces.forEach(w => {
         if (workspace.path !== w.path) {
           allBoards = allBoards.concat(w.boards);

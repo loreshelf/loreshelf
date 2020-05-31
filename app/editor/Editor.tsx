@@ -576,7 +576,7 @@ Still | renders | nicely
         ipcRenderer.sendSync('file-link', baseURI.href)
       );
       if (filePath) {
-        const label = filePath.substring(filePath.lastIndexOf('/') + 1);
+        const label = filePath.substring(filePath.lastIndexOf(path.sep) + 1);
         const cursorPos = state.selection.from;
         let tr = state.tr.insertText(label);
         tr = tr.addMark(
