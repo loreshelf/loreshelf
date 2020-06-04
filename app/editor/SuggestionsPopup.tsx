@@ -12,13 +12,20 @@ function SuggestionsPopup(props) {
     textProperty,
     suggestionIndex
   } = props;
-  const topPos = position.top + 20;
+  const height = suggestions.length * 30;
+  let topPos = position.top + 20;
+  const maxTopPos = window.innerHeight - height;
+  let adjustLeftPos = 0;
+  if (topPos > maxTopPos) {
+    topPos = maxTopPos;
+    adjustLeftPos = 10;
+  }
 
   return (
     <div>
       <Menu
         style={{
-          left: position.left,
+          left: position.left + adjustLeftPos,
           top: topPos
         }}
         className={classes.suggestions}

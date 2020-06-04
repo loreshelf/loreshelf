@@ -213,7 +213,6 @@ Still | renders | nicely
                         gatewayUrl.substring(separatorIndex2 + 1)
                       );
                       view.root.activeElement.blur();
-                      console.log(workspaceName);
                       const started = view.onStartSpooling(
                         workspaceName,
                         boardName,
@@ -800,7 +799,7 @@ Still | renders | nicely
         dispatch(
           state.tr.insertText(cardName, this.suggestionPos - 1, from).addMark(
             this.suggestionPos - 1,
-            this.suggestionPos + cardName.length,
+            this.suggestionPos + cardName.length - 1,
             schema.marks.link.create({
               href: `@${prefix}${boardName}#${cardName}`,
               title: `Open from '${boardName}'`

@@ -107,6 +107,7 @@ class Menu extends Component {
     this.licenseActivatedClose = this.licenseActivatedClose.bind(this);
     this.handleLicenseKeyChange = this.handleLicenseKeyChange.bind(this);
     this.handleLicenseEmailChange = this.handleLicenseEmailChange.bind(this);
+    this.newBoardConfirm = this.newBoardConfirm.bind(this);
   }
 
   componentDidMount() {

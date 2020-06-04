@@ -26,8 +26,9 @@
 
 .spoolingCard table,
 .card table {
-  width: 100%;
+  width: calc(100% + 10px);
   border-collapse: collapse;
+  margin: -5px;
 }
 
 .spoolingCard th,
@@ -36,13 +37,21 @@
   font-weight: bold;
   width: 50%;
   background: #0081c9;
-  border: 5px solid #30404d;
+}
+
+.spoolingCard tr:not(:first-child),
+.card tr:not(:first-child) {
+  border-top: 1px solid hsl(206, 24%, 64%);
+}
+
+.spoolingCard th:not(:first-child),
+.card th:not(:first-child) {
+  border-left: 5px solid #30404d;
 }
 
 .spoolingCard td,
 .card td {
   text-align: left;
-  border-top: 1px solid hsl(206, 24%, 64%);
   padding: 0;
   padding-left: 5px;
 }

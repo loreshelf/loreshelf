@@ -72,11 +72,21 @@ p a:hover {
 }
 
 .property {
-  font-size: 15px;
-  min-height: 24px;
-  padding: 4px;
+  font-size: 16px;
+  line-height: 20px;
+  min-height: 34px;
+  margin: 0 -5px;
+  padding: 7px;
+  background: hsl(207, 23%, 37%);
+  width: calc(100% + 10px);
+  text-align: center;
+}
+
+h3 {
+  font-size: 1.1em;
+  min-height: 2em;
   margin: 3px -5px;
-  border-left: 7px solid hsl(207, 23%, 37%);
+  padding: 4px;
 }
 
 .ProseMirror {
