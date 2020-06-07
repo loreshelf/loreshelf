@@ -54,6 +54,36 @@ const COMMANDS = [
     }
   },
   {
+    name: 'metadata',
+    disabled: isNotInline,
+    onSelect: (start, end, state, dispatch) => {
+      const headerCells = [];
+      const cells = [];
+      const pros = schema.text('Metadata-key');
+      const cons = schema.text('Metadata-value');
+      cells.push(schema.nodes.table_cell.createAndFill());
+      cells.push(schema.nodes.table_cell.createAndFill());
+      headerCells.push(schema.nodes.table_header.createChecked(null, pros));
+      headerCells.push(schema.nodes.table_header.createChecked(null, cons));
+      const headerRows = schema.nodes.table_row.createChecked(
+        null,
+        headerCells
+      );
+      const rows = schema.nodes.table_row.createChecked(null, cells);
+      const thead = schema.nodes.table_head.createChecked(null, headerRows);
+      const tbody = schema.nodes.table_body.createChecked(null, rows);
+      const table = schema.nodes.table.createChecked({ class: 'metadata' }, [
+        thead,
+        tbody
+      ]);
+      const tr = state.tr.replaceWith(start, end, table);
+      console.log(start);
+      console.log(end);
+      tr.setSelection(Selection.near(tr.doc.resolve(end + 5)));
+      dispatch(tr);
+    }
+  },
+  {
     name: 'table',
     disabled: isNotInline,
     onSelect: (start, end, state, dispatch) => {

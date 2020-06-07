@@ -22,7 +22,9 @@ const markdownParser = new MarkdownParser(
         class: +tok.tag.slice(1) === 2 ? 'property' : undefined
       })
     },
-    code_block: { block: 'code_block' },
+    code_block: {
+      block: 'code_block'
+    },
     fence: {
       block: 'code_block',
       getAttrs: tok => ({ params: tok.info || '' })
@@ -147,8 +149,20 @@ const markdownSerializer = new MarkdownSerializer(
       state.text(node.text);
     },
     table(state, node) {
-      state.renderContent(node);
-      state.write(`\n`);
+      if (node.textContent.startsWith('Metadata-keyMetadata-value')) {
+        const rows = node.content.content[1].content.content;
+        state.write('```metadata\n');
+        rows.forEach(row => {
+          state.renderInline(row.content.content[0]);
+          state.write(`=`);
+          state.renderInline(row.content.content[1]);
+          state.write(`\n`);
+        });
+        state.write('```\n');
+      } else {
+        state.renderContent(node);
+        state.write(`\n`);
+      }
     },
     table_row(state, node) {
       const cells = node.content.content;

@@ -18,6 +18,7 @@ import { timeSince } from '../utils/CoreFunctions';
 import { parseMarkdown, serializeMarkdown } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
 import AppToaster from './AppToaster';
+import Metadata from '../editor/Metadata';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -629,6 +630,15 @@ class Home extends Component {
       const regExp = new RegExp(escapeRegExp(mdi.code), 'g');
       newText = newText.replace(regExp, `![Icon](${mdi.icon})`);
     });
+    const metaData = new RegExp('^```metadata\\n(((?!```).)*)\\n```$', 'msg');
+    let found = metaData.exec(newText);
+    while (found) {
+      newText = newText.replace(
+        found[0],
+        Metadata.getInstance().transformToTable(found[1])
+      );
+      found = metaData.exec(newText);
+    }
     const mdCards = newText.split(/^(?=# )/gm);
     const cards = [];
     mdCards.forEach(md => {

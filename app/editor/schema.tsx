@@ -214,11 +214,22 @@ export const schema = new Schema({
 
     table: {
       content: 'table_head table_body',
+      attrs: {
+        class: { default: undefined }
+      },
       tableRole: 'table',
       group: 'block',
       parseDOM: [{ tag: 'table' }],
-      toDOM() {
-        return ['table', 0];
+      toDOM(node) {
+        return [
+          'table',
+          {
+            class: node.textContent.startsWith('Metadata-keyMetadata-value')
+              ? 'metadata'
+              : null
+          },
+          0
+        ];
       }
     },
     table_head: {

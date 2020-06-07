@@ -66,7 +66,7 @@ export function buildInputRules(schema) {
         class: 'property'
       }))
     );
-  const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+ )$/;
+  const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&%'\(\)\*\+,;=.]+ )$/;
   const imageUrlRegexp = /((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif) )$/;
 
   /** const str =

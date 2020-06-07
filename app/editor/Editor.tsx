@@ -128,12 +128,10 @@ Still | renders | nicely
           }
         },
         Tab: (state, dispatch) => {
-          sinkListItem(schema.nodes.list_item)(state, dispatch);
-          return true;
+          return sinkListItem(schema.nodes.list_item)(state, dispatch);
         },
         'Shift-Tab': (state, dispatch) => {
-          liftListItem(schema.nodes.list_item)(state, dispatch);
-          return true;
+          return liftListItem(schema.nodes.list_item)(state, dispatch);
         },
         'Mod-Space': state => {
           const transaction = state.tr;

@@ -26,9 +26,9 @@
 
 .spoolingCard table,
 .card table {
-  width: calc(100% + 10px);
+  width: calc(100% + 12px);
   border-collapse: collapse;
-  margin: -5px;
+  margin: -6px;
 }
 
 .spoolingCard th,
