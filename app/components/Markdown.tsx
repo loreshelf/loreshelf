@@ -158,7 +158,7 @@ const markdownSerializer = new MarkdownSerializer(
           state.renderInline(row.content.content[1]);
           state.write(`\n`);
         });
-        state.write('```\n');
+        state.write('```\n\n');
       } else {
         state.renderContent(node);
         state.write(`\n`);

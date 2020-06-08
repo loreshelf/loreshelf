@@ -45,8 +45,12 @@ class Metadata {
     let table = '| Metadata-key | Metadata-value |\n| --- | --- |';
     `${metadata}`.split('\n').forEach(property => {
       const parts = property.split('=');
-      if (parts.length === 2) {
-        table += `\n| ${parts[0]} | ${parts[1]} |`;
+      if (parts.length >= 2) {
+        table += `\n| ${parts[0]} | ${parts[1]}`;
+        for (let i = 2; i < parts.length; i += 1) {
+          table += `=${parts[i]}`;
+        }
+        table += ' |';
       }
     });
     return table;

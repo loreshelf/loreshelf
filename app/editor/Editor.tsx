@@ -5,7 +5,6 @@
 import React from 'react';
 import { Menu, MenuItem, ContextMenu, Intent } from '@blueprintjs/core';
 import path from 'path';
-import fs from 'fs';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';

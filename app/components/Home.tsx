@@ -10,7 +10,7 @@ import {
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
-import JSZip, { ZIP64_CENTRAL_DIRECTORY_END } from '../utils/jszip';
+import JSZip from '../utils/jszip';
 import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
@@ -300,39 +300,6 @@ class Home extends Component {
     }
     this.setState({ homeWorkspace, homeBoard });
     ipcRenderer.send('deviceId');
-    /**
-    const file = '/home/ibek/Temp/ProtectedTest.md.zip';
-    fs.readFile(file, (err, data) => {
-      if (err) throw err;
-      JSZip.loadAsync(data, { password: 'heslo' })
-        .then(zip => {
-          return zip.file('Test.md').async('string');
-        })
-        // eslint-disable-next-line promise/always-return
-        .then(content => {
-          console.log(content);
-        })
-        .catch(error => {
-          console.error(error);
-        });
-    });
-
-    const zip = new JSZip();
-    zip.file('sifrovany.md', '#header\ntest');
-    zip
-      .generateAsync({
-        type: 'arraybuffer',
-        password: '1234',
-        encryptStrength: 3
-      })
-      // eslint-disable-next-line promise/always-return
-      .then(zipFile => {
-        const data = Buffer.from(zipFile);
-        fs.writeFileSync('/home/ibek/Temp/sifrovany.md.zip', data, 'binary');
-      })
-      .catch(error => {
-        console.error(error);
-      }); */
   }
 
   getCurrentBoardMd(data?) {
@@ -651,7 +618,7 @@ class Home extends Component {
         if (notEmpty) {
           src = md.substring(notEmpty + 2);
         }
-        cards.push({ title, doc: parseMarkdown(src) });
+        cards.push({ title, doc: parseMarkdown(`${src}\n\n&nbsp;`) });
       }
     });
     const status = timeSince(stats.mtimeMs);

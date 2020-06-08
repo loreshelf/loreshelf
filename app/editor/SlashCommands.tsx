@@ -77,9 +77,7 @@ const COMMANDS = [
         tbody
       ]);
       const tr = state.tr.replaceWith(start, end, table);
-      console.log(start);
-      console.log(end);
-      tr.setSelection(Selection.near(tr.doc.resolve(end + 5)));
+      tr.setSelection(Selection.near(tr.doc.resolve(end + 35)));
       dispatch(tr);
     }
   },
