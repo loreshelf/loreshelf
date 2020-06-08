@@ -6,7 +6,8 @@ import {
   NonIdealState,
   Button,
   Intent,
-  InputGroup
+  InputGroup,
+  Tooltip
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
@@ -122,7 +123,8 @@ class Home extends Component {
       homeBoard,
       sortBy,
       filterBy,
-      deviceId
+      deviceId,
+      showPassword: false
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -1249,7 +1251,8 @@ class Home extends Component {
       sortBy,
       filterBy,
       deviceId,
-      pro
+      pro,
+      showPassword
     } = this.state;
     const OpenWorkspace = (
       <Button
@@ -1267,6 +1270,19 @@ class Home extends Component {
       >
         Create Notebook
       </Button>
+    );
+
+    const lockButton = (
+      <Tooltip content={`${showPassword ? 'Hide' : 'Show'} Password`}>
+        <Button
+          icon={showPassword ? 'unlock' : 'lock'}
+          intent={Intent.WARNING}
+          minimal
+          onClick={() => {
+            this.setState({ showPassword: !showPassword });
+          }}
+        />
+      </Tooltip>
     );
 
     const boardStatus = boardData && boardData.status ? boardData.status : '';
@@ -1309,8 +1325,8 @@ class Home extends Component {
             description="This secured workspace is currently locked. Enter the password and load its notebooks."
           >
             <InputGroup
-              type="password"
-              leftIcon="key"
+              type={showPassword ? 'text' : 'password'}
+              rightElement={lockButton}
               autoFocus
               intent={workspace.wrongPassword ? Intent.DANGER : Intent.NONE}
               placeholder="Enter password..."
@@ -1361,20 +1377,15 @@ class Home extends Component {
               boardStatus={boardStatus}
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}
-              homeBoard={homeBoard}
               sortBy={sortBy}
               filterBy={filterBy}
               pro={pro}
               deviceId={deviceId}
-              onNewBoard={this.newBoard}
-              onDuplicateBoard={this.duplicateBoard}
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
-              onRenameBoard={this.renameBoard}
               onMoveCardToBoard={this.moveCardToBoard}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
-              onOpenHomeBoard={this.openHomeBoard}
               onSetHome={this.setHome}
               onSortSelect={this.selectSort}
               onFilterSelect={this.selectFilter}

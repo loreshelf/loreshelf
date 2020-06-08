@@ -15,7 +15,8 @@ import {
   Icon,
   Label,
   Card,
-  Tag
+  Tag,
+  Tooltip
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -89,7 +90,8 @@ class Menu extends Component {
       licenseEmailIntent: Intent.NONE,
       licenseKeyIntent: Intent.NONE,
       licenseActivatedOpen: false,
-      filterText: undefined
+      filterText: undefined,
+      showPassword: false
     };
 
     this.searchInputRef = React.createRef();
@@ -284,17 +286,11 @@ class Menu extends Component {
       boardStatus,
       knownWorkspaces,
       workspace,
-      homeBoard,
-      onNewBoard,
-      onDuplicateBoard,
       onSelectBoard,
       onDeleteBoard,
-      onRenameBoard,
       onMoveCardToBoard,
-      onAddWorkspace,
       onCloseWorkspace,
       onSwitchWorkspace,
-      onOpenHomeBoard,
       onSetHome,
       onNewCard,
       sortBy,
@@ -321,7 +317,8 @@ class Menu extends Component {
       licenseEmail,
       licenseEmailIntent,
       licenseActivatedOpen,
-      filterText
+      filterText,
+      showPassword
     } = this.state;
     const noResults = <MenuItem text="No matching workspaces found" />;
     let workspaceName =
@@ -361,6 +358,19 @@ class Menu extends Component {
     } else if (newBoardType === NewBoardType.RENAME) {
       dialogTitle = 'Rename the notebook';
     }
+
+    const lockButton = (
+      <Tooltip content={`${showPassword ? 'Hide' : 'Show'} Password`}>
+        <Button
+          icon={showPassword ? 'unlock' : 'lock'}
+          intent={Intent.WARNING}
+          minimal
+          onClick={() => {
+            this.setState({ showPassword: !showPassword });
+          }}
+        />
+      </Tooltip>
+    );
 
     return (
       <div className={styles.menu}>
@@ -835,8 +845,8 @@ class Menu extends Component {
               </ButtonGroup>
               <p>Protect the workspace with your password:</p>
               <InputGroup
-                type="password"
-                leftIcon="key"
+                type={showPassword ? 'text' : 'password'}
+                rightElement={lockButton}
                 placeholder="Enter password..."
                 inputRef={(pwdInput: HTMLInputElement) => {
                   this.pwdInput = pwdInput;
