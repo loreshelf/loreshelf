@@ -111,6 +111,32 @@ const createWindow = async () => {
     });
   });
 
+  ipcMain.on(
+    'places-exist',
+    (event, workspaceOnStartup, boardOnStartup, workspaces) => {
+      const workspaceOnStartupExist =
+        workspaceOnStartup && fs.existsSync(workspaceOnStartup)
+          ? workspaceOnStartup
+          : null;
+      const boardOnStartupExist =
+        boardOnStartup && fs.existsSync(boardOnStartup) ? boardOnStartup : null;
+      const existingWorkspaces = [];
+      if (workspaces) {
+        workspaces.forEach(w => {
+          if (fs.existsSync(w)) {
+            existingWorkspaces.push(w);
+          }
+        });
+      }
+      event.reply(
+        'places-exist-callback',
+        workspaceOnStartupExist,
+        boardOnStartupExist,
+        existingWorkspaces
+      );
+    }
+  );
+
   ipcMain.on('workspace-add', event => {
     const options = {
       title: 'Add and open a workspace',

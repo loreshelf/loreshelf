@@ -122,7 +122,7 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardStatus, homeBoard, pro } = this.props;
+    const { boardStatus, pro } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -134,9 +134,6 @@ class Menu extends Component {
       return true;
     }
     if (pro !== nextProps.pro) {
-      return true;
-    }
-    if (homeBoard !== nextProps.homeBoard) {
       return true;
     }
     return false;
@@ -291,7 +288,7 @@ class Menu extends Component {
       onMoveCardToBoard,
       onCloseWorkspace,
       onSwitchWorkspace,
-      onSetHome,
+      onSetBoardOnStartup,
       onNewCard,
       sortBy,
       onSortSelect,
@@ -481,7 +478,7 @@ class Menu extends Component {
                   }),
                   React.createElement(MenuItem, {
                     onClick: () => {
-                      onSetHome();
+                      onSetBoardOnStartup();
                     },
                     icon: 'log-in',
                     text: 'Open on startup'

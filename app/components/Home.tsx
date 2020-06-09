@@ -7,7 +7,8 @@ import {
   Button,
   Intent,
   InputGroup,
-  Tooltip
+  Tooltip,
+  Spinner
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import SHA512 from 'crypto-js/sha512';
@@ -28,10 +29,10 @@ const CONFIG_SCHEMA = {
       type: 'string'
     }
   },
-  homeWorkspace: {
+  workspaceOnStartup: {
     type: 'string'
   },
-  homeBoard: {
+  notebookOnStartup: {
     type: 'string'
   },
   sortBy: {
@@ -45,13 +46,13 @@ const CONFIG_SCHEMA = {
   }
 };
 
-// workspaces=[path1, path2], homeWorkspace, homeBoard
+// workspaces=[path1, path2], workspaceOnStartup, notebookOnStartup
 const CONFIG_STORE = new Store(CONFIG_SCHEMA);
 
 enum CONFIG {
   WORKSPACES = 'workspaces',
-  HOMEWORKSPACE = 'homeWorkspace',
-  HOMEBOARD = 'homeBoard',
+  WORKSPACEONSTARTUP = 'workspaceOnStartup',
+  NOTEBOOKONSTARTUP = 'notebookOnStartup',
   SORTBY = 'sortBy',
   FILTERBY = 'filterBy'
 }
@@ -93,7 +94,7 @@ class Home extends Component {
     const boardData = undefined; // {cards = [{doc, title, spooling={ boardPath, cardTitle }}], path, name, status, modified}
     const knownWorkspaces = []; // [workspace1, workspace2]
 
-    const homeBoard = undefined; // = boardPath
+    const boardOnStartup = undefined; // = boardPath
     const deviceId = undefined;
 
     const sortBy = CONFIG_STORE.get(CONFIG.SORTBY, {
@@ -120,11 +121,12 @@ class Home extends Component {
       spoolingTimer,
       spoolingSavingCardIndex,
       knownWorkspaces,
-      homeBoard,
+      boardOnStartup,
       sortBy,
       filterBy,
       deviceId,
-      showPassword: false
+      showPassword: false,
+      loading: true
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -137,9 +139,9 @@ class Home extends Component {
     this.loadBoardWithPath = this.loadBoardWithPath.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.renameBoard = this.renameBoard.bind(this);
-    this.openHomeBoard = this.openHomeBoard.bind(this);
+    this.openDefaultBoard = this.openDefaultBoard.bind(this);
     this.openBoard = this.openBoard.bind(this);
-    this.setHome = this.setHome.bind(this);
+    this.setBoardOnStartup = this.setBoardOnStartup.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
     this.closeWorkspace = this.closeWorkspace.bind(this);
@@ -152,6 +154,7 @@ class Home extends Component {
     this.selectFilter = this.selectFilter.bind(this);
     this.licenseActivated = this.licenseActivated.bind(this);
     this.newSecuredWorkspace = this.newSecuredWorkspace.bind(this);
+    this.onStartupCallback = this.onStartupCallback.bind(this);
 
     window.onkeydown = e => {
       if (e.ctrlKey) {
@@ -178,6 +181,22 @@ class Home extends Component {
       );
       self.loadWorkspace(workspacePath, true, boardPath);
     });
+
+    ipcRenderer.on(
+      'places-exist-callback',
+      (
+        event,
+        workspaceOnStartupExist,
+        boardOnStartupExist,
+        existingWorkspaces
+      ) => {
+        self.onStartupCallback(
+          workspaceOnStartupExist,
+          boardOnStartupExist,
+          existingWorkspaces
+        );
+      }
+    );
 
     ipcRenderer.on(
       'workspace-add-callback',
@@ -286,22 +305,46 @@ class Home extends Component {
       }
     });
     const workspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
-    const homeWorkspace = CONFIG_STORE.get(CONFIG.HOMEWORKSPACE);
-    const homeBoard = CONFIG_STORE.get(CONFIG.HOMEBOARD);
-    if (homeWorkspace && homeBoard) {
-      this.loadWorkspace(homeWorkspace, true, homeBoard);
+    const workspaceOnStartup = CONFIG_STORE.get(CONFIG.WORKSPACEONSTARTUP);
+    const boardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
+    ipcRenderer.send(
+      'places-exist',
+      workspaceOnStartup,
+      boardOnStartup,
+      workspaces
+    );
+    ipcRenderer.send('deviceId');
+    setTimeout(() => {
+      const { loading } = this.state;
+      if (loading) {
+        this.setState({ loading: false });
+      }
+    }, 1000);
+  }
+
+  onStartupCallback(workspaceOnStartup, boardOnStartup, existingWorkspaces) {
+    const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
+    const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
+    if (!boardOnStartup && configBoardOnStartup) {
+      CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
+      CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
-    if (workspaces) {
-      let shouldSetFirst = !homeWorkspace;
-      workspaces.forEach(workspacePath => {
-        if (workspacePath !== homeWorkspace) {
+    if (configWorkspaces.length !== existingWorkspaces.length) {
+      CONFIG_STORE.set(CONFIG.WORKSPACES, existingWorkspaces);
+    }
+    if (workspaceOnStartup && boardOnStartup) {
+      this.loadWorkspace(workspaceOnStartup, true, boardOnStartup);
+      this.setState({ workspaceOnStartup, boardOnStartup });
+    }
+    if (existingWorkspaces) {
+      let shouldSetFirst = !(workspaceOnStartup && boardOnStartup);
+      existingWorkspaces.forEach(workspacePath => {
+        if (workspacePath !== workspaceOnStartup) {
           this.loadWorkspace(workspacePath, shouldSetFirst);
           shouldSetFirst = false;
         }
       });
     }
-    this.setState({ homeWorkspace, homeBoard });
-    ipcRenderer.send('deviceId');
   }
 
   getCurrentBoardMd(data?) {
@@ -318,11 +361,14 @@ class Home extends Component {
     return boardMd;
   }
 
-  setHome() {
+  setBoardOnStartup() {
     const { boardData, workspace } = this.state;
-    CONFIG_STORE.set(CONFIG.HOMEBOARD, boardData.path);
-    CONFIG_STORE.set(CONFIG.HOMEWORKSPACE, workspace.path);
-    this.setState({ homeBoard: boardData.path, homeWorkspace: workspace.path });
+    CONFIG_STORE.set(CONFIG.NOTEBOOKONSTARTUP, boardData.path);
+    CONFIG_STORE.set(CONFIG.WORKSPACEONSTARTUP, workspace.path);
+    this.setState({
+      boardOnStartup: boardData.path,
+      workspaceOnStartup: workspace.path
+    });
   }
 
   checkLicense(deviceId) {
@@ -633,18 +679,25 @@ class Home extends Component {
     return boardData;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   loadBoardCallback(boardMeta, boardContent, stats) {
+    const { loading } = this.state;
     const boardData = this.toBoardData(boardMeta, boardContent, stats);
     const baseURI = document.getElementById('baseURI');
     baseURI.href = nodePath.join(
       'file:///',
       boardData.path.substring(0, boardData.path.lastIndexOf(nodePath.sep) + 1)
     );
+    let newLoading = loading;
+    if (loading) {
+      newLoading = false;
+    }
     this.setState({
-      boardData
+      boardData,
+      loading: newLoading
     });
-    this.menuRef.current.forceUpdate();
+    if (this.menuRef.current) {
+      this.menuRef.current.forceUpdate();
+    }
   }
 
   loadBoard(boardMetaIndex) {
@@ -1016,9 +1069,9 @@ class Home extends Component {
     this.menuRef.current.forceUpdate();
   }
 
-  openHomeBoard() {
-    const { homeWorkspace, homeBoard } = this.state;
-    this.loadWorkspace(homeWorkspace, true, homeBoard);
+  openDefaultBoard() {
+    const { workspaceOnStartup, boardOnStartup } = this.state;
+    this.loadWorkspace(workspaceOnStartup, true, boardOnStartup);
   }
 
   processSpoolingData(
@@ -1247,13 +1300,26 @@ class Home extends Component {
       knownWorkspaces,
       workspace,
       boardData,
-      homeBoard,
       sortBy,
       filterBy,
       deviceId,
       pro,
-      showPassword
+      showPassword,
+      loading
     } = this.state;
+
+    if (loading) {
+      return (
+        <div style={{ height: '100%' }}>
+          <Spinner
+            intent={Intent.PRIMARY}
+            size={80}
+            className={styles.loading}
+          />
+        </div>
+      );
+    }
+
     const OpenWorkspace = (
       <Button
         intent={Intent.PRIMARY}
@@ -1386,7 +1452,7 @@ class Home extends Component {
               onMoveCardToBoard={this.moveCardToBoard}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
-              onSetHome={this.setHome}
+              onSetBoardOnStartup={this.setBoardOnStartup}
               onSortSelect={this.selectSort}
               onFilterSelect={this.selectFilter}
               onNewCard={this.newCard}
