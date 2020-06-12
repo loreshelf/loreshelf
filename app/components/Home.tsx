@@ -17,10 +17,15 @@ import styles from './Home.css';
 import Menu from './Menu';
 import Board from './Board';
 import { timeSince } from '../utils/CoreFunctions';
-import { parseMarkdown, serializeMarkdown } from './Markdown';
+import {
+  parseMarkdown,
+  serializeMarkdown,
+  md2html,
+  metadata2table,
+  icons2links
+} from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
 import AppToaster from './AppToaster';
-import Metadata from '../editor/Metadata';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -81,10 +86,6 @@ const SORTING_METHODS = {
     return 0;
   }
 };
-
-function escapeRegExp(stringToGoIntoTheRegex) {
-  return stringToGoIntoTheRegex.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-}
 
 class Home extends Component {
   constructor() {
@@ -155,6 +156,7 @@ class Home extends Component {
     this.licenseActivated = this.licenseActivated.bind(this);
     this.newSecuredWorkspace = this.newSecuredWorkspace.bind(this);
     this.onStartupCallback = this.onStartupCallback.bind(this);
+    this.exportToPDF = this.exportToPDF.bind(this);
 
     window.onkeydown = e => {
       if (e.ctrlKey) {
@@ -641,19 +643,8 @@ class Home extends Component {
   // eslint-disable-next-line class-methods-use-this
   toBoardData(boardMeta, text, stats) {
     let newText = text;
-    MarkdownIcons.forEach(mdi => {
-      const regExp = new RegExp(escapeRegExp(mdi.code), 'g');
-      newText = newText.replace(regExp, `![Icon](${mdi.icon})`);
-    });
-    const metaData = new RegExp('^```metadata\\n(((?!```).)*)\\n```$', 'msg');
-    let found = metaData.exec(newText);
-    while (found) {
-      newText = newText.replace(
-        found[0],
-        Metadata.getInstance().transformToTable(found[1])
-      );
-      found = metaData.exec(newText);
-    }
+    newText = icons2links(newText);
+    newText = metadata2table(newText);
     const mdCards = newText.split(/^(?=# )/gm);
     const cards = [];
     mdCards.forEach(md => {
@@ -1205,6 +1196,11 @@ class Home extends Component {
     this.loadWorkspace(workspacePath, true, boardPath);
   }
 
+  exportToPDF() {
+    const htmlSource = md2html(this.getCurrentBoardMd());
+    ipcRenderer.send('export-pdf', htmlSource);
+  }
+
   // eslint-disable-next-line class-methods-use-this
   licenseActivated(email, licenseKey, deviceId, hash) {
     const SLV_STORE = new Store({
@@ -1458,6 +1454,7 @@ class Home extends Component {
               onNewCard={this.newCard}
               onLicenseActivated={this.licenseActivated}
               onNewSecuredWorkspace={this.newSecuredWorkspace}
+              onExportToPDF={this.exportToPDF}
             />,
             mainContent
           ]

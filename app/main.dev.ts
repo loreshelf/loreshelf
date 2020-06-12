@@ -194,7 +194,7 @@ const createWindow = async () => {
     const options = {
       title: 'Create new secured workspace',
       buttonLabel: 'Create workspace',
-      filters: [{ name: 'Archive (.zip)', extensions: ['zip'] }],
+      filters: [{ name: 'Archive', extensions: ['zip'] }],
       properties: ['createDirectory', 'showOverwriteConfirmation']
     };
     // eslint-disable-next-line promise/catch-or-return
@@ -347,6 +347,55 @@ const createWindow = async () => {
         );
         event.returnValue = relativePath;
       }
+    });
+  });
+
+  ipcMain.on('export-pdf', (event, htmlSource) => {
+    const winPDF = new BrowserWindow({
+      show: false
+    });
+    winPDF.webContents.loadURL(
+      `data:text/html;charset=utf-8;base64,${Buffer.from(htmlSource).toString(
+        'base64'
+      )}`
+    );
+    winPDF.on('ready-to-show', () => {
+      const options = {
+        title: 'Save PDF',
+        buttonLabel: 'Save',
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+        properties: ['createDirectory', 'showOverwriteConfirmation']
+      };
+      // eslint-disable-next-line promise/catch-or-return
+      dialog.showSaveDialog(mainWindow, options).then(data => {
+        // eslint-disable-next-line promise/always-return
+        if (data.canceled) {
+          console.log('No file selected');
+          winPDF.close();
+        } else {
+          let pdfPath = data.filePath;
+          if (!pdfPath?.endsWith('.pdf')) {
+            pdfPath += '.pdf';
+          }
+          // eslint-disable-next-line promise/no-nesting
+          winPDF.webContents
+            .printToPDF({
+              printBackground: true,
+              pageSize: 'A4',
+              scaleFactor: 100,
+              landscape: false
+            })
+            .then(pdfData => {
+              fs.writeFile(pdfPath, pdfData, error => {
+                if (error) throw error;
+              });
+              winPDF.close();
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        }
+      });
     });
   });
 

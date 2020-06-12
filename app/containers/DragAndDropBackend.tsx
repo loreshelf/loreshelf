@@ -18,7 +18,7 @@ const DragAndDropBackend = (...args) => {
   listeners.forEach(name => {
     const original = instance[name];
     instance[name] = (e, ...extraArgs) => {
-      if (e.target.textContent === 'drag-handle-vertical') {
+      if (!e.dataTransfer.getData('text/plain')) {
         original(e, ...extraArgs);
       }
     };

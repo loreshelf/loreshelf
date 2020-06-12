@@ -297,7 +297,8 @@ class Menu extends Component {
       pro,
       deviceId,
       onLicenseActivated,
-      onNewSecuredWorkspace
+      onNewSecuredWorkspace,
+      onExportToPDF
     } = this.props;
     const {
       newBoardOpen,
@@ -475,6 +476,13 @@ class Menu extends Component {
                     },
                     icon: 'edit',
                     text: 'Rename'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      onExportToPDF();
+                    },
+                    icon: 'export',
+                    text: 'Export to PDF'
                   }),
                   React.createElement(MenuItem, {
                     onClick: () => {
@@ -713,7 +721,8 @@ class Menu extends Component {
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
-              The new notebook will be stored at
+              The new notebook will be stored at:
+              <br />
               <strong>{` ${workspacePath}${path.sep}${newBoardName}`}</strong>
             </p>
             <p style={{ color: 'red' }}>

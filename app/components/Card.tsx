@@ -257,7 +257,7 @@ const Card: React.FC<CardProps> = forwardRef(
                 </div>
                 <Tooltip
                   content={card.title}
-                  disabled={card.title.length <= 19}
+                  disabled={card.title.length <= 21}
                   position={Position.BOTTOM}
                   inheritDarkTheme
                 >
@@ -278,7 +278,7 @@ const Card: React.FC<CardProps> = forwardRef(
                     }}
                   />
                 </Tooltip>
-                {card.title.length > 19 && (
+                {card.title.length > 21 && (
                   <div style={{ marginLeft: '3px' }}>...</div>
                 )}
               </h1>
