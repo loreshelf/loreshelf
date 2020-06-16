@@ -11,6 +11,7 @@ import {
   Spinner
 } from '@blueprintjs/core';
 import Store from 'electron-store';
+import log from 'electron-log';
 import SHA512 from 'crypto-js/sha512';
 import JSZip from '../utils/jszip';
 import styles from './Home.css';
@@ -165,7 +166,7 @@ class Home extends Component {
         document.body.className = '';
       }
     };
-    window.onkeyup = e => {
+    window.onkeyup = () => {
       if (document.body.className === 'ctrl') {
         document.body.className = '';
       }
@@ -559,7 +560,7 @@ class Home extends Component {
           return true;
         })
         .catch(error => {
-          console.error(error);
+          log.error(`Loading secured workspace failed: ${error}`);
         });
     }
     if (shouldSetWorkspace) {
@@ -628,7 +629,7 @@ class Home extends Component {
         this.setState({ workspace });
       })
       .catch(error => {
-        console.error(error);
+        log.error(`Creating new secured workspace failed: ${error}`);
       });
   }
 
@@ -708,7 +709,7 @@ class Home extends Component {
           return true;
         })
         .catch(error => {
-          console.log(error);
+          log.error(`Loading secured workspace (wrong password): ${error}`);
           workspace.password = null;
           workspace.wrongPassword = true;
           this.setState({ workspace });
@@ -878,7 +879,7 @@ class Home extends Component {
         );
       })
       .catch(error => {
-        console.error(error);
+        log.error(`Saving secured workspace failed: ${error}`);
       });
   }
 
@@ -893,11 +894,11 @@ class Home extends Component {
 
       // This part very much depends on Board component structure!
       setTimeout(() => {
-        this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
+        // this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
         const n = this.boardRef.boardRef.current.childNodes;
         const title =
-          n[n.length - 1].firstChild.firstChild.lastChild.firstChild.firstChild
-            .firstElementChild;
+          n[n.length - 1].firstChild.firstChild.firstChild.lastChild.firstChild
+            .firstChild.firstElementChild;
         title.focus();
       }, 100);
     }
@@ -1121,7 +1122,7 @@ class Home extends Component {
   }
 
   requestBoardDataAsync(boardPath) {
-    const promiseResponse = (resolve, reject) => {
+    const promiseResponse = resolve => {
       this.spoolingBoardDataResolve = resolve;
       ipcRenderer.send('board-spooling-load', boardPath);
     };
@@ -1129,7 +1130,7 @@ class Home extends Component {
   }
 
   requestBoardsAsync() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const { workspace, knownWorkspaces } = this.state;
       // get boards from the current workspace
       let allBoards = [];
@@ -1455,6 +1456,9 @@ class Home extends Component {
               onLicenseActivated={this.licenseActivated}
               onNewSecuredWorkspace={this.newSecuredWorkspace}
               onExportToPDF={this.exportToPDF}
+              onNewBoard={this.newBoard}
+              onDuplicateBoard={this.duplicateBoard}
+              onRenameBoard={this.renameBoard}
             />,
             mainContent
           ]

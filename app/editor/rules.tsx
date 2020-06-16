@@ -69,10 +69,6 @@ export function buildInputRules(schema) {
   const linkRegexp = /((?:http(s)?:\/\/|www.)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&%'\(\)\*\+,;=.]+ )$/;
   const imageUrlRegexp = /((?:https?:\/\/|www\.)[^ ]+\.(?:png|jpg|gif) )$/;
 
-  /** const str =
-    '![Photo](/home/ibek/Pictures/Screenshot from 2019-11-19 17-30-40.png) ';
-  const res = localImageRegexp.exec(str);
-  console.log(res); */
   if ((type = schema.marks.link)) {
     rules.push(
       new InputRule(imageUrlRegexp, (state, match, start, end) => {

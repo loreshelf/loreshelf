@@ -152,9 +152,7 @@ const createWindow = async () => {
     // eslint-disable-next-line promise/catch-or-return
     dialog.showOpenDialog(mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return
-      if (data.canceled) {
-        console.log('No file selected');
-      } else {
+      if (!data.canceled) {
         const workspacePath = data.filePaths[0];
         fs.readdir(workspacePath, (err, files) => {
           const stats = [];
@@ -177,9 +175,7 @@ const createWindow = async () => {
     // eslint-disable-next-line promise/catch-or-return
     dialog.showOpenDialog(mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return
-      if (data.canceled) {
-        console.log('No file selected');
-      } else {
+      if (!data.canceled) {
         const workspacePath = data.filePaths[0];
         fs.readFile(workspacePath, (err, zipdata) => {
           if (!err) {
@@ -200,9 +196,7 @@ const createWindow = async () => {
     // eslint-disable-next-line promise/catch-or-return
     dialog.showSaveDialog(mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return
-      if (data.canceled) {
-        console.log('No file selected');
-      } else {
+      if (!data.canceled) {
         let workspacePath = data.filePath;
         if (!workspacePath?.endsWith('.zip')) {
           workspacePath += '.zip';
@@ -338,7 +332,6 @@ const createWindow = async () => {
     dialog.showOpenDialog(mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return
       if (data.canceled) {
-        console.log('No file selected');
         event.returnValue = undefined;
       } else {
         const relativePath = path.relative(
@@ -370,7 +363,6 @@ const createWindow = async () => {
       dialog.showSaveDialog(mainWindow, options).then(data => {
         // eslint-disable-next-line promise/always-return
         if (data.canceled) {
-          console.log('No file selected');
           winPDF.close();
         } else {
           let pdfPath = data.filePath;
@@ -392,7 +384,7 @@ const createWindow = async () => {
               winPDF.close();
             })
             .catch(error => {
-              console.log(error);
+              log.error(`Exporting to PDF failed: ${error}`);
             });
         }
       });
@@ -436,7 +428,6 @@ app.on('window-all-closed', () => {
 
 app.on('open-file', (event, filePath) => {
   event.preventDefault();
-  console.log(filePath);
   log.info(`filePath: ${filePath}`);
 });
 

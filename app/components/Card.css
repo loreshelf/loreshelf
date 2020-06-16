@@ -37,7 +37,8 @@
   text-align: center;
   font-weight: bold;
   width: 50%;
-  background: #0081c9;
+  padding: 5px 2px;
+  background: hsl(207, 23%, 37%);
 }
 
 .spoolingCard tr:not(:first-child),

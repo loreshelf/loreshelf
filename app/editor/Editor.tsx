@@ -5,6 +5,7 @@
 import React from 'react';
 import { Menu, MenuItem, ContextMenu, Intent } from '@blueprintjs/core';
 import path from 'path';
+import log from 'electron-log';
 import { EditorState, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
@@ -707,7 +708,7 @@ Still | renders | nicely
         this.updateDoc();
       })
       .catch(error => {
-        console.log(error);
+        log.error(`Requesting @mentions failed: ${error}`);
       });
   }
 
@@ -773,7 +774,7 @@ Still | renders | nicely
             this.updateDoc();
           })
           .catch(error => {
-            console.log(error);
+            log.error(`Requesting notecards from @mentions failed: ${error}`);
           });
         // ipcRenderer.send('board-spooling-load', suggestion.path);
       } else {

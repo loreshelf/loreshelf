@@ -694,8 +694,8 @@ class Menu extends Component {
                   Pro
                 </Tag>
               ) : (
-                <Tag round intent={Intent.WARNING}>
-                  Basic
+                <Tag round intent={Intent.PRIMARY}>
+                  Closed Beta
                 </Tag>
               )}
             </div>
