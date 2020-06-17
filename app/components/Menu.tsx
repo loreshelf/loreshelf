@@ -800,7 +800,14 @@ class Menu extends Component {
                   workspace.
                 </p>
               </Card>
-              <Card interactive className={styles.addWorkspaceCard}>
+              <Card
+                className={styles.addWorkspaceCard}
+                style={{
+                  color: 'rgba(167, 182, 194, 0.6)',
+                  backgroundColor: 'rgba(57, 75, 89, 0.5)',
+                  boxShadow: 'none'
+                }}
+              >
                 <h3>GitHub repository</h3>
                 <p>Open location in your GitHub repository as a workspace.</p>
               </Card>
