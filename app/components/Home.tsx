@@ -142,6 +142,7 @@ class Home extends Component {
     this.loadBoardWithPath = this.loadBoardWithPath.bind(this);
     this.deleteBoard = this.deleteBoard.bind(this);
     this.renameBoard = this.renameBoard.bind(this);
+    this.moveBoardToWorkspace = this.moveBoardToWorkspace.bind(this);
     this.openDefaultBoard = this.openDefaultBoard.bind(this);
     this.openBoard = this.openBoard.bind(this);
     this.setBoardOnStartup = this.setBoardOnStartup.bind(this);
@@ -266,6 +267,17 @@ class Home extends Component {
       'board-rename-callback',
       (event, oldBoardPath, newBoardPath) => {
         self.renameBoardCallback(oldBoardPath, newBoardPath);
+      }
+    );
+
+    ipcRenderer.on(
+      'board-move-to-workspace-callback',
+      (event, boardPath?, newBoardPath?, targetWorkspacePath?) => {
+        self.moveBoardToWorkspaceCallback(
+          boardPath,
+          newBoardPath,
+          targetWorkspacePath
+        );
       }
     );
 
@@ -1042,6 +1054,52 @@ class Home extends Component {
     this.loadWorkspace(workspaceOnStartup, true, boardOnStartup);
   }
 
+  moveBoardToWorkspace(workspace) {
+    const { boardData } = this.state;
+    ipcRenderer.send(
+      'board-move-to-workspace',
+      boardData.name,
+      boardData.path,
+      workspace.path
+    );
+  }
+
+  moveBoardToWorkspaceCallback(
+    boardPath?,
+    newBoardPath?,
+    targetWorkspacePath?
+  ) {
+    const { boardData, workspace, knownWorkspaces, settings } = this.state;
+    const { sortBy } = settings;
+    if (newBoardPath == null) {
+      AppToaster.show({
+        message: `Cannot move notebook '${boardData.name}' to '${targetWorkspacePath}' because a file with that name already exists.`,
+        intent: Intent.DANGER
+      });
+    } else {
+      boardData.path = newBoardPath;
+      workspace.numBoards -= 1;
+      const boardIndex = workspace.boards.findIndex(board => {
+        return board.path === boardPath;
+      });
+      workspace.boards.splice(boardIndex, 1);
+      const workspaceIndex = knownWorkspaces.findIndex(w => {
+        return w.path === targetWorkspacePath;
+      });
+      const targetWorkspace = knownWorkspaces[workspaceIndex];
+      targetWorkspace.numBoards += 1;
+      targetWorkspace.boards.push({
+        path: newBoardPath,
+        name: this.boardPathToName(newBoardPath)
+      });
+      targetWorkspace.boards.sort((a, b) => {
+        return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
+      });
+      this.setState({ boardData, workspace: targetWorkspace });
+      this.menuRef.current.forceUpdate();
+    }
+  }
+
   processSpoolingData(
     boardPath,
     boardContent,
@@ -1420,6 +1478,7 @@ class Home extends Component {
               onNewBoard={this.newBoard}
               onDuplicateBoard={this.duplicateBoard}
               onRenameBoard={this.renameBoard}
+              onMoveBoardToWorkspace={this.moveBoardToWorkspace}
             />,
             mainContent
           ]

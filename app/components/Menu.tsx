@@ -86,7 +86,11 @@ class Menu extends Component {
       newVaultPath: '',
       filterText: undefined,
       showPassword: false,
-      settingsOpen: false
+      settingsOpen: false,
+      newGithubOpen: false,
+      newGithubURL: '',
+      newGithubWorkspaceName: '',
+      newGithubNumOfNotebooks: -1
     };
 
     this.searchInputRef = React.createRef();
@@ -98,6 +102,8 @@ class Menu extends Component {
     this.addWorkspaceClose = this.addWorkspaceClose.bind(this);
     this.newVaultOpen = this.newVaultOpen.bind(this);
     this.newVaultClose = this.newVaultClose.bind(this);
+    this.newGithubOpen = this.newGithubOpen.bind(this);
+    this.newGithubClose = this.newGithubClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
     this.newBoardConfirm = this.newBoardConfirm.bind(this);
     this.settingsOpen = this.settingsOpen.bind(this);
@@ -198,6 +204,15 @@ class Menu extends Component {
     });
   }
 
+  newGithubOpen() {
+    this.setState({
+      newGithubOpen: true,
+      newGithubURL: '',
+      newGithubWorkspaceName: '',
+      newGithubNumOfNotebooks: -1
+    });
+  }
+
   duplicateBoardOpen() {
     const { boardData } = this.props;
     this.setState({
@@ -228,6 +243,10 @@ class Menu extends Component {
     this.setState({ newVaultOpen: false });
   }
 
+  newGithubClose() {
+    this.setState({ newGithubOpen: false });
+  }
+
   handleNameChange(newBoardName, workspacePath) {
     // Check if board already exists
     let newBoardIntent;
@@ -256,7 +275,8 @@ class Menu extends Component {
       onNewCard,
       settings,
       onNewSecuredWorkspace,
-      onExportToPDF
+      onExportToPDF,
+      onMoveBoardToWorkspace
     } = this.props;
     const {
       newBoardOpen,
@@ -269,7 +289,11 @@ class Menu extends Component {
       filterText,
       showPassword,
       settingsOpen,
-      newSettings
+      newSettings,
+      newGithubOpen,
+      newGithubURL,
+      newGithubWorkspaceName,
+      newGithubNumOfNotebooks
     } = this.state;
 
     const { sortBy, filterBy } = settings;
@@ -325,6 +349,21 @@ class Menu extends Component {
         />
       </Tooltip>
     );
+
+    const listOfWorkspaces = [];
+    knownWorkspaces.forEach(ws => {
+      if (!ws.path.endsWith('.zip') && ws.path !== workspace.path) {
+        listOfWorkspaces.push(
+          React.createElement(MenuItem, {
+            onClick: () => {
+              onMoveBoardToWorkspace(ws);
+            },
+            key: `move-${ws.path}`,
+            text: ws.name
+          })
+        );
+      }
+    });
 
     return (
       <div className={styles.menu}>
@@ -426,6 +465,14 @@ class Menu extends Component {
                     icon: 'duplicate',
                     text: 'Duplicate'
                   }),
+                  React.createElement(
+                    MenuItem,
+                    {
+                      icon: 'flows',
+                      text: 'Move to workspace'
+                    },
+                    listOfWorkspaces
+                  ),
                   React.createElement(MenuItem, {
                     onClick: () => {
                       this.renameBoardOpen();
@@ -753,6 +800,10 @@ class Menu extends Component {
                   backgroundColor: 'rgba(57, 75, 89, 0.5)',
                   boxShadow: 'none'
                 }}
+                onClick={() => {
+                  // this.addWorkspaceClose();
+                  // this.newGithubOpen();
+                }}
               >
                 <h3>GitHub repository</h3>
                 <p>Open location in your GitHub repository as a workspace.</p>
@@ -821,6 +872,78 @@ class Menu extends Component {
                 onClick={() => {
                   this.newVaultClose();
                   onNewSecuredWorkspace(newVaultPath, this.pwdInput.value);
+                }}
+              >
+                Create workspace
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="git-repo"
+          onClose={this.newGithubClose}
+          isOpen={newGithubOpen}
+          title="New GitHub workspace"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>
+              Create new GitHub workspace from the repository url to its root or
+              a specific folder.
+            </p>
+            <div style={{ width: '300px' }}>
+              <p>Provide the workspace location:</p>
+              <InputGroup
+                type="text"
+                placeholder="GitHub workspace URL"
+                onChange={e => {
+                  this.setState({ newGithubURL: e.target.value });
+                  // check the Github URL
+                  if (e.target.value.startsWith('https://github.com/')) {
+                    const res = e.target.value.match(
+                      /https:\/\/github.com\/([^/]*)\/([^/]*)(\/.*\/([^/]*))?$/i
+                    );
+                    let namePos = -1;
+                    if (res && res.length === 5 && res[4]) {
+                      // specific folder in github url
+                      namePos = 4;
+                    } else if (res && res.length >= 3 && res[2]) {
+                      // root github url
+                      namePos = 2;
+                    }
+                    if (res && namePos > 0 && res[namePos].length > 0) {
+                      let defaultWorkspaceName =
+                        res[namePos][0].toUpperCase() + res[namePos].slice(1);
+                      defaultWorkspaceName = defaultWorkspaceName.replace(
+                        /[_-]/g,
+                        ' '
+                      );
+                      this.setState({
+                        newGithubWorkspaceName: defaultWorkspaceName
+                      });
+                    }
+                  }
+                }}
+              />
+              <p>Workspace Name:</p>
+              <InputGroup
+                type="text"
+                defaultValue={newGithubWorkspaceName}
+                onChange={e => {
+                  console.log(e.target.value);
+                }}
+              />
+              <Tag>{`with ${newGithubNumOfNotebooks} notebooks.`}</Tag>
+            </div>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.newGithubClose}>Close</Button>
+              <Button
+                intent={Intent.PRIMARY}
+                onClick={() => {
+                  this.newGithubClose();
+                  // TODO
                 }}
               >
                 Create workspace

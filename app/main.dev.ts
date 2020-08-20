@@ -285,6 +285,29 @@ const createWindow = async () => {
     fs.writeFileSync(boardPath, newBoardContent, 'utf8');
   });
 
+  ipcMain.on(
+    'board-move-to-workspace',
+    (event, boardName, boardPath, targetWorkspacePath) => {
+      const newBoardPath = `${targetWorkspacePath}${path.sep}${boardName}.md`;
+      if (fs.existsSync(newBoardPath)) {
+        event.reply(
+          'board-move-to-workspace-callback',
+          boardPath,
+          null,
+          targetWorkspacePath
+        );
+      } else {
+        fs.renameSync(boardPath, newBoardPath);
+        event.reply(
+          'board-move-to-workspace-callback',
+          boardPath,
+          newBoardPath,
+          targetWorkspacePath
+        );
+      }
+    }
+  );
+
   ipcMain.on('board-rename', (event, oldBoardPath, newBoardPath) => {
     fs.renameSync(oldBoardPath, newBoardPath);
     event.reply('board-rename-callback', oldBoardPath, newBoardPath);
