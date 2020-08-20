@@ -17,7 +17,6 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import fs from 'fs';
 import sourceMapSupport from 'source-map-support';
-import si from 'systeminformation';
 import MenuBuilder from './menu';
 
 export default class AppUpdater {
@@ -99,16 +98,6 @@ const createWindow = async () => {
       mainWindow.show();
       mainWindow.focus();
     }
-  });
-
-  ipcMain.on('deviceId', event => {
-    si.baseboard().then(data => {
-      // eslint-disable-next-line promise/no-nesting
-      si.cpu().then(cpudata => {
-        const deviceId = `${data.model}#${cpudata.brand}`;
-        event.reply('deviceId-callback', deviceId);
-      });
-    });
   });
 
   ipcMain.on(

@@ -65,6 +65,7 @@ class Board extends Component {
     const {
       boardData,
       workspace,
+      settings,
       onEditCard,
       onNewCard,
       onRemoveCard,
@@ -109,6 +110,7 @@ class Board extends Component {
                 key={`${c.title}-${cardData.indexOf(c)}`}
                 card={c}
                 workspace={workspace}
+                settings={settings}
                 collapsed={collapsed}
                 index={cardData.indexOf(c)}
                 dividerIndex={dividerIndex}

@@ -12,9 +12,6 @@
 .card {
   margin: 5px;
   font-size: 14px;
-  min-width: 220px;
-  width: 220px;
-  max-width: 220px;
 }
 
 .spoolingCard {

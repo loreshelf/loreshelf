@@ -16,7 +16,8 @@ import {
   Label,
   Card,
   Tag,
-  Tooltip
+  Tooltip,
+  Slider
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -83,15 +84,9 @@ class Menu extends Component {
       addWorkspaceOpen: false,
       newVaultOpen: false,
       newVaultPath: '',
-      licensePopupOpen: false,
-      licenseActivatePopupOpen: false,
-      licenseEmail: '',
-      licenseKey: '',
-      licenseEmailIntent: Intent.NONE,
-      licenseKeyIntent: Intent.NONE,
-      licenseActivatedOpen: false,
       filterText: undefined,
-      showPassword: false
+      showPassword: false,
+      settingsOpen: false
     };
 
     this.searchInputRef = React.createRef();
@@ -104,12 +99,10 @@ class Menu extends Component {
     this.newVaultOpen = this.newVaultOpen.bind(this);
     this.newVaultClose = this.newVaultClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
-    this.licensePopupOpen = this.licensePopupOpen.bind(this);
-    this.licensePopupClose = this.licensePopupClose.bind(this);
-    this.licenseActivatedClose = this.licenseActivatedClose.bind(this);
-    this.handleLicenseKeyChange = this.handleLicenseKeyChange.bind(this);
-    this.handleLicenseEmailChange = this.handleLicenseEmailChange.bind(this);
     this.newBoardConfirm = this.newBoardConfirm.bind(this);
+    this.settingsOpen = this.settingsOpen.bind(this);
+    this.settingsClose = this.settingsClose.bind(this);
+    this.settingsApply = this.settingsApply.bind(this);
   }
 
   componentDidMount() {
@@ -122,7 +115,7 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardStatus, pro } = this.props;
+    const { boardStatus } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -133,23 +126,31 @@ class Menu extends Component {
     if (boardStatus !== nextProps.boardStatus) {
       return true;
     }
-    if (pro !== nextProps.pro) {
-      return true;
-    }
     return false;
+  }
+
+  settingsOpen() {
+    const { settings } = this.props;
+    this.setState({
+      newSettings: { ...settings },
+      settingsOpen: true
+    });
+  }
+
+  settingsClose() {
+    this.setState({ settingsOpen: false });
+  }
+
+  settingsApply() {
+    const { onSettingsChange } = this.props;
+    const { newSettings } = this.state;
+    onSettingsChange(newSettings);
+    this.settingsClose();
   }
 
   // eslint-disable-next-line class-methods-use-this
   isValidEmail(email) {
     if (/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-      return true;
-    }
-    return false;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  isValidLicenseKey(licenseKey) {
-    if (/^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/.test(licenseKey)) {
       return true;
     }
     return false;
@@ -197,12 +198,6 @@ class Menu extends Component {
     });
   }
 
-  licensePopupOpen() {
-    this.setState({
-      licensePopupOpen: true
-    });
-  }
-
   duplicateBoardOpen() {
     const { boardData } = this.props;
     this.setState({
@@ -233,14 +228,6 @@ class Menu extends Component {
     this.setState({ newVaultOpen: false });
   }
 
-  licensePopupClose() {
-    this.setState({ licensePopupOpen: false });
-  }
-
-  licenseActivatedClose() {
-    this.setState({ licenseActivatedOpen: false });
-  }
-
   handleNameChange(newBoardName, workspacePath) {
     // Check if board already exists
     let newBoardIntent;
@@ -253,36 +240,13 @@ class Menu extends Component {
     return newBoardIntent;
   }
 
-  handleLicenseKeyChange(event) {
-    // Check if board already exists
-    const licenseKey = event.target.value;
-    let licenseKeyIntent;
-    if (!this.isValidLicenseKey(licenseKey)) {
-      licenseKeyIntent = Intent.DANGER;
-    } else {
-      licenseKeyIntent = Intent.NONE;
-    }
-    this.setState({ licenseKey, licenseKeyIntent });
-  }
-
-  handleLicenseEmailChange(event) {
-    // Check if board already exists
-    const licenseEmail = event.target.value;
-    let licenseEmailIntent;
-    if (!this.isValidEmail(licenseEmail)) {
-      licenseEmailIntent = Intent.DANGER;
-    } else {
-      licenseEmailIntent = Intent.NONE;
-    }
-    this.setState({ licenseEmail, licenseEmailIntent });
-  }
-
   render() {
     const {
       boardData,
       boardStatus,
       knownWorkspaces,
       workspace,
+      onSettingsChange,
       onSelectBoard,
       onDeleteBoard,
       onMoveCardToBoard,
@@ -290,13 +254,7 @@ class Menu extends Component {
       onSwitchWorkspace,
       onSetBoardOnStartup,
       onNewCard,
-      sortBy,
-      onSortSelect,
-      filterBy,
-      onFilterSelect,
-      pro,
-      deviceId,
-      onLicenseActivated,
+      settings,
       onNewSecuredWorkspace,
       onExportToPDF
     } = this.props;
@@ -308,16 +266,14 @@ class Menu extends Component {
       addWorkspaceOpen,
       newVaultOpen,
       newVaultPath,
-      licensePopupOpen,
-      licenseActivatePopupOpen,
-      licenseKey,
-      licenseKeyIntent,
-      licenseEmail,
-      licenseEmailIntent,
-      licenseActivatedOpen,
       filterText,
-      showPassword
+      showPassword,
+      settingsOpen,
+      newSettings
     } = this.state;
+
+    const { sortBy, filterBy } = settings;
+
     const noResults = <MenuItem text="No matching workspaces found" />;
     let workspaceName =
       workspace && workspace.name ? workspace.name : '(No selection)';
@@ -564,11 +520,9 @@ class Menu extends Component {
                 filterable={false}
                 onItemSelect={selectedSort => {
                   this.shouldUpdate = true;
-                  onSortSelect(
-                    selectedSort.name,
-                    selectedSort.asc,
-                    selectedSort.icon
-                  );
+                  const newSortSettings = { ...settings };
+                  newSortSettings.sortBy = selectedSort;
+                  onSettingsChange(newSortSettings);
                 }}
                 popoverProps={{ minimal: true }}
               >
@@ -615,6 +569,9 @@ class Menu extends Component {
                 onItemSelect={selectedFilter => {
                   this.shouldUpdate = true;
                   onFilterSelect(selectedFilter.name, selectedFilter.icon);
+                  const newFilterSettings = { ...settings };
+                  newFilterSettings.filterBy = selectedFilter;
+                  onSettingsChange(newFilterSettings);
                 }}
                 popoverProps={{ minimal: true }}
               >
@@ -684,20 +641,11 @@ class Menu extends Component {
                 width: '100%',
                 color: '#a7b6c2',
                 cursor: 'default',
-                paddingTop: '5px',
+                paddingTop: '7px',
                 paddingLeft: '10px'
               }}
             >
-              v1.0&nbsp;
-              {pro ? (
-                <Tag round intent={Intent.PRIMARY}>
-                  Pro
-                </Tag>
-              ) : (
-                <Tag round intent={Intent.PRIMARY}>
-                  Closed Beta
-                </Tag>
-              )}
+              v1.0-sep-2020
             </div>
             <Button
               icon="cog"
@@ -706,9 +654,7 @@ class Menu extends Component {
                 width: '50px',
                 maxWidth: '50px'
               }}
-              onClick={() => {
-                this.licensePopupOpen();
-              }}
+              onClick={this.settingsOpen}
             />
           </ButtonGroup>
         </ButtonGroup>
@@ -884,144 +830,53 @@ class Menu extends Component {
         </Dialog>
         <Dialog
           className={Classes.DARK}
-          icon="git-repo"
-          onClose={this.licensePopupClose}
-          isOpen={licensePopupOpen}
-          title="Free version"
+          icon="cog"
+          onClose={this.settingsClose}
+          isOpen={settingsOpen}
+          title="Settings"
         >
           <div className={Classes.DIALOG_BODY}>
             <p>
-              This is a free version of Loreshelf for personal use. In order to
-              remove the popup and enable premium features, please consider
-              upgrading to the premium version.
+              These settings apply globally in the whole Loreshelf application,
+              all workspaces and notebooks.
             </p>
-            <Button
-              onClick={() => {
-                this.setState({
-                  licensePopupOpen: false,
-                  licenseActivatePopupOpen: true
-                });
-              }}
-            >
-              Activate license
-            </Button>
-          </div>
-          <div className={Classes.DIALOG_FOOTER}>
-            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Button onClick={this.licensePopupClose}>Close</Button>
-              <Button
-                intent={Intent.PRIMARY}
-                onClick={() => {
-                  window.open('https://loreshelf.com/pricing', '_blank');
+            <Tag fill large minimal icon="two-columns">
+              Notecard Width
+            </Tag>
+            <div style={{ padding: '20px' }}>
+              <Slider
+                min={220}
+                max={440}
+                stepSize={110}
+                labelStepSize={110}
+                onChange={val => {
+                  newSettings.notecardWidth = val;
+                  this.setState({ newSettings });
                 }}
-              >
-                Buy online
-              </Button>
-            </div>
-          </div>
-        </Dialog>
-        <Dialog
-          className={Classes.DARK}
-          icon="key"
-          onClose={() => {
-            this.setState({ licenseActivatePopupOpen: false });
-          }}
-          isOpen={licenseActivatePopupOpen}
-          title="Activate License"
-        >
-          <div className={Classes.DIALOG_BODY}>
-            <p>
-              Fill in your email address which you used for the purchase and the
-              license key which you received in the welcome email.
-            </p>
-            <Label>
-              Email:
-              <InputGroup
-                placeholder="Enter your email"
-                intent={licenseEmailIntent}
-                onChange={this.handleLicenseEmailChange}
-              />
-            </Label>
-            <Label>
-              License Key:
-              <InputGroup
-                placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
-                intent={licenseKeyIntent}
-                onChange={this.handleLicenseKeyChange}
-              />
-            </Label>
-          </div>
-          <div className={Classes.DIALOG_FOOTER}>
-            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Button
-                onClick={() => {
-                  this.setState({ licenseActivatePopupOpen: false });
-                }}
-              >
-                Close
-              </Button>
-              <Button
-                intent={Intent.PRIMARY}
-                onClick={() => {
-                  // check inputs, email and licenseKey
-                  const valid =
-                    this.isValidEmail(licenseEmail) &&
-                    this.isValidLicenseKey(licenseKey);
-                  if (valid) {
-                    const requestOptions = {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        email: licenseEmail,
-                        licenseKey,
-                        deviceId
-                      })
-                    };
-                    // eslint-disable-next-line promise/catch-or-return
-                    fetch('http://localhost:4242/activate', requestOptions)
-                      .then(response => response.json())
-                      // eslint-disable-next-line promise/always-return
-                      .then(data => {
-                        const { hash } = data;
-                        onLicenseActivated(
-                          licenseEmail,
-                          licenseKey,
-                          deviceId,
-                          hash
-                        );
-                        this.setState({
-                          licenseActivatePopupOpen: false,
-                          licenseActivatedOpen: true
-                        });
-                      });
+                labelRenderer={(val: number) => {
+                  switch (val) {
+                    case 220:
+                      return 'Minimal';
+                    case 330:
+                      return 'Medium';
+                    case 440:
+                      return 'Maximal';
+                    default:
+                      break;
                   }
+                  return 'Unknown';
                 }}
-              >
-                Activate
-              </Button>
+                showTrackFill={false}
+                value={newSettings?.notecardWidth}
+                vertical={false}
+              />
             </div>
-          </div>
-        </Dialog>
-        <Dialog
-          className={Classes.DARK}
-          icon="crown"
-          onClose={this.licenseActivatedClose}
-          isOpen={licenseActivatedOpen}
-          title="Premium version"
-        >
-          <div className={Classes.DIALOG_BODY}>
-            <p>
-              Congratulations! You successfully activated your premium license.
-              The premium functions have been enabled. Use it well.
-            </p>
           </div>
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Button
-                onClick={this.licenseActivatedClose}
-                intent={Intent.PRIMARY}
-              >
-                Close
+              <Button onClick={this.settingsClose}>Close</Button>
+              <Button intent={Intent.PRIMARY} onClick={this.settingsApply}>
+                Apply
               </Button>
             </div>
           </div>

@@ -52,6 +52,7 @@ const Card: React.FC<CardProps> = forwardRef(
       moveCard,
       hoverDivider,
       resetDivider,
+      settings,
       onEditCard,
       onRemoveCard,
       onEditTitle,
@@ -69,6 +70,8 @@ const Card: React.FC<CardProps> = forwardRef(
   ) => {
     const blueRef = useRef<BlueCard>(null);
     const titleRef = useRef<EditableText>(null);
+
+    const { notecardWidth } = settings;
 
     let cardData = card;
     if (card.spooling) {
@@ -162,14 +165,19 @@ const Card: React.FC<CardProps> = forwardRef(
       <>
         <ButtonGroup
           className={`${card.spooling ? styles.spoolingCard : styles.card}`}
+          style={{
+            width: `${notecardWidth}px`,
+            minWidth: `${notecardWidth}px`,
+            maxWidth: `${notecardWidth}px`
+          }}
         >
           <div
             ref={blueRef}
             style={{
               opacity,
-              minWidth: '220px',
-              width: '220px',
-              maxWidth: '220px'
+              width: `${notecardWidth}px`,
+              minWidth: `${notecardWidth}px`,
+              maxWidth: `${notecardWidth}px`
             }}
           >
             <DragPreviewImage connect={preview} src={cardPreview} />

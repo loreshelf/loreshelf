@@ -12,7 +12,6 @@ import {
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import log from 'electron-log';
-import SHA512 from 'crypto-js/sha512';
 import JSZip from '../utils/jszip';
 import styles from './Home.css';
 import Menu from './Menu';
@@ -97,7 +96,6 @@ class Home extends Component {
     const knownWorkspaces = []; // [workspace1, workspace2]
 
     const boardOnStartup = undefined; // = boardPath
-    const deviceId = undefined;
 
     const sortBy = CONFIG_STORE.get(CONFIG.SORTBY, {
       method: 'NAME',
@@ -112,6 +110,11 @@ class Home extends Component {
     const saveTimer = undefined;
     const spoolingTimer = undefined;
     const spoolingSavingCardIndex = undefined;
+    const settings = {
+      sortBy,
+      filterBy,
+      notecardWidth: 220
+    };
 
     this.menuRef = React.createRef();
     this.boardRef = React.createRef();
@@ -124,9 +127,7 @@ class Home extends Component {
       spoolingSavingCardIndex,
       knownWorkspaces,
       boardOnStartup,
-      sortBy,
-      filterBy,
-      deviceId,
+      settings,
       showPassword: false,
       loading: true
     };
@@ -152,9 +153,7 @@ class Home extends Component {
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
     this.startSpooling = this.startSpooling.bind(this);
     this.stopSpooling = this.stopSpooling.bind(this);
-    this.selectSort = this.selectSort.bind(this);
-    this.selectFilter = this.selectFilter.bind(this);
-    this.licenseActivated = this.licenseActivated.bind(this);
+    this.changeSettings = this.changeSettings.bind(this);
     this.newSecuredWorkspace = this.newSecuredWorkspace.bind(this);
     this.onStartupCallback = this.onStartupCallback.bind(this);
     this.exportToPDF = this.exportToPDF.bind(this);
@@ -283,10 +282,6 @@ class Home extends Component {
       }
     );
 
-    ipcRenderer.on('deviceId-callback', (event, deviceId) => {
-      self.checkLicense(deviceId);
-    });
-
     document.addEventListener('keyup', e => {
       if (e.ctrlKey || e.metaKey) {
         // eslint-disable-next-line default-case
@@ -316,7 +311,6 @@ class Home extends Component {
       boardOnStartup,
       workspaces
     );
-    ipcRenderer.send('deviceId');
     setTimeout(() => {
       const { loading } = this.state;
       if (loading) {
@@ -374,30 +368,9 @@ class Home extends Component {
     });
   }
 
-  checkLicense(deviceId) {
-    const SLV_STORE = new Store({
-      name: 'slv',
-      encryptionKey: deviceId
-    });
-    const email = SLV_STORE.get('email');
-    const licenseKey = SLV_STORE.get('licenseKey');
-    const hash = SHA512(`${email}-${licenseKey}+${deviceId}`);
-    const hashString = hash.toString();
-    const originalHash = SLV_STORE.get('hash');
-    if (hashString === originalHash) {
-      this.setState({ pro: true, deviceId });
-    } else {
-      this.setState({ pro: false, deviceId });
-      /** setTimeout(() => {
-        if (this.menuRef.current) {
-          this.menuRef.current.licensePopupOpen();
-        }
-      }, 2000); */
-    }
-  }
-
   updateWorkspace(workspacePath, knownWorkspaces, files, stats) {
-    const { sortBy } = this.state;
+    const { settings } = this.state;
+    const { sortBy } = settings;
     let numBoards = 0;
     const boards = [];
     files.forEach((file, id) => {
@@ -739,7 +712,8 @@ class Home extends Component {
   }
 
   newBoardCallback(newBoardPath) {
-    const { workspace, sortBy } = this.state;
+    const { workspace, settings } = this.state;
+    const { sortBy } = settings;
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
     workspace.boards.push({
@@ -813,7 +787,8 @@ class Home extends Component {
 
   // eslint-disable-next-line class-methods-use-this
   saveBoardCallback() {
-    const { boardData, workspace, sortBy } = this.state;
+    const { boardData, workspace, settings } = this.state;
+    const { sortBy } = settings;
     // eslint-disable-next-line no-param-reassign
     boardData.status = 'All changes saved';
     const boardIndex = workspace.boards.findIndex(board => {
@@ -1043,7 +1018,8 @@ class Home extends Component {
   }
 
   renameBoardCallback(oldBoardPath, newBoardPath) {
-    const { boardData, workspace, sortBy } = this.state;
+    const { boardData, workspace, settings } = this.state;
+    const { sortBy } = settings;
     const boardName = this.boardPathToName(newBoardPath);
     boardData.path = newBoardPath;
     boardData.name = boardName;
@@ -1144,24 +1120,32 @@ class Home extends Component {
     });
   }
 
-  selectSort(sortName, sortAsc, sortIcon) {
-    const { sortBy, workspace } = this.state;
-    sortBy.method = sortName;
-    sortBy.asc = sortAsc;
-    sortBy.icon = sortIcon;
-    workspace.boards.sort((a, b) => {
-      return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
-    });
-    this.setState({ sortBy, workspace });
-    CONFIG_STORE.set(CONFIG.SORTBY, sortBy);
-  }
-
-  selectFilter(filterName, filterIcon) {
-    const { filterBy } = this.state;
-    filterBy.name = filterName;
-    filterBy.icon = filterIcon;
-    this.setState({ filterBy });
-    CONFIG_STORE.set(CONFIG.FILTERBY, filterBy);
+  changeSettings(newSettings) {
+    const { settings, workspace } = this.state;
+    const { sortBy, filterBy, notecardWidth } = settings;
+    if (newSettings.sortBy !== sortBy) {
+      sortBy.method = newSettings.sortBy.sortName;
+      sortBy.asc = newSettings.sortBy.sortAsc;
+      sortBy.icon = newSettings.sortBy.sortIcon;
+      workspace.boards.sort((a, b) => {
+        return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
+      });
+      CONFIG_STORE.set(CONFIG.SORTBY, sortBy);
+    }
+    if (newSettings.filterBy !== filterBy) {
+      filterBy.name = newSettings.filterBy.filterName;
+      filterBy.icon = newSettings.filterBy.filterIcon;
+      CONFIG_STORE.set(CONFIG.FILTERBY, filterBy);
+    }
+    let updateBoard = false;
+    if (newSettings.notecardWidth !== notecardWidth) {
+      updateBoard = true;
+      settings.notecardWidth = newSettings.notecardWidth;
+    }
+    this.setState({ settings });
+    if (updateBoard) {
+      this.boardRef.forceUpdate();
+    }
   }
 
   startSpooling(workspaceName, boardName, cardName, cardIndex) {
@@ -1200,22 +1184,6 @@ class Home extends Component {
   exportToPDF() {
     const htmlSource = md2html(this.getCurrentBoardMd());
     ipcRenderer.send('export-pdf', htmlSource);
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  licenseActivated(email, licenseKey, deviceId, hash) {
-    const SLV_STORE = new Store({
-      name: 'slv',
-      encryptionKey: deviceId
-    });
-    const hashCheck = SHA512(`${email}-${licenseKey}+${deviceId}`);
-    const hashString = hashCheck.toString();
-    if (hashString === hash) {
-      SLV_STORE.set('email', email);
-      SLV_STORE.set('licenseKey', licenseKey);
-      SLV_STORE.set('hash', hash);
-    }
-    this.checkLicense(deviceId);
   }
 
   autoSave(immediatelyWhenNeeded?) {
@@ -1297,10 +1265,7 @@ class Home extends Component {
       knownWorkspaces,
       workspace,
       boardData,
-      sortBy,
-      filterBy,
-      deviceId,
-      pro,
+      settings,
       showPassword,
       loading
     } = this.state;
@@ -1363,6 +1328,7 @@ class Home extends Component {
             }}
             boardData={boardData}
             workspace={workspace}
+            settings={settings}
             onEditTitle={this.editTitle}
             onEditCard={this.editCard}
             onNewCard={this.newCard}
@@ -1440,20 +1406,15 @@ class Home extends Component {
               boardStatus={boardStatus}
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}
-              sortBy={sortBy}
-              filterBy={filterBy}
-              pro={pro}
-              deviceId={deviceId}
+              settings={settings}
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
               onMoveCardToBoard={this.moveCardToBoard}
               onCloseWorkspace={this.closeWorkspace}
               onSwitchWorkspace={this.switchWorkspace}
               onSetBoardOnStartup={this.setBoardOnStartup}
-              onSortSelect={this.selectSort}
-              onFilterSelect={this.selectFilter}
+              onSettingsChange={this.changeSettings}
               onNewCard={this.newCard}
-              onLicenseActivated={this.licenseActivated}
               onNewSecuredWorkspace={this.newSecuredWorkspace}
               onExportToPDF={this.exportToPDF}
               onNewBoard={this.newBoard}
