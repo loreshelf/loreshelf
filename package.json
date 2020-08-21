@@ -267,6 +267,7 @@
     "@blueprintjs/select": "^3.12.0",
     "@fortawesome/fontawesome-free": "^5.12.0",
     "@hot-loader/react-dom": "^16.11.0",
+    "chokidar": "^3.4.2",
     "connected-react-router": "^6.6.1",
     "core-js": "^3.6.4",
     "crypto-js": "^4.0.0",

@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import React, { Component } from 'react';
 import { ipcRenderer } from 'electron';
 import nodePath from 'path';
@@ -148,7 +149,7 @@ class Home extends Component {
     this.setBoardOnStartup = this.setBoardOnStartup.bind(this);
     this.moveCardToBoard = this.moveCardToBoard.bind(this);
     this.switchWorkspace = this.switchWorkspace.bind(this);
-    this.closeWorkspace = this.closeWorkspace.bind(this);
+    this.closeWorkspaceCallback = this.closeWorkspaceCallback.bind(this);
     this.boardPathToName = this.boardPathToName.bind(this);
     this.requestBoardsAsync = this.requestBoardsAsync.bind(this);
     this.requestBoardDataAsync = this.requestBoardDataAsync.bind(this);
@@ -251,8 +252,8 @@ class Home extends Component {
       self.loadBoardCallback(boardMeta, text, stats);
     });
 
-    ipcRenderer.on('board-save-callback', () => {
-      self.saveBoardCallback();
+    ipcRenderer.on('board-save-callback', (event, stats) => {
+      self.saveBoardCallback(stats);
     });
 
     ipcRenderer.on('board-new-callback', (event, newBoardPath) => {
@@ -294,6 +295,78 @@ class Home extends Component {
       }
     );
 
+    ipcRenderer.on('event-workspace-removed', (event, removedWorkspacePath) => {
+      self.closeWorkspaceCallback(removedWorkspacePath);
+    });
+
+    ipcRenderer.on('workspace-close-callback', (event, closedWorkspacePath) => {
+      self.closeWorkspaceCallback(closedWorkspacePath);
+    });
+
+    ipcRenderer.on('event-board-added', (event, boardPath) => {
+      const { knownWorkspaces } = self.state;
+      const workspacePath = boardPath.substring(
+        0,
+        boardPath.lastIndexOf(nodePath.sep)
+      );
+      const workspaceIndex = knownWorkspaces.findIndex(w => {
+        return w.path === workspacePath;
+      });
+      const workspace = knownWorkspaces[workspaceIndex];
+      const boardIndex = workspace.boards.findIndex(board => {
+        return board.path === boardPath;
+      });
+      if (boardIndex < 0) {
+        self.newBoardInWorkspaceCallback(
+          knownWorkspaces[workspaceIndex],
+          boardPath
+        );
+        self.menuRef.current.forceUpdate();
+      }
+    });
+
+    ipcRenderer.on('event-board-modified', (event, boardPath, stats) => {
+      const { boardData } = self.state;
+      if (stats.mtimeMs !== boardData.modified) {
+        self.loadBoardWithPath(boardPath);
+      }
+    });
+
+    ipcRenderer.on('event-board-removed', (event, removedBoardPath) => {
+      const { knownWorkspaces, boardData } = this.state;
+      const workspacePath = removedBoardPath.substring(
+        0,
+        removedBoardPath.lastIndexOf(nodePath.sep)
+      );
+      const workspaceIndex = knownWorkspaces.findIndex(w => {
+        return w.path === workspacePath;
+      });
+      const workspace = knownWorkspaces[workspaceIndex];
+      let boardIndex = workspace.boards.findIndex(board => {
+        return board.path === removedBoardPath;
+      });
+      workspace.boards.splice(boardIndex, 1);
+      workspace.numBoards -= 1;
+      if (removedBoardPath === boardData.path) {
+        if (boardIndex >= workspace.boards.length) {
+          if (workspace.boards.length > 0) {
+            boardIndex = 0;
+          } else {
+            boardIndex = -1;
+          }
+        }
+        this.setState({ workspace, knownWorkspaces, boardData: undefined });
+      } else {
+        boardIndex = -1;
+      }
+      // select next board
+      if (boardIndex >= 0) {
+        this.loadBoard(boardIndex);
+      } else {
+        this.menuRef.current.forceUpdate();
+      }
+    });
+
     document.addEventListener('keyup', e => {
       if (e.ctrlKey || e.metaKey) {
         // eslint-disable-next-line default-case
@@ -334,7 +407,8 @@ class Home extends Component {
   onStartupCallback(workspaceOnStartup, boardOnStartup, existingWorkspaces) {
     const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
     const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
-    if (!boardOnStartup && configBoardOnStartup) {
+    const isSecured = workspaceOnStartup && workspaceOnStartup.endsWith('.zip');
+    if (!isSecured && !boardOnStartup && configBoardOnStartup) {
       CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
@@ -346,9 +420,12 @@ class Home extends Component {
       this.setState({ workspaceOnStartup, boardOnStartup });
     }
     if (existingWorkspaces) {
-      let shouldSetFirst = !(workspaceOnStartup && boardOnStartup);
+      let shouldSetFirst =
+        !isSecured && !(workspaceOnStartup && boardOnStartup);
       existingWorkspaces.forEach(workspacePath => {
-        if (workspacePath !== workspaceOnStartup) {
+        if (isSecured && workspacePath === workspaceOnStartup) {
+          this.loadWorkspace(workspacePath, true);
+        } else if (!(workspaceOnStartup && boardOnStartup)) {
           this.loadWorkspace(workspacePath, shouldSetFirst);
           shouldSetFirst = false;
         }
@@ -372,12 +449,14 @@ class Home extends Component {
 
   setBoardOnStartup() {
     const { boardData, workspace } = this.state;
-    CONFIG_STORE.set(CONFIG.NOTEBOOKONSTARTUP, boardData.path);
-    CONFIG_STORE.set(CONFIG.WORKSPACEONSTARTUP, workspace.path);
-    this.setState({
-      boardOnStartup: boardData.path,
-      workspaceOnStartup: workspace.path
-    });
+    if (boardData) {
+      CONFIG_STORE.set(CONFIG.NOTEBOOKONSTARTUP, boardData.path);
+      CONFIG_STORE.set(CONFIG.WORKSPACEONSTARTUP, workspace.path);
+      this.setState({
+        boardOnStartup: boardData.path,
+        workspaceOnStartup: workspace.path
+      });
+    }
   }
 
   updateWorkspace(workspacePath, knownWorkspaces, files, stats) {
@@ -536,6 +615,15 @@ class Home extends Component {
           if (shouldSetWorkspace) {
             if (workspace.numBoards > 0) {
               if (!openBoardPath) {
+                const workspaceOnStartup = CONFIG_STORE.get(
+                  CONFIG.WORKSPACEONSTARTUP
+                );
+                const boardOnStartup = CONFIG_STORE.get(
+                  CONFIG.NOTEBOOKONSTARTUP
+                );
+                if (workspaceOnStartup === workspace.path) {
+                  this.loadBoardWithPath(boardOnStartup);
+                }
                 this.loadBoard(0);
               } else {
                 this.loadBoardWithPath(openBoardPath);
@@ -556,7 +644,9 @@ class Home extends Component {
       this.setState({
         boardData: undefined
       });
-      this.menuRef.current.forceUpdate();
+      if (this.menuRef.current) {
+        this.menuRef.current.forceUpdate();
+      }
     } else {
       this.setState({
         knownWorkspaces
@@ -612,6 +702,8 @@ class Home extends Component {
         workspace.zip = zip;
         workspace.zipdata = data;
         this.setState({ workspace });
+        this.menuRef.current.forceUpdate();
+        this.boardRef.forceUpdate();
       })
       .catch(error => {
         log.error(`Creating new secured workspace failed: ${error}`);
@@ -647,10 +739,12 @@ class Home extends Component {
       }
     });
     const status = timeSince(stats.mtimeMs);
+    const modified = stats.mtimeMs;
     const boardData = {
       path: boardMeta.path,
       cards,
       status,
+      modified,
       name: boardMeta.name
     };
     return boardData;
@@ -723,8 +817,8 @@ class Home extends Component {
     }
   }
 
-  newBoardCallback(newBoardPath) {
-    const { workspace, settings } = this.state;
+  newBoardInWorkspaceCallback(workspace, newBoardPath) {
+    const { settings } = this.state;
     const { sortBy } = settings;
     // This part might not be need when I add workspace watching..
     workspace.numBoards += 1;
@@ -735,6 +829,11 @@ class Home extends Component {
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
+  }
+
+  newBoardCallback(newBoardPath) {
+    const { workspace } = this.state;
+    this.newBoardInWorkspaceCallback(workspace, newBoardPath);
     const newBoardMetaIndex = workspace.boards.findIndex(board => {
       return board.path === newBoardPath;
     });
@@ -767,7 +866,7 @@ class Home extends Component {
     this.loadWorkspace(workspace.path, true);
   }
 
-  closeWorkspace(workspacePath) {
+  closeWorkspaceCallback(workspacePath) {
     const { knownWorkspaces, workspace } = this.state;
     // save board for unsaved changes
     this.autoSave(true);
@@ -798,7 +897,7 @@ class Home extends Component {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  saveBoardCallback() {
+  saveBoardCallback(stats) {
     const { boardData, workspace, settings } = this.state;
     const { sortBy } = settings;
     // eslint-disable-next-line no-param-reassign
@@ -806,7 +905,8 @@ class Home extends Component {
     const boardIndex = workspace.boards.findIndex(board => {
       return board.path === boardData.path;
     });
-    workspace.boards[boardIndex].modified = Date.now();
+    workspace.boards[boardIndex].modified = stats.mtimeMs;
+    boardData.modified = stats.mtimeMs;
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
@@ -1240,8 +1340,9 @@ class Home extends Component {
   }
 
   exportToPDF() {
+    const { boardData } = this.state;
     const htmlSource = md2html(this.getCurrentBoardMd());
-    ipcRenderer.send('export-pdf', htmlSource);
+    ipcRenderer.send('export-pdf', boardData.name, htmlSource);
   }
 
   autoSave(immediatelyWhenNeeded?) {
@@ -1278,6 +1379,16 @@ class Home extends Component {
       spoolingBoardData.status = 'All changes saved';
       const status = document.getElementById(`subnote-${spoolingCardIndex}`);
       status.classList.remove('subnote-active');
+      if (boardData.path === spoolingBoardData.path) {
+        // Update the same card in the notebook
+        const editedCardIndex = boardData.cards[cardIndex].spooling.cardIndex;
+        this.editCard(
+          editedCardIndex,
+          boardData.cards[cardIndex].spooling.boardData.cards[editedCardIndex]
+            .doc
+        );
+        this.boardRef.forceUpdate();
+      }
       this.setState({ spoolingSavingCardIndex: undefined });
     };
     if (
@@ -1373,6 +1484,16 @@ class Home extends Component {
 
     const boardStatus = boardData && boardData.status ? boardData.status : '';
 
+    const unlockWorkspace = () => {
+      const password = this.pwdInput.value;
+      workspace.password = password;
+      this.loadSecuredWorkspaceCallback(
+        workspace.path,
+        workspace.zipdata,
+        true
+      );
+    };
+
     let mainContent;
 
     if (workspace) {
@@ -1415,24 +1536,19 @@ class Home extends Component {
               type={showPassword ? 'text' : 'password'}
               rightElement={lockButton}
               autoFocus
+              onKeyPress={e => {
+                if (e.which === 13) {
+                  // Enter
+                  unlockWorkspace();
+                }
+              }}
               intent={workspace.wrongPassword ? Intent.DANGER : Intent.NONE}
               placeholder="Enter password..."
               inputRef={(pwdInput: HTMLInputElement) => {
                 this.pwdInput = pwdInput;
               }}
             />
-            <Button
-              intent={Intent.PRIMARY}
-              onClick={() => {
-                const password = this.pwdInput.value;
-                workspace.password = password;
-                this.loadSecuredWorkspaceCallback(
-                  workspace.path,
-                  workspace.zipdata,
-                  true
-                );
-              }}
-            >
+            <Button intent={Intent.PRIMARY} onClick={unlockWorkspace}>
               Unlock Workspace
             </Button>
           </NonIdealState>
@@ -1468,7 +1584,9 @@ class Home extends Component {
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
               onMoveCardToBoard={this.moveCardToBoard}
-              onCloseWorkspace={this.closeWorkspace}
+              onCloseWorkspace={() => {
+                ipcRenderer.send('workspace-close', workspace.path);
+              }}
               onSwitchWorkspace={this.switchWorkspace}
               onSetBoardOnStartup={this.setBoardOnStartup}
               onSettingsChange={this.changeSettings}

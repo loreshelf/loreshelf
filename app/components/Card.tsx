@@ -18,11 +18,9 @@ import {
   Button,
   Tooltip,
   Position,
-  ButtonGroup,
-  Intent
+  ButtonGroup
 } from '@blueprintjs/core';
 import { XYCoord } from 'dnd-core';
-import { ipcRenderer } from 'electron';
 import Editor from '../editor/Editor';
 import DragItemTypes from '../utils/DragItemTypes';
 import styles from './Card.css';

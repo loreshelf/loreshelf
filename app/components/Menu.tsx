@@ -13,7 +13,6 @@ import {
   Intent,
   Dialog,
   Icon,
-  Label,
   Card,
   Tag,
   Tooltip,
@@ -463,12 +462,14 @@ class Menu extends Component {
                       this.duplicateBoardOpen();
                     },
                     icon: 'duplicate',
+                    disabled: boardData == null,
                     text: 'Duplicate'
                   }),
                   React.createElement(
                     MenuItem,
                     {
                       icon: 'flows',
+                      disabled: boardData == null,
                       text: 'Move to workspace'
                     },
                     listOfWorkspaces
@@ -478,6 +479,7 @@ class Menu extends Component {
                       this.renameBoardOpen();
                     },
                     icon: 'edit',
+                    disabled: boardData == null,
                     text: 'Rename'
                   }),
                   React.createElement(MenuItem, {
@@ -485,6 +487,7 @@ class Menu extends Component {
                       onExportToPDF();
                     },
                     icon: 'export',
+                    disabled: boardData == null,
                     text: 'Export to PDF'
                   }),
                   React.createElement(MenuItem, {
@@ -492,12 +495,14 @@ class Menu extends Component {
                       onSetBoardOnStartup();
                     },
                     icon: 'log-in',
+                    disabled: boardData == null,
                     text: 'Open on startup'
                   }),
                   React.createElement(MenuDivider),
                   React.createElement(MenuItem, {
                     onClick: onDeleteBoard,
                     icon: 'trash',
+                    disabled: boardData == null,
                     intent: Intent.DANGER,
                     text: 'Delete'
                   })

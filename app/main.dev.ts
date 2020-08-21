@@ -13,9 +13,11 @@
  */
 import path from 'path';
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
+import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import fs from 'fs';
+import fs, { watch } from 'fs';
+import chokidar from 'chokidar';
 import sourceMapSupport from 'source-map-support';
 import MenuBuilder from './menu';
 
@@ -50,6 +52,49 @@ const installExtensions = async () => {
   ).catch(console.log);
 };
 
+const appConfig = new Store();
+
+function windowStateKeeper(windowName) {
+  let window;
+  let windowState;
+  function setBounds() {
+    // Restore from appConfig
+    if (appConfig.has(`windowState.${windowName}`)) {
+      windowState = appConfig.get(`windowState.${windowName}`);
+      return;
+    }
+    // Default
+    windowState = {
+      x: undefined,
+      y: undefined,
+      width: 1366,
+      height: 768
+    };
+  }
+  function saveState() {
+    if (!windowState.isMaximized) {
+      windowState = window.getBounds();
+    }
+    windowState.isMaximized = window.isMaximized();
+    appConfig.set(`windowState.${windowName}`, windowState);
+  }
+  function track(win) {
+    window = win;
+    ['resize', 'move', 'close'].forEach(event => {
+      win.on(event, saveState);
+    });
+  }
+  setBounds();
+  return {
+    x: windowState.x,
+    y: windowState.y,
+    width: windowState.width,
+    height: windowState.height,
+    isMaximized: windowState.isMaximized,
+    track
+  };
+}
+
 const createWindow = async () => {
   if (
     process.env.NODE_ENV === 'development' ||
@@ -58,12 +103,16 @@ const createWindow = async () => {
     await installExtensions();
   }
 
+  const mainWindowStateKeeper = windowStateKeeper('main');
+
   mainWindow = new BrowserWindow({
     title: 'Loreshelf',
     show: false,
     darkTheme: true,
-    width: 1366,
-    height: 768,
+    x: mainWindowStateKeeper.x,
+    y: mainWindowStateKeeper.y,
+    width: mainWindowStateKeeper.width,
+    height: mainWindowStateKeeper.height,
     icon: path.join(__dirname, '/resources/icon.png'),
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
@@ -99,6 +148,32 @@ const createWindow = async () => {
       mainWindow.focus();
     }
   });
+
+  mainWindowStateKeeper.track(mainWindow);
+
+  let watcher = null;
+  let boardWatcher = null;
+  const watcherOptions = {
+    depth: 0,
+    awaitWriteFinish: true,
+    ignorePermissionErrors: true
+  };
+  const initializeWatcher = workspacePath => {
+    watcher = chokidar.watch(workspacePath, watcherOptions);
+    watcher.on('unlinkDir', removedWorkspacePath => {
+      mainWindow.webContents.send(
+        'event-workspace-removed',
+        removedWorkspacePath
+      );
+      watcher.unwatch(removedWorkspacePath);
+    });
+    watcher.on('add', boardPath => {
+      mainWindow.webContents.send('event-board-added', boardPath);
+    });
+    watcher.on('unlink', removedBoardPath => {
+      mainWindow.webContents.send('event-board-removed', removedBoardPath);
+    });
+  };
 
   ipcMain.on(
     'places-exist',
@@ -143,6 +218,11 @@ const createWindow = async () => {
       // eslint-disable-next-line promise/always-return
       if (!data.canceled) {
         const workspacePath = data.filePaths[0];
+        if (watcher == null) {
+          initializeWatcher(workspacePath);
+        } else {
+          watcher.add(workspacePath);
+        }
         fs.readdir(workspacePath, (err, files) => {
           const stats = [];
           files.forEach(filePath => {
@@ -198,6 +278,11 @@ const createWindow = async () => {
   ipcMain.on(
     'workspace-load',
     (event, workspacePath, shouldSetWorkspace, openBoardPath) => {
+      if (watcher == null) {
+        initializeWatcher(workspacePath);
+      } else {
+        watcher.add(workspacePath);
+      }
       fs.readdir(workspacePath, (err, files) => {
         const stats = [];
         if (files) {
@@ -237,17 +322,34 @@ const createWindow = async () => {
   ipcMain.on('board-read', (event, boardMeta) => {
     const text = fs.readFileSync(boardMeta.path, 'utf8');
     const stats = fs.statSync(boardMeta.path);
+    if (boardWatcher != null) {
+      boardWatcher.close();
+    }
+    boardWatcher = chokidar.watch(boardMeta.path, { alwaysStat: true });
+    boardWatcher.on('change', (modifiedBoardPath, modifiedStats) => {
+      mainWindow.webContents.send(
+        'event-board-modified',
+        modifiedBoardPath,
+        modifiedStats
+      );
+    });
     event.reply('board-read-callback', boardMeta, text, stats);
+  });
+
+  ipcMain.on('workspace-close', (event, workspacePath) => {
+    watcher.unwatch(workspacePath);
+    event.reply('workspace-close-callback', workspacePath);
   });
 
   ipcMain.on(
     'board-save',
     (event, boardPath, boardContent, isNew?, isInBackground?) => {
       fs.writeFileSync(boardPath, boardContent, 'utf8');
+      const stats = fs.statSync(boardPath);
       if (isNew) {
         event.reply('board-new-callback', boardPath);
       } else if (!isInBackground) {
-        event.reply('board-save-callback');
+        event.reply('board-save-callback', stats);
       }
     }
   );
@@ -355,7 +457,7 @@ const createWindow = async () => {
     });
   });
 
-  ipcMain.on('export-pdf', (event, htmlSource) => {
+  ipcMain.on('export-pdf', (event, boardName, htmlSource) => {
     const winPDF = new BrowserWindow({
       show: false
     });
@@ -367,6 +469,7 @@ const createWindow = async () => {
     winPDF.on('ready-to-show', () => {
       const options = {
         title: 'Save PDF',
+        defaultPath: `${boardName}.pdf`,
         buttonLabel: 'Save',
         filters: [{ name: 'PDF', extensions: ['pdf'] }],
         properties: ['createDirectory', 'showOverwriteConfirmation']
@@ -405,6 +508,12 @@ const createWindow = async () => {
 
   mainWindow.on('close', () => {
     mainWindow.webContents.send('board-save');
+    if (watcher != null) {
+      watcher.close();
+    }
+    if (boardWatcher != null) {
+      boardWatcher.close();
+    }
   });
 
   mainWindow.on('closed', () => {
