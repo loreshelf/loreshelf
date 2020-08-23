@@ -249,14 +249,7 @@ Still | renders | nicely
                     }),
                     React.createElement(MenuItem, {
                       onClick: () => {
-                        if (url.startsWith('file')) {
-                          const { baseURI } = dom.node;
-                          clipboard.writeText(
-                            path.normalize(path.join(baseURI, url))
-                          );
-                        } else {
-                          clipboard.writeText(url);
-                        }
+                        clipboard.writeText(url);
                       },
                       text: 'Copy to clipboard'
                     }),

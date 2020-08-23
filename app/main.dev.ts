@@ -156,7 +156,8 @@ const createWindow = async () => {
   const watcherOptions = {
     depth: 0,
     awaitWriteFinish: true,
-    ignorePermissionErrors: true
+    ignorePermissionErrors: true,
+    disableGlobbing: true
   };
   const initializeWatcher = workspacePath => {
     watcher = chokidar.watch(workspacePath, watcherOptions);

@@ -304,7 +304,15 @@ class Home extends Component {
     });
 
     ipcRenderer.on('event-board-added', (event, boardPath) => {
-      const { knownWorkspaces } = self.state;
+      const { knownWorkspaces, ignoreRenameEvent } = self.state;
+      if (
+        ignoreRenameEvent &&
+        ignoreRenameEvent.length === 2 &&
+        ignoreRenameEvent[1] === boardPath
+      ) {
+        ignoreRenameEvent.splice(0, ignoreRenameEvent.length);
+        return;
+      }
       const workspacePath = boardPath.substring(
         0,
         boardPath.lastIndexOf(nodePath.sep)
@@ -333,7 +341,14 @@ class Home extends Component {
     });
 
     ipcRenderer.on('event-board-removed', (event, removedBoardPath) => {
-      const { knownWorkspaces, boardData } = this.state;
+      const { knownWorkspaces, boardData, ignoreRenameEvent } = this.state;
+      if (
+        ignoreRenameEvent &&
+        ignoreRenameEvent.length === 2 &&
+        ignoreRenameEvent[0] === removedBoardPath
+      ) {
+        return;
+      }
       const workspacePath = removedBoardPath.substring(
         0,
         removedBoardPath.lastIndexOf(nodePath.sep)
@@ -425,7 +440,7 @@ class Home extends Component {
       existingWorkspaces.forEach(workspacePath => {
         if (isSecured && workspacePath === workspaceOnStartup) {
           this.loadWorkspace(workspacePath, true);
-        } else if (!(workspaceOnStartup && boardOnStartup)) {
+        } else {
           this.loadWorkspace(workspacePath, shouldSetFirst);
           shouldSetFirst = false;
         }
@@ -1145,7 +1160,11 @@ class Home extends Component {
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
-    this.setState({ boardData, workspace });
+    this.setState({
+      boardData,
+      workspace,
+      ignoreRenameEvent: [oldBoardPath, newBoardPath]
+    });
     this.menuRef.current.forceUpdate();
   }
 
@@ -1584,8 +1603,8 @@ class Home extends Component {
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
               onMoveCardToBoard={this.moveCardToBoard}
-              onCloseWorkspace={() => {
-                ipcRenderer.send('workspace-close', workspace.path);
+              onCloseWorkspace={workspacePath => {
+                ipcRenderer.send('workspace-close', workspacePath);
               }}
               onSwitchWorkspace={this.switchWorkspace}
               onSetBoardOnStartup={this.setBoardOnStartup}
