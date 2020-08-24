@@ -16,7 +16,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import fs, { watch } from 'fs';
+import fs from 'fs';
 import chokidar from 'chokidar';
 import sourceMapSupport from 'source-map-support';
 import MenuBuilder from './menu';
@@ -156,8 +156,7 @@ const createWindow = async () => {
   const watcherOptions = {
     depth: 0,
     awaitWriteFinish: true,
-    ignorePermissionErrors: true,
-    disableGlobbing: true
+    ignorePermissionErrors: true
   };
   const initializeWatcher = workspacePath => {
     watcher = chokidar.watch(workspacePath, watcherOptions);
@@ -193,11 +192,21 @@ const createWindow = async () => {
           }
         });
       }
+      const loreshelfDocsWorkspacePath =
+        process.env.NODE_ENV === 'development'
+          ? path.join(__dirname, '/workspaces/Loreshelf Docs')
+          : path.join(process.resourcesPath, '/workspaces/Loreshelf Docs');
+      const getStartedWorkspacePath =
+        process.env.NODE_ENV === 'development'
+          ? path.join(__dirname, '/workspaces/Get Started')
+          : path.join(process.resourcesPath, '/workspaces/Get Started');
       event.reply(
         'places-exist-callback',
         workspaceOnStartupExist,
         boardOnStartupExist,
-        existingWorkspaces
+        existingWorkspaces,
+        loreshelfDocsWorkspacePath,
+        getStartedWorkspacePath
       );
     }
   );

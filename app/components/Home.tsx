@@ -9,7 +9,8 @@ import {
   Intent,
   InputGroup,
   Tooltip,
-  Spinner
+  Spinner,
+  ButtonGroup
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import log from 'electron-log';
@@ -27,6 +28,7 @@ import {
 } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
 import AppToaster from './AppToaster';
+import brandIcon from '../resources/icon.png';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -192,12 +194,16 @@ class Home extends Component {
         event,
         workspaceOnStartupExist,
         boardOnStartupExist,
-        existingWorkspaces
+        existingWorkspaces,
+        loreshelfDocsWorkspacePath,
+        getStartedWorkspacePath
       ) => {
         self.onStartupCallback(
           workspaceOnStartupExist,
           boardOnStartupExist,
-          existingWorkspaces
+          existingWorkspaces,
+          loreshelfDocsWorkspacePath,
+          getStartedWorkspacePath
         );
       }
     );
@@ -419,7 +425,14 @@ class Home extends Component {
     }, 1000);
   }
 
-  onStartupCallback(workspaceOnStartup, boardOnStartup, existingWorkspaces) {
+  onStartupCallback(
+    workspaceOnStartup,
+    boardOnStartup,
+    existingWorkspaces,
+    loreshelfDocsWorkspacePath,
+    getStartedWorkspacePath
+  ) {
+    this.setState({ loreshelfDocsWorkspacePath, getStartedWorkspacePath });
     const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
     const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
     const isSecured = workspaceOnStartup && workspaceOnStartup.endsWith('.zip');
@@ -579,7 +592,9 @@ class Home extends Component {
         this.setState({
           boardData: undefined
         });
-        this.menuRef.current.forceUpdate();
+        if (this.menuRef.current) {
+          this.menuRef.current.forceUpdate();
+        }
       }
     } else {
       this.setState({
@@ -688,7 +703,9 @@ class Home extends Component {
       this.setState({
         boardData: undefined
       });
-      this.menuRef.current.forceUpdate();
+      if (this.menuRef.current) {
+        this.menuRef.current.forceUpdate();
+      }
     }
     return workspace;
   }
@@ -900,6 +917,7 @@ class Home extends Component {
           workspace: undefined,
           boardData: undefined
         });
+        this.storeConfiguration();
         return;
       }
     }
@@ -908,7 +926,9 @@ class Home extends Component {
       this.switchWorkspace(knownWorkspaces[newWorkspaceIndex]);
     }
     this.storeConfiguration();
-    this.menuRef.current.forceUpdate();
+    if (this.menuRef.current) {
+      this.menuRef.current.forceUpdate();
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -1445,6 +1465,11 @@ class Home extends Component {
     knownWorkspaces.forEach(workspace => {
       workspaces.push(workspace.path);
     });
+    const workspaceOnStartup = CONFIG_STORE.get(CONFIG.WORKSPACEONSTARTUP);
+    if (!workspaces.includes(workspaceOnStartup)) {
+      CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
+      CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
+    }
     CONFIG_STORE.set(CONFIG.WORKSPACES, workspaces);
   }
 
@@ -1455,7 +1480,9 @@ class Home extends Component {
       boardData,
       settings,
       showPassword,
-      loading
+      loading,
+      loreshelfDocsWorkspacePath,
+      getStartedWorkspacePath
     } = this.state;
 
     if (loading) {
@@ -1470,14 +1497,6 @@ class Home extends Component {
       );
     }
 
-    const OpenWorkspace = (
-      <Button
-        intent={Intent.PRIMARY}
-        onClick={() => ipcRenderer.send('workspace-add')}
-      >
-        Open Workspace
-      </Button>
-    );
     const { menuRef } = this;
     const CreateBoard = (
       <Button
@@ -1620,12 +1639,58 @@ class Home extends Component {
             mainContent
           ]
         ) : (
-          <NonIdealState
-            icon="folder-open"
-            title="No Workspace"
-            description="Start with opening or creating a new folder as your first workspace context. Name it according to where and when you may need to work with the stored information. For example 'Family', 'Job', 'Finance', 'Civil', 'Hobbies', 'Shopping', 'House Keeping', 'Ideas', 'Past'."
-            action={OpenWorkspace}
-          />
+          <NonIdealState>
+            <ButtonGroup vertical>
+              <img
+                src={brandIcon}
+                alt="Logo"
+                style={{ width: '150px', margin: '0 auto' }}
+              />
+              <div
+                style={{
+                  margin: '20px',
+                  marginBottom: '5px',
+                  fontSize: '20px',
+                  userSelect: 'none'
+                }}
+              >
+                Welcome to Loreshelf
+              </div>
+              <div
+                style={{
+                  margin: '5px',
+                  marginBottom: '15px',
+                  userSelect: 'none'
+                }}
+              >
+                Version 1.0.0
+              </div>
+              <Button
+                intent={Intent.PRIMARY}
+                style={{ margin: '10px', width: '200px' }}
+                onClick={() => {
+                  this.loadWorkspace(getStartedWorkspacePath, true);
+                  this.loadWorkspace(loreshelfDocsWorkspacePath, false);
+                }}
+              >
+                Get Started
+              </Button>
+              <Button
+                style={{ margin: '10px', width: '200px' }}
+                onClick={() => {
+                  this.loadWorkspace(loreshelfDocsWorkspacePath, false);
+                  ipcRenderer.send('workspace-add');
+                }}
+              >
+                Open Workspace
+              </Button>
+              <div
+                style={{ margin: '20px', fontSize: '12px', userSelect: 'none' }}
+              >
+                Made by Ivo Bek
+              </div>
+            </ButtonGroup>
+          </NonIdealState>
         )}
       </div>
     );

@@ -61,6 +61,15 @@
       "main.prod.js.map",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "./app/workspaces/",
+        "to": "workspaces",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "fileAssociations": [
       {
         "ext": "md",
