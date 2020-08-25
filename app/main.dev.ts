@@ -52,6 +52,45 @@ const installExtensions = async () => {
   ).catch(console.log);
 };
 
+function copyFolderRecursiveSync(source, target) {
+  let files = [];
+
+  // check if folder needs to be created or integrated
+  const targetFolder = path.join(target, path.basename(source));
+  if (!fs.existsSync(targetFolder)) {
+    fs.mkdirSync(targetFolder);
+  }
+
+  // copy
+  if (fs.lstatSync(source).isDirectory()) {
+    files = fs.readdirSync(source);
+    files.forEach(file => {
+      const curSource = path.join(source, file);
+      if (fs.lstatSync(curSource).isDirectory()) {
+        copyFolderRecursiveSync(curSource, targetFolder);
+      } else {
+        fs.copyFileSync(curSource, path.join(targetFolder, file));
+      }
+    });
+  }
+}
+
+function deleteFolderRecursive(folder) {
+  if (fs.existsSync(folder)) {
+    fs.readdirSync(folder).forEach((file, index) => {
+      const curPath = path.join(folder, file);
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // recurse
+        deleteFolderRecursive(curPath);
+      } else {
+        // delete file
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(folder);
+  }
+}
+
 const appConfig = new Store();
 
 function windowStateKeeper(windowName) {
@@ -168,10 +207,47 @@ const createWindow = async () => {
       watcher.unwatch(removedWorkspacePath);
     });
     watcher.on('add', boardPath => {
-      mainWindow.webContents.send('event-board-added', boardPath);
+      if (boardPath.endsWith('.md')) {
+        mainWindow.webContents.send('event-board-added', boardPath);
+      }
     });
     watcher.on('unlink', removedBoardPath => {
-      mainWindow.webContents.send('event-board-removed', removedBoardPath);
+      if (removedBoardPath.endsWith('.md')) {
+        mainWindow.webContents.send('event-board-removed', removedBoardPath);
+      }
+    });
+  };
+
+  const workspaceLoadFunc = (
+    event,
+    workspacePath,
+    shouldSetWorkspace,
+    openBoardPath
+  ) => {
+    fs.access(workspacePath, fs.constants.W_OK, err => {
+      const readonly = err != null;
+      if (watcher == null) {
+        initializeWatcher(workspacePath);
+      } else {
+        watcher.add(workspacePath);
+      }
+      fs.readdir(workspacePath, (err2, files) => {
+        const stats = [];
+        if (files) {
+          files.forEach(filePath => {
+            stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+          });
+          event.reply(
+            'workspace-load-callback',
+            workspacePath,
+            files,
+            stats,
+            shouldSetWorkspace,
+            openBoardPath,
+            readonly
+          );
+        }
+      });
     });
   };
 
@@ -196,20 +272,41 @@ const createWindow = async () => {
         process.env.NODE_ENV === 'development'
           ? path.join(__dirname, '/workspaces/Loreshelf Docs')
           : path.join(process.resourcesPath, '/workspaces/Loreshelf Docs');
-      const getStartedWorkspacePath =
-        process.env.NODE_ENV === 'development'
-          ? path.join(__dirname, '/workspaces/Get Started')
-          : path.join(process.resourcesPath, '/workspaces/Get Started');
       event.reply(
         'places-exist-callback',
         workspaceOnStartupExist,
         boardOnStartupExist,
         existingWorkspaces,
-        loreshelfDocsWorkspacePath,
-        getStartedWorkspacePath
+        loreshelfDocsWorkspacePath
       );
     }
   );
+
+  ipcMain.on('get-started', event => {
+    const getStartedWorkspacePath =
+      process.env.NODE_ENV === 'development'
+        ? path.join(__dirname, '/workspaces/Get Started')
+        : path.join(process.resourcesPath, '/workspaces/Get Started');
+    const getStartedWorkspacePathTarget = path.join(
+      app.getPath('userData'),
+      '/workspaces/'
+    );
+    const getStartedWorkspacePathFinal = path.join(
+      getStartedWorkspacePathTarget,
+      'Get Started'
+    );
+    if (!fs.existsSync(getStartedWorkspacePathTarget)) {
+      fs.mkdirSync(getStartedWorkspacePathTarget);
+    }
+    if (fs.existsSync(getStartedWorkspacePathFinal)) {
+      deleteFolderRecursive(getStartedWorkspacePathFinal);
+    }
+    copyFolderRecursiveSync(
+      getStartedWorkspacePath,
+      getStartedWorkspacePathTarget
+    );
+    workspaceLoadFunc(event, getStartedWorkspacePathFinal, true, null);
+  });
 
   ipcMain.on('workspace-add', event => {
     const options = {
@@ -228,17 +325,28 @@ const createWindow = async () => {
       // eslint-disable-next-line promise/always-return
       if (!data.canceled) {
         const workspacePath = data.filePaths[0];
-        if (watcher == null) {
-          initializeWatcher(workspacePath);
-        } else {
-          watcher.add(workspacePath);
-        }
-        fs.readdir(workspacePath, (err, files) => {
-          const stats = [];
-          files.forEach(filePath => {
-            stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+        fs.access(workspacePath, fs.constants.W_OK, err => {
+          const readonly = err != null;
+          if (watcher == null) {
+            initializeWatcher(workspacePath);
+          } else {
+            watcher.add(workspacePath);
+          }
+          fs.readdir(workspacePath, (err2, files) => {
+            if (!err2) {
+              const stats = [];
+              files.forEach(filePath => {
+                stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+              });
+              event.reply(
+                'workspace-add-callback',
+                workspacePath,
+                files,
+                stats,
+                readonly
+              );
+            }
           });
-          event.reply('workspace-add-callback', workspacePath, files, stats);
         });
       }
     });
@@ -285,32 +393,7 @@ const createWindow = async () => {
     });
   });
 
-  ipcMain.on(
-    'workspace-load',
-    (event, workspacePath, shouldSetWorkspace, openBoardPath) => {
-      if (watcher == null) {
-        initializeWatcher(workspacePath);
-      } else {
-        watcher.add(workspacePath);
-      }
-      fs.readdir(workspacePath, (err, files) => {
-        const stats = [];
-        if (files) {
-          files.forEach(filePath => {
-            stats.push(fs.statSync(`${workspacePath}/${filePath}`));
-          });
-          event.reply(
-            'workspace-load-callback',
-            workspacePath,
-            files,
-            stats,
-            shouldSetWorkspace,
-            openBoardPath
-          );
-        }
-      });
-    }
-  );
+  ipcMain.on('workspace-load', workspaceLoadFunc);
 
   ipcMain.on(
     'workspace-secured-load',

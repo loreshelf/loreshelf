@@ -441,7 +441,7 @@ class Menu extends Component {
               }}
               intent={Intent.PRIMARY}
               onClick={onNewCard}
-              disabled={!boardData}
+              disabled={!boardData || workspace.readonly}
               title="Add a new notecard"
               icon="plus"
             />
@@ -469,7 +469,7 @@ class Menu extends Component {
                     MenuItem,
                     {
                       icon: 'flows',
-                      disabled: boardData == null,
+                      disabled: boardData == null || workspace.readonly,
                       text: 'Move to workspace'
                     },
                     listOfWorkspaces
@@ -479,7 +479,7 @@ class Menu extends Component {
                       this.renameBoardOpen();
                     },
                     icon: 'edit',
-                    disabled: boardData == null,
+                    disabled: boardData == null || workspace.readonly,
                     text: 'Rename'
                   }),
                   React.createElement(MenuItem, {
@@ -502,7 +502,7 @@ class Menu extends Component {
                   React.createElement(MenuItem, {
                     onClick: onDeleteBoard,
                     icon: 'trash',
-                    disabled: boardData == null,
+                    disabled: boardData == null || workspace.readonly,
                     intent: Intent.DANGER,
                     text: 'Delete'
                   })
@@ -592,7 +592,10 @@ class Menu extends Component {
                 key="newBoard"
                 title="Create a new notebook"
                 intent={Intent.PRIMARY}
-                disabled={workspace && workspace.zipdata && !workspace.password}
+                disabled={
+                  (workspace && workspace.zipdata && !workspace.password) ||
+                  workspace.readonly
+                }
                 icon="plus"
                 onClick={this.newBoardOpen}
               />

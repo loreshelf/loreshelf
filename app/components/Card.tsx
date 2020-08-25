@@ -208,59 +208,61 @@ const Card: React.FC<CardProps> = forwardRef(
               elevation={Elevation.TWO}
             >
               <h1 className={styles.title}>
-                <div ref={drag}>
-                  <Icon
-                    icon="drag-handle-vertical"
-                    style={{
-                      cursor: 'grab',
-                      minWidth: '20px'
-                    }}
-                    onDoubleClick={onToggleCollapse}
-                    onClick={() => {
-                      if (collapsed) {
-                        card.collapsed =
-                          card.collapsed === undefined
-                            ? false
-                            : !card.collapsed;
-                        forceUpdate();
-                      }
-                    }}
-                    onContextMenu={e => {
-                      e.preventDefault();
-                      let parent = e.target;
-                      const rect = parent.getBoundingClientRect();
-                      if (parent.tagName !== 'BUTTON') {
-                        parent = e.target.offsetParent;
-                      }
-                      const boardContextMenu = React.createElement(
-                        Menu,
-                        {},
-                        React.createElement(MenuItem, {
-                          onClick: onMoveToTop,
-                          icon: 'double-chevron-up',
-                          text: 'Move to the top'
-                        }),
-                        React.createElement(MenuItem, {
-                          onClick: onMoveToBottom,
-                          icon: 'double-chevron-down',
-                          text: 'Move to the bottom'
-                        })
-                      );
+                {!workspace.readonly && (
+                  <div ref={drag}>
+                    <Icon
+                      icon="drag-handle-vertical"
+                      style={{
+                        cursor: 'grab',
+                        minWidth: '20px'
+                      }}
+                      onDoubleClick={onToggleCollapse}
+                      onClick={() => {
+                        if (collapsed) {
+                          card.collapsed =
+                            card.collapsed === undefined
+                              ? false
+                              : !card.collapsed;
+                          forceUpdate();
+                        }
+                      }}
+                      onContextMenu={e => {
+                        e.preventDefault();
+                        let parent = e.target;
+                        const rect = parent.getBoundingClientRect();
+                        if (parent.tagName !== 'BUTTON') {
+                          parent = e.target.offsetParent;
+                        }
+                        const boardContextMenu = React.createElement(
+                          Menu,
+                          {},
+                          React.createElement(MenuItem, {
+                            onClick: onMoveToTop,
+                            icon: 'double-chevron-up',
+                            text: 'Move to the top'
+                          }),
+                          React.createElement(MenuItem, {
+                            onClick: onMoveToBottom,
+                            icon: 'double-chevron-down',
+                            text: 'Move to the bottom'
+                          })
+                        );
 
-                      ContextMenu.show(
-                        boardContextMenu,
-                        {
-                          left: rect.left - 5,
-                          top: rect.bottom + 7
-                        },
-                        () => {
-                          // menu was closed; callback optional
-                        },
-                        true
-                      );
-                    }}
-                  />
-                </div>
+                        ContextMenu.show(
+                          boardContextMenu,
+                          {
+                            left: rect.left - 5,
+                            top: rect.bottom + 7
+                          },
+                          () => {
+                            // menu was closed; callback optional
+                          },
+                          true
+                        );
+                      }}
+                    />
+                  </div>
+                )}
                 <Tooltip
                   content={card.title}
                   disabled={card.title.length <= 21}
@@ -271,7 +273,7 @@ const Card: React.FC<CardProps> = forwardRef(
                     ref={titleRef}
                     placeholder="Edit title..."
                     alwaysRenderInput={!card.spooling}
-                    disabled={card.spooling}
+                    disabled={card.spooling || workspace.readonly}
                     onConfirm={() => {
                       titleRef.current.inputElement.blur();
                       // forceUpdate();

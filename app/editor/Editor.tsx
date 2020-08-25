@@ -72,7 +72,8 @@ Still | renders | nicely
       doc,
       onStartSpooling,
       onOpenBoard,
-      onOpenImage
+      onOpenImage,
+      workspace
     } = this.props;
     this.saveChanges = true;
     this.originalDoc = doc;
@@ -273,6 +274,7 @@ Still | renders | nicely
                         );
                       },
                       intent: Intent.DANGER,
+                      disabled: workspace.readonly,
                       text: 'Remove link'
                     })
                   );
@@ -330,6 +332,7 @@ Still | renders | nicely
                     );
                   },
                   intent: Intent.DANGER,
+                  disabled: workspace.readonly,
                   text: 'Remove image'
                 })
               );
@@ -357,12 +360,14 @@ Still | renders | nicely
                 onClick: () => {
                   addRowAfter(view.state, view.dispatch);
                 },
+                disabled: workspace.readonly,
                 text: 'Add row after'
               }),
               React.createElement(MenuItem, {
                 onClick: () => {
                   deleteRow(view.state, view.dispatch);
                 },
+                disabled: workspace.readonly,
                 text: 'Delete row'
               }),
               React.createElement(MenuItem, {
@@ -372,6 +377,7 @@ Still | renders | nicely
                   );
                 },
                 intent: Intent.DANGER,
+                disabled: workspace.readonly,
                 text: 'Remove table'
               })
             );
@@ -514,6 +520,9 @@ Still | renders | nicely
         this.cursor = currentCursor;
         this.filteredSuggestions = filteredSuggestions;
         this.updateDoc();
+      },
+      editable: () => {
+        return !workspace.readonly;
       },
       attributes,
       nodeViews

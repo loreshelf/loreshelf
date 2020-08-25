@@ -195,23 +195,21 @@ class Home extends Component {
         workspaceOnStartupExist,
         boardOnStartupExist,
         existingWorkspaces,
-        loreshelfDocsWorkspacePath,
-        getStartedWorkspacePath
+        loreshelfDocsWorkspacePath
       ) => {
         self.onStartupCallback(
           workspaceOnStartupExist,
           boardOnStartupExist,
           existingWorkspaces,
-          loreshelfDocsWorkspacePath,
-          getStartedWorkspacePath
+          loreshelfDocsWorkspacePath
         );
       }
     );
 
     ipcRenderer.on(
       'workspace-add-callback',
-      (event, workspacePath, files, stats) => {
-        self.addWorkspaceCallback(workspacePath, files, stats);
+      (event, workspacePath, files, stats, readonly) => {
+        self.addWorkspaceCallback(workspacePath, files, stats, readonly);
       }
     );
 
@@ -230,14 +228,16 @@ class Home extends Component {
         files,
         stats,
         shouldSetWorkspace,
-        openBoardPath
+        openBoardPath,
+        readonly
       ) => {
         self.loadWorkspaceCallback(
           workspacePath,
           files,
           stats,
           shouldSetWorkspace,
-          openBoardPath
+          openBoardPath,
+          readonly
         );
       }
     );
@@ -335,7 +335,9 @@ class Home extends Component {
           knownWorkspaces[workspaceIndex],
           boardPath
         );
-        self.menuRef.current.forceUpdate();
+        if (self.menuRef.current) {
+          self.menuRef.current.forceUpdate();
+        }
       }
     });
 
@@ -347,7 +349,7 @@ class Home extends Component {
     });
 
     ipcRenderer.on('event-board-removed', (event, removedBoardPath) => {
-      const { knownWorkspaces, boardData, ignoreRenameEvent } = this.state;
+      const { knownWorkspaces, boardData, ignoreRenameEvent } = self.state;
       if (
         ignoreRenameEvent &&
         ignoreRenameEvent.length === 2 &&
@@ -376,15 +378,15 @@ class Home extends Component {
             boardIndex = -1;
           }
         }
-        this.setState({ workspace, knownWorkspaces, boardData: undefined });
+        self.setState({ workspace, knownWorkspaces, boardData: undefined });
       } else {
         boardIndex = -1;
       }
       // select next board
       if (boardIndex >= 0) {
-        this.loadBoard(boardIndex);
-      } else {
-        this.menuRef.current.forceUpdate();
+        self.loadBoard(boardIndex);
+      } else if (self.menuRef.current) {
+        self.menuRef.current.forceUpdate();
       }
     });
 
@@ -429,10 +431,9 @@ class Home extends Component {
     workspaceOnStartup,
     boardOnStartup,
     existingWorkspaces,
-    loreshelfDocsWorkspacePath,
-    getStartedWorkspacePath
+    loreshelfDocsWorkspacePath
   ) {
-    this.setState({ loreshelfDocsWorkspacePath, getStartedWorkspacePath });
+    this.setState({ loreshelfDocsWorkspacePath });
     const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
     const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
     const isSecured = workspaceOnStartup && workspaceOnStartup.endsWith('.zip');
@@ -487,7 +488,13 @@ class Home extends Component {
     }
   }
 
-  updateWorkspace(workspacePath, knownWorkspaces, files, stats) {
+  updateWorkspace(
+    workspacePath,
+    knownWorkspaces,
+    files,
+    stats,
+    readonly? = false
+  ) {
     const { settings } = this.state;
     const { sortBy } = settings;
     let numBoards = 0;
@@ -523,6 +530,7 @@ class Home extends Component {
       });
     }
     workspace.numBoards = numBoards;
+    workspace.readonly = readonly;
     boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
@@ -568,14 +576,16 @@ class Home extends Component {
     files,
     stats,
     shouldSetWorkspace,
-    openBoardPath?
+    openBoardPath?,
+    readonly
   ) {
     const { knownWorkspaces } = this.state;
     const workspace = this.updateWorkspace(
       workspacePath,
       knownWorkspaces,
       files,
-      stats
+      stats,
+      readonly
     );
     if (shouldSetWorkspace) {
       this.setState({
@@ -684,13 +694,14 @@ class Home extends Component {
     }
   }
 
-  addWorkspaceCallback(workspacePath, files, stats) {
+  addWorkspaceCallback(workspacePath, files, stats, readonly) {
     const { knownWorkspaces } = this.state;
     const workspace = this.updateWorkspace(
       workspacePath,
       knownWorkspaces,
       files,
-      stats
+      stats,
+      readonly
     );
     this.setState({
       knownWorkspaces,
@@ -1183,6 +1194,7 @@ class Home extends Component {
     this.setState({
       boardData,
       workspace,
+      // eslint-disable-next-line react/no-unused-state
       ignoreRenameEvent: [oldBoardPath, newBoardPath]
     });
     this.menuRef.current.forceUpdate();
@@ -1481,8 +1493,7 @@ class Home extends Component {
       settings,
       showPassword,
       loading,
-      loreshelfDocsWorkspacePath,
-      getStartedWorkspacePath
+      loreshelfDocsWorkspacePath
     } = this.state;
 
     if (loading) {
@@ -1650,7 +1661,7 @@ class Home extends Component {
                 style={{
                   margin: '20px',
                   marginBottom: '5px',
-                  fontSize: '20px',
+                  fontSize: '25px',
                   userSelect: 'none'
                 }}
               >
@@ -1665,25 +1676,27 @@ class Home extends Component {
               >
                 Version 1.0.0
               </div>
-              <Button
-                intent={Intent.PRIMARY}
-                style={{ margin: '10px', width: '200px' }}
-                onClick={() => {
-                  this.loadWorkspace(getStartedWorkspacePath, true);
-                  this.loadWorkspace(loreshelfDocsWorkspacePath, false);
-                }}
-              >
-                Get Started
-              </Button>
-              <Button
-                style={{ margin: '10px', width: '200px' }}
-                onClick={() => {
-                  this.loadWorkspace(loreshelfDocsWorkspacePath, false);
-                  ipcRenderer.send('workspace-add');
-                }}
-              >
-                Open Workspace
-              </Button>
+              <ButtonGroup vertical style={{ margin: '0 auto' }}>
+                <Button
+                  intent={Intent.PRIMARY}
+                  style={{ margin: '5px', width: '150px' }}
+                  onClick={() => {
+                    this.loadWorkspace(loreshelfDocsWorkspacePath, false);
+                    ipcRenderer.send('get-started');
+                  }}
+                >
+                  Get started tutorial
+                </Button>
+                <Button
+                  style={{ margin: '5px', width: '150px' }}
+                  onClick={() => {
+                    this.loadWorkspace(loreshelfDocsWorkspacePath, false);
+                    ipcRenderer.send('workspace-add');
+                  }}
+                >
+                  Open workspace
+                </Button>
+              </ButtonGroup>
               <div
                 style={{ margin: '20px', fontSize: '12px', userSelect: 'none' }}
               >
