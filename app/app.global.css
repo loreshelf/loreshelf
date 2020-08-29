@@ -72,14 +72,23 @@ p a:hover {
 }
 
 .property {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 20px;
   min-height: 34px;
   margin: 0 -5px;
   padding: 7px;
-  background: hsl(207, 23%, 37%);
+  padding-left: 27px;
   width: calc(100% + 10px);
-  text-align: center;
+  min-width: calc(100% + 10px);
+  text-align: left;
+}
+
+.property::before {
+  content: '# ';
+  font-size: 25px;
+  margin-left: -20px;
+  float: left;
+  color: #0081c9;
 }
 
 h3 {
@@ -249,11 +258,12 @@ hr {
 }
 
 img {
-  width: calc(100% + 10px);
+  max-width: calc(100% + 10px);
   margin: 5px -5px;
   display: block;
   position: relative;
   min-height: 18px;
+  margin-bottom: -22px;
 }
 
 img::before {
@@ -286,6 +296,11 @@ img::after {
   text-align: left;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+td img {
+  max-width: calc(100% + 4px);
+  margin: -5px -2px;
 }
 
 @keyframes up-right {

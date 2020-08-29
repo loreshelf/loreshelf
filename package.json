@@ -103,7 +103,7 @@
     },
     "linux": {
       "icon": "icon.icns",
-      "synopsis": "Reduce your information noise and display the scoped view of quickly accessible knowledge data.",
+      "synopsis": "Reduce the information noise and cultivate your knowledge notebooks.",
       "target": [
         "deb"
       ],
