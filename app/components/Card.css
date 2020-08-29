@@ -17,9 +17,6 @@
 .spoolingCard {
   margin: 5px;
   font-size: 14px;
-  min-width: 440px;
-  width: 440px;
-  max-width: 440px;
 }
 
 .spoolingCard table,

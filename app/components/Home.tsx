@@ -16,6 +16,7 @@ import Store from 'electron-store';
 import log from 'electron-log';
 import JSZip from '../utils/jszip';
 import styles from './Home.css';
+import { schema } from '../editor/schema';
 import Menu from './Menu';
 import Board from './Board';
 import { timeSince } from '../utils/CoreFunctions';
@@ -778,7 +779,8 @@ class Home extends Component {
         if (notEmpty) {
           src = md.substring(notEmpty + 2);
         }
-        cards.push({ title, doc: parseMarkdown(`${src}\n\n&nbsp;`) });
+        const nodes = parseMarkdown(src);
+        cards.push({ title, doc: nodes });
       }
     });
     const status = timeSince(stats.mtimeMs);

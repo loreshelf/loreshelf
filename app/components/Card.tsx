@@ -158,15 +158,16 @@ const Card: React.FC<CardProps> = forwardRef(
 
     const [, updateState] = React.useState();
     const forceUpdate = React.useCallback(() => updateState({}), []);
+    const doubleWidth = card.spooling ? 2 : 1;
 
     return (
       <>
         <ButtonGroup
           className={`${card.spooling ? styles.spoolingCard : styles.card}`}
           style={{
-            width: `${notecardWidth}px`,
-            minWidth: `${notecardWidth}px`,
-            maxWidth: `${notecardWidth}px`
+            width: `${notecardWidth * doubleWidth}px`,
+            minWidth: `${notecardWidth * doubleWidth}px`,
+            maxWidth: `${notecardWidth * doubleWidth}px`
           }}
         >
           <div

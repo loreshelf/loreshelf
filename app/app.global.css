@@ -301,6 +301,7 @@ img::after {
 td img {
   max-width: calc(100% + 4px);
   margin: -5px -2px;
+  margin-bottom: -22px;
 }
 
 @keyframes up-right {
