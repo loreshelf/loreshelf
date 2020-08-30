@@ -21,7 +21,7 @@ import plugins from './plugins';
 import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 import COMMANDS from './SlashCommands';
-import AppToaster from '../components/AppToaster';
+import { AppToaster } from '../components/AppToaster';
 
 const MAX_SUGGESTIONS = 7;
 

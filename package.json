@@ -1,7 +1,7 @@
 {
   "name": "loreshelf",
   "productName": "Loreshelf",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Concise notes, secure and lasting.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
@@ -77,20 +77,6 @@
         "role": "Editor"
       }
     ],
-    "dmg": {
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ]
-    },
     "win": {
       "icon": "icon.png",
       "target": [
@@ -102,22 +88,28 @@
       "allowToChangeInstallationDirectory": true
     },
     "linux": {
+      "executableName": "Loreshelf",
       "icon": "icon.icns",
       "synopsis": "Reduce the information noise and cultivate your knowledge notebooks.",
       "target": [
-        "deb"
+        "appImage"
       ],
-      "category": "Office"
+      "category": "Office",
+      "desktop": {
+        "Name": "Loreshelf",
+        "Terminal": "false",
+        "Type": "Application",
+        "Categories": "Office;"
+      }
     },
     "directories": {
       "buildResources": "resources",
       "output": "release"
     },
     "publish": {
-      "provider": "github",
-      "owner": "ibek",
-      "repo": "loreshelf",
-      "private": true
+      "provider": "s3",
+      "endpoint": "http://192.168.0.16:9000",
+      "bucket": "test-update"
     }
   },
   "repository": {

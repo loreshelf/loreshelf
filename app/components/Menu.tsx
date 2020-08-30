@@ -16,7 +16,8 @@ import {
   Card,
   Tag,
   Tooltip,
-  Slider
+  Slider,
+  Spinner
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -85,11 +86,7 @@ class Menu extends Component {
       newVaultPath: '',
       filterText: undefined,
       showPassword: false,
-      settingsOpen: false,
-      newGithubOpen: false,
-      newGithubURL: '',
-      newGithubWorkspaceName: '',
-      newGithubNumOfNotebooks: -1
+      settingsOpen: false
     };
 
     this.searchInputRef = React.createRef();
@@ -101,8 +98,6 @@ class Menu extends Component {
     this.addWorkspaceClose = this.addWorkspaceClose.bind(this);
     this.newVaultOpen = this.newVaultOpen.bind(this);
     this.newVaultClose = this.newVaultClose.bind(this);
-    this.newGithubOpen = this.newGithubOpen.bind(this);
-    this.newGithubClose = this.newGithubClose.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
     this.newBoardConfirm = this.newBoardConfirm.bind(this);
     this.settingsOpen = this.settingsOpen.bind(this);
@@ -120,7 +115,7 @@ class Menu extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { boardStatus } = this.props;
+    const { boardStatus, newVersion, updateDownloading } = this.props;
     if (this.shouldUpdate) {
       this.shouldUpdate = false;
       return true;
@@ -129,6 +124,12 @@ class Menu extends Component {
       return true;
     }
     if (boardStatus !== nextProps.boardStatus) {
+      return true;
+    }
+    if (newVersion !== nextProps.newVersion) {
+      return true;
+    }
+    if (updateDownloading !== nextProps.updateDownloading) {
       return true;
     }
     return false;
@@ -203,15 +204,6 @@ class Menu extends Component {
     });
   }
 
-  newGithubOpen() {
-    this.setState({
-      newGithubOpen: true,
-      newGithubURL: '',
-      newGithubWorkspaceName: '',
-      newGithubNumOfNotebooks: -1
-    });
-  }
-
   duplicateBoardOpen() {
     const { boardData } = this.props;
     this.setState({
@@ -242,10 +234,6 @@ class Menu extends Component {
     this.setState({ newVaultOpen: false });
   }
 
-  newGithubClose() {
-    this.setState({ newGithubOpen: false });
-  }
-
   handleNameChange(newBoardName, workspacePath) {
     // Check if board already exists
     let newBoardIntent;
@@ -260,10 +248,13 @@ class Menu extends Component {
 
   render() {
     const {
+      appVersion,
       boardData,
       boardStatus,
       knownWorkspaces,
       workspace,
+      updateDownloading,
+      newVersion,
       onSettingsChange,
       onSelectBoard,
       onDeleteBoard,
@@ -288,11 +279,7 @@ class Menu extends Component {
       filterText,
       showPassword,
       settingsOpen,
-      newSettings,
-      newGithubOpen,
-      newGithubURL,
-      newGithubWorkspaceName,
-      newGithubNumOfNotebooks
+      newSettings
     } = this.state;
 
     const { sortBy, filterBy } = settings;
@@ -700,7 +687,7 @@ class Menu extends Component {
                 paddingLeft: '10px'
               }}
             >
-              v1.0-sep-2020
+              {appVersion}
             </div>
             <Button
               icon="cog"
@@ -907,78 +894,6 @@ class Menu extends Component {
         </Dialog>
         <Dialog
           className={Classes.DARK}
-          icon="git-repo"
-          onClose={this.newGithubClose}
-          isOpen={newGithubOpen}
-          title="New GitHub workspace"
-        >
-          <div className={Classes.DIALOG_BODY}>
-            <p>
-              Create new GitHub workspace from the repository url to its root or
-              a specific folder.
-            </p>
-            <div style={{ width: '300px' }}>
-              <p>Provide the workspace location:</p>
-              <InputGroup
-                type="text"
-                placeholder="GitHub workspace URL"
-                onChange={e => {
-                  this.setState({ newGithubURL: e.target.value });
-                  // check the Github URL
-                  if (e.target.value.startsWith('https://github.com/')) {
-                    const res = e.target.value.match(
-                      /https:\/\/github.com\/([^/]*)\/([^/]*)(\/.*\/([^/]*))?$/i
-                    );
-                    let namePos = -1;
-                    if (res && res.length === 5 && res[4]) {
-                      // specific folder in github url
-                      namePos = 4;
-                    } else if (res && res.length >= 3 && res[2]) {
-                      // root github url
-                      namePos = 2;
-                    }
-                    if (res && namePos > 0 && res[namePos].length > 0) {
-                      let defaultWorkspaceName =
-                        res[namePos][0].toUpperCase() + res[namePos].slice(1);
-                      defaultWorkspaceName = defaultWorkspaceName.replace(
-                        /[_-]/g,
-                        ' '
-                      );
-                      this.setState({
-                        newGithubWorkspaceName: defaultWorkspaceName
-                      });
-                    }
-                  }
-                }}
-              />
-              <p>Workspace Name:</p>
-              <InputGroup
-                type="text"
-                defaultValue={newGithubWorkspaceName}
-                onChange={e => {
-                  console.log(e.target.value);
-                }}
-              />
-              <Tag>{`with ${newGithubNumOfNotebooks} notebooks.`}</Tag>
-            </div>
-          </div>
-          <div className={Classes.DIALOG_FOOTER}>
-            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Button onClick={this.newGithubClose}>Close</Button>
-              <Button
-                intent={Intent.PRIMARY}
-                onClick={() => {
-                  this.newGithubClose();
-                  // TODO
-                }}
-              >
-                Create workspace
-              </Button>
-            </div>
-          </div>
-        </Dialog>
-        <Dialog
-          className={Classes.DARK}
           icon="cog"
           onClose={this.settingsClose}
           isOpen={settingsOpen}
@@ -1020,6 +935,43 @@ class Menu extends Component {
                 vertical={false}
               />
             </div>
+            <ButtonGroup>
+              {(!newVersion || appVersion === newVersion) &&
+                updateDownloading == null && (
+                  <Button
+                    style={{ marginRight: '10px' }}
+                    onClick={() => ipcRenderer.send('update-check', false)}
+                  >
+                    Check for updates
+                  </Button>
+                )}
+              {newVersion && appVersion !== newVersion && (
+                <Button
+                  style={{ marginRight: '10px' }}
+                  disabled={updateDownloading}
+                  onClick={() => ipcRenderer.send('update-download')}
+                >
+                  Download updates
+                </Button>
+              )}
+              {newVersion &&
+                appVersion === newVersion &&
+                updateDownloading === false && (
+                  <Button
+                    style={{ marginRight: '10px' }}
+                    onClick={() => ipcRenderer.send('update-install')}
+                  >
+                    Install and Restart
+                  </Button>
+                )}
+              {updateDownloading && <Spinner size={Spinner.SIZE_SMALL} />}
+              {appVersion === newVersion && (
+                <p>{`Up to date, v${appVersion}`}</p>
+              )}
+              {newVersion && appVersion !== newVersion && (
+                <p>{`Version ${newVersion} available`}</p>
+              )}
+            </ButtonGroup>
           </div>
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>

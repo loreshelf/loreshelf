@@ -21,15 +21,15 @@ import chokidar from 'chokidar';
 import sourceMapSupport from 'source-map-support';
 import MenuBuilder from './menu';
 
-export default class AppUpdater {
-  constructor() {
-    log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-}
-
 let mainWindow: BrowserWindow | null = null;
+
+log.transports.file.level = 'info';
+autoUpdater.logger = log;
+autoUpdater.autoDownload = false;
+
+autoUpdater.on('error', error => {
+  log.error(`Autoupdate failed: ${error}`);
+});
 
 if (process.env.NODE_ENV === 'production') {
   sourceMapSupport.install();
@@ -274,6 +274,7 @@ const createWindow = async () => {
           : path.join(process.resourcesPath, '/workspaces/Loreshelf Docs');
       event.reply(
         'places-exist-callback',
+        app.getVersion(),
         workspaceOnStartupExist,
         boardOnStartupExist,
         existingWorkspaces,
@@ -597,6 +598,42 @@ const createWindow = async () => {
         }
       });
     });
+  });
+
+  let autoUpdateCheck = false;
+
+  ipcMain.on('update-check', auto => {
+    autoUpdateCheck = auto;
+    autoUpdater.checkForUpdates();
+  });
+
+  ipcMain.on('update-download', () => {
+    autoUpdater.downloadUpdate();
+  });
+
+  ipcMain.on('update-install', () => {
+    setImmediate(() => autoUpdater.quitAndInstall());
+  });
+
+  autoUpdater.on('update-available', info => {
+    mainWindow.webContents.send(
+      'update-check-callback',
+      info.version,
+      autoUpdateCheck
+    );
+    autoUpdateCheck = false;
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    mainWindow.webContents.send('update-check-callback', null, autoUpdateCheck);
+    autoUpdateCheck = false;
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    if (process.env.DESKTOPINTEGRATION === 'AppImageLauncher') {
+      process.env.APPIMAGE = process.env.ARGV0;
+    }
+    mainWindow.webContents.send('update-download-callback');
   });
 
   mainWindow.on('close', () => {

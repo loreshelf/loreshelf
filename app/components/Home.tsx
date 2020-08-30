@@ -10,13 +10,14 @@ import {
   InputGroup,
   Tooltip,
   Spinner,
-  ButtonGroup
+  ButtonGroup,
+  Toaster,
+  Position
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import log from 'electron-log';
 import JSZip from '../utils/jszip';
 import styles from './Home.css';
-import { schema } from '../editor/schema';
 import Menu from './Menu';
 import Board from './Board';
 import { timeSince } from '../utils/CoreFunctions';
@@ -28,7 +29,7 @@ import {
   icons2links
 } from './Markdown';
 import MarkdownIcons from './MarkdownIcons';
-import AppToaster from './AppToaster';
+import { AppToaster, AppUpdateToaster } from './AppToaster';
 import brandIcon from '../resources/icon.png';
 
 const CONFIG_SCHEMA = {
@@ -63,7 +64,8 @@ enum CONFIG {
   WORKSPACEONSTARTUP = 'workspaceOnStartup',
   NOTEBOOKONSTARTUP = 'notebookOnStartup',
   SORTBY = 'sortBy',
-  FILTERBY = 'filterBy'
+  FILTERBY = 'filterBy',
+  UPDATELASTCHECKED = 'updateLastChecked'
 }
 
 const SORTING_METHODS = {
@@ -111,6 +113,9 @@ class Home extends Component {
       icon: 'calendar'
     });
 
+    const updateDateStr = CONFIG_STORE.get(CONFIG.UPDATELASTCHECKED);
+    const updateLastChecked = updateDateStr ? new Date(updateDateStr) : null;
+
     const saveTimer = undefined;
     const spoolingTimer = undefined;
     const spoolingSavingCardIndex = undefined;
@@ -133,7 +138,9 @@ class Home extends Component {
       boardOnStartup,
       settings,
       showPassword: false,
-      loading: true
+      loading: true,
+      appVersion: '?',
+      updateLastChecked
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -193,11 +200,13 @@ class Home extends Component {
       'places-exist-callback',
       (
         event,
+        appVersion,
         workspaceOnStartupExist,
         boardOnStartupExist,
         existingWorkspaces,
         loreshelfDocsWorkspacePath
       ) => {
+        self.setState({ appVersion });
         self.onStartupCallback(
           workspaceOnStartupExist,
           boardOnStartupExist,
@@ -391,6 +400,41 @@ class Home extends Component {
       }
     });
 
+    ipcRenderer.on('update-check-callback', (event, version, auto) => {
+      const { appVersion } = self.state;
+      if (auto && version && appVersion !== version) {
+        AppUpdateToaster.show({
+          message: `New version ${version} available.`,
+          intent: Intent.DANGER,
+          action: {
+            onClick: () => {
+              self.setState({ updateDownloading: true });
+              ipcRenderer.send('update-download');
+            },
+            text: 'Download'
+          },
+          timeout: 60000
+        });
+      }
+      const newVersion = version == null ? appVersion : version;
+      self.setState({ updateLastChecked: Date.now(), newVersion });
+      self.storeConfiguration();
+    });
+
+    ipcRenderer.on('update-download-callback', () => {
+      const { newVersion } = self.state;
+      self.setState({ updateDownloading: false, appVersion: newVersion });
+      AppUpdateToaster.show({
+        message: `To install the update, the app must be restarted.`,
+        intent: Intent.DANGER,
+        action: {
+          onClick: () => ipcRenderer.send('update-install'),
+          text: 'Install and restart'
+        },
+        timeout: 60000
+      });
+    });
+
     document.addEventListener('keyup', e => {
       if (e.ctrlKey || e.metaKey) {
         // eslint-disable-next-line default-case
@@ -421,9 +465,21 @@ class Home extends Component {
       workspaces
     );
     setTimeout(() => {
-      const { loading } = this.state;
+      const { loading, updateLastChecked } = this.state;
       if (loading) {
         this.setState({ loading: false });
+      }
+      if (!updateLastChecked) {
+        ipcRenderer.send('update-check', true);
+      } else {
+        const diff = Date.now() - updateLastChecked.getTime();
+        const oneDay = 1000 * 60 * 60 * 24;
+        console.log(updateLastChecked);
+        console.log(diff);
+        console.log(oneDay);
+        if (diff >= oneDay) {
+          ipcRenderer.send('update-check', true);
+        }
       }
     }, 1000);
   }
@@ -1474,7 +1530,7 @@ class Home extends Component {
   }
 
   storeConfiguration() {
-    const { knownWorkspaces } = this.state;
+    const { knownWorkspaces, updateLastChecked } = this.state;
     const workspaces = [];
     knownWorkspaces.forEach(workspace => {
       workspaces.push(workspace.path);
@@ -1485,17 +1541,21 @@ class Home extends Component {
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
     CONFIG_STORE.set(CONFIG.WORKSPACES, workspaces);
+    CONFIG_STORE.set(CONFIG.UPDATELASTCHECKED, updateLastChecked);
   }
 
   render() {
     const {
+      appVersion,
       knownWorkspaces,
       workspace,
       boardData,
       settings,
       showPassword,
       loading,
-      loreshelfDocsWorkspacePath
+      loreshelfDocsWorkspacePath,
+      updateDownloading,
+      newVersion
     } = this.state;
 
     if (loading) {
@@ -1627,11 +1687,14 @@ class Home extends Component {
             <Menu
               key="menu"
               ref={menuRef}
+              appVersion={appVersion}
               boardData={boardData}
               boardStatus={boardStatus}
               knownWorkspaces={knownWorkspaces}
               workspace={workspace}
               settings={settings}
+              updateDownloading={updateDownloading}
+              newVersion={newVersion}
               onSelectBoard={this.selectBoard}
               onDeleteBoard={this.deleteBoard}
               onMoveCardToBoard={this.moveCardToBoard}
