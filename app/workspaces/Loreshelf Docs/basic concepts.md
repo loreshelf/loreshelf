@@ -1,6 +1,6 @@
 # What is Loreshelf?
 
-Loreshelf is a **knowledge base** that brings the following benefits:
+Loreshelf is a **knowledge archive** that brings the following benefits:
 
 ## Fast Access
 

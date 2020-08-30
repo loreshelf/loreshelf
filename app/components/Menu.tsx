@@ -767,7 +767,7 @@ class Menu extends Component {
             <div
               style={{
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexDirection: 'column',
                 width: '100%',
                 margin: '0 auto',
                 justifyContent: 'center'
@@ -781,11 +781,20 @@ class Menu extends Component {
                   ipcRenderer.send('workspace-add');
                 }}
               >
-                <h3>Folder</h3>
-                <p>
-                  Open local folder where notebooks (.md) files will be stored
-                  as a workspace.
-                </p>
+                <div style={{ display: 'flex' }}>
+                  <Icon
+                    icon="folder-open"
+                    iconSize="48"
+                    style={{ marginTop: '10px', marginRight: '10px' }}
+                  />
+                  <div>
+                    <h3>Folder</h3>
+                    <p>
+                      Open local folder where notebooks (.md) files will be
+                      stored as a workspace.
+                    </p>
+                  </div>
+                </div>
               </Card>
               <Card
                 interactive
@@ -795,26 +804,23 @@ class Menu extends Component {
                   ipcRenderer.send('workspace-add-zip');
                 }}
               >
-                <h3>My vault</h3>
-                <p>
-                  Open AES-encrypted zip archive with your notebooks as a
-                  workspace.
-                </p>
-              </Card>
-              <Card
-                className={styles.addWorkspaceCard}
-                style={{
-                  color: 'rgba(167, 182, 194, 0.6)',
-                  backgroundColor: 'rgba(57, 75, 89, 0.5)',
-                  boxShadow: 'none'
-                }}
-                onClick={() => {
-                  // this.addWorkspaceClose();
-                  // this.newGithubOpen();
-                }}
-              >
-                <h3>GitHub repository</h3>
-                <p>Open location in your GitHub repository as a workspace.</p>
+                <div style={{ display: 'flex' }}>
+                  <Icon
+                    icon="shield"
+                    iconSize="48"
+                    style={{ marginTop: '10px', marginRight: '10px' }}
+                  />
+                  <div style={{ width: '100%' }}>
+                    <h3>
+                      My vault
+                      <Tag style={{ float: 'right' }}>Password-protected</Tag>
+                    </h3>
+                    <p>
+                      Open AES-encrypted zip archive with your notebooks as a
+                      workspace.
+                    </p>
+                  </div>
+                </div>
               </Card>
               <Card
                 interactive
@@ -824,8 +830,20 @@ class Menu extends Component {
                   this.newVaultOpen();
                 }}
               >
-                <h3>New vault</h3>
-                <p>Create new AES-encrypted zip archive as a workspace.</p>
+                <div style={{ display: 'flex' }}>
+                  <Icon
+                    icon="folder-new"
+                    iconSize="48"
+                    style={{ marginTop: '10px', marginRight: '10px' }}
+                  />
+                  <div style={{ width: '100%' }}>
+                    <h3>
+                      New vault
+                      <Tag style={{ float: 'right' }}>Password-protected</Tag>
+                    </h3>
+                    <p>Create new AES-encrypted zip archive as a workspace.</p>
+                  </div>
+                </div>
               </Card>
             </div>
           </div>

@@ -491,7 +491,7 @@ td {
   box-shadow: 0 0 0 1px rgba(16, 22, 26, 0.4);
   border-radius: 3px 0 0 3px;
   color: #f5f8fa;
-  text-align: right;
+  text-align: left;
   padding-right: 5px;
   min-width: 30px;
   width: 30px;
@@ -501,6 +501,8 @@ td {
     background-color: rgba(16, 22, 26, 0.3);
     box-shadow: 0 0 0 0 rgba(19, 124, 189, 0), 0 0 0 0 rgba(19, 124, 189, 0), 0 0 0 0 rgba(19, 124, 189, 0), inset 0 0 0 1px rgba(16, 22, 26, 0.3), inset 0 1px 1px rgba(16, 22, 26, 0.4);
     word-break: break-all;
+    text-align: right;
+    padding-right: 5px;
 }
 img {
   width: calc(100% + 10px);

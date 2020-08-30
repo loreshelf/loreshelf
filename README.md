@@ -1,15 +1,15 @@
-[![Loreshelf](resources/fulllogo.png)](https://loreshelf.com/)
+[![Loreshelf](resources/logo.svg)](https://loreshelf.com/)
 
-Loreshelf is the supervised information-spinning application for the highest productivity in working with information.
+Loreshelf is a knowledge archive that enables you to organize concise notes.
 
 <br>
 
-## Install
+## Code
 
 First, clone the repo via git:
 
 ```bash
-git clone https://github.com/ibek/loreshelf.git
+git clone https://github.com/loreshelf/loreshelf.git
 ```
 
 And then install the dependencies with yarn.
@@ -27,7 +27,7 @@ Start the app in the `dev` environment. This starts the renderer process in [**h
 $ yarn dev
 ```
 
-## Packaging for Production
+## Packaging
 
 To package apps for the local platform:
 
