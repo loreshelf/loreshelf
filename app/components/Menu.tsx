@@ -900,10 +900,6 @@ class Menu extends Component {
           title="Settings"
         >
           <div className={Classes.DIALOG_BODY}>
-            <p>
-              These settings apply globally in the whole Loreshelf application,
-              all workspaces and notebooks.
-            </p>
             <Tag fill large minimal icon="two-columns">
               Notecard Width
             </Tag>
@@ -935,7 +931,10 @@ class Menu extends Component {
                 vertical={false}
               />
             </div>
-            <ButtonGroup>
+            <Tag fill large minimal icon="automatic-updates">
+              Updates
+            </Tag>
+            <ButtonGroup style={{ marginTop: '10px' }}>
               {(!newVersion || appVersion === newVersion) &&
                 updateDownloading == null && (
                   <Button
