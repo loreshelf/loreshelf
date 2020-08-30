@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable react/prop-types */
-import React, { useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, forwardRef } from 'react';
 import {
   useDrag,
   useDrop,
@@ -39,33 +39,30 @@ interface DragItem {
 }
 
 const Card: React.FC<CardProps> = forwardRef(
-  (
-    {
-      card,
-      workspace,
-      collapsed,
-      dividerIndex,
-      dividerLeft,
-      index,
-      moveCard,
-      hoverDivider,
-      resetDivider,
-      settings,
-      onEditCard,
-      onRemoveCard,
-      onEditTitle,
-      onRequestBoardsAsync,
-      onRequestBoardDataAsync,
-      onStartSpooling,
-      onStopSpooling,
-      onOpenImage,
-      onMoveToTop,
-      onMoveToBottom,
-      onToggleCollapse,
-      onOpenBoard
-    },
-    ref
-  ) => {
+  ({
+    card,
+    workspace,
+    collapsed,
+    dividerIndex,
+    dividerLeft,
+    index,
+    moveCard,
+    hoverDivider,
+    resetDivider,
+    settings,
+    onEditCard,
+    onRemoveCard,
+    onEditTitle,
+    onRequestBoardsAsync,
+    onRequestBoardDataAsync,
+    onStartSpooling,
+    onStopSpooling,
+    onOpenImage,
+    onMoveToTop,
+    onMoveToBottom,
+    onToggleCollapse,
+    onOpenBoard
+  }) => {
     const blueRef = useRef<BlueCard>(null);
     const titleRef = useRef<EditableText>(null);
 
@@ -148,7 +145,7 @@ const Card: React.FC<CardProps> = forwardRef(
       end: () => {
         resetDivider();
       },
-      collect: (monitor: any) => ({
+      collect: monitor => ({
         isDragging: monitor.isDragging()
       })
     });

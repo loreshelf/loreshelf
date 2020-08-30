@@ -10,9 +10,7 @@ import {
   InputGroup,
   Tooltip,
   Spinner,
-  ButtonGroup,
-  Toaster,
-  Position
+  ButtonGroup
 } from '@blueprintjs/core';
 import Store from 'electron-store';
 import log from 'electron-log';
@@ -474,9 +472,6 @@ class Home extends Component {
       } else {
         const diff = Date.now() - updateLastChecked.getTime();
         const oneDay = 1000 * 60 * 60 * 24;
-        console.log(updateLastChecked);
-        console.log(diff);
-        console.log(oneDay);
         if (diff >= oneDay) {
           ipcRenderer.send('update-check', true);
         }

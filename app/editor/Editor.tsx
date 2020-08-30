@@ -118,7 +118,7 @@ Still | renders | nicely
             this.updateDoc();
           }
         },
-        Enter: (state, dispatch) => {
+        Enter: () => {
           if (this.suggestionPos >= 0) {
             this.cancelTransaction = true;
             setTimeout(() => {

@@ -30,6 +30,7 @@ import { SortOption, renderSort } from './SortBySelect';
 import BoardItem from './MenuItem';
 import brand from '../resources/brand.png';
 import { FilterOption, renderFilter } from './FilterBySelect';
+import latoWhite from '../resources/lato-white.png';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 const SortSelect = Select.ofType<SortOption>();
@@ -648,7 +649,7 @@ class Menu extends Component {
                   width: '100%'
                 }}
               >
-                {filteredBoards.map((boardMeta, id) => {
+                {filteredBoards.map(boardMeta => {
                   return (
                     <BoardItem
                       // eslint-disable-next-line react/no-array-index-key
@@ -934,7 +935,7 @@ class Menu extends Component {
             <Tag fill large minimal icon="automatic-updates">
               Updates
             </Tag>
-            <ButtonGroup style={{ marginTop: '10px' }}>
+            <ButtonGroup style={{ marginTop: '10px', marginBottom: '30px' }}>
               {(!newVersion || appVersion === newVersion) &&
                 updateDownloading == null && (
                   <Button
@@ -973,6 +974,24 @@ class Menu extends Component {
             </ButtonGroup>
           </div>
           <div className={Classes.DIALOG_FOOTER}>
+            <Button
+              minimal
+              onClick={() => {
+                window.open('https://www.buymeacoffee.com/loreshelf', '_blank');
+              }}
+              style={{ padding: '0px', float: 'left' }}
+            >
+              <img
+                src={latoWhite}
+                alt="Buy Me A Coffee"
+                style={{
+                  height: '30px',
+                  width: '127px',
+                  margin: '0px',
+                  padding: '0px'
+                }}
+              />
+            </Button>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
               <Button onClick={this.settingsClose}>Close</Button>
               <Button intent={Intent.PRIMARY} onClick={this.settingsApply}>

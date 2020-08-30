@@ -8,7 +8,6 @@ import {
   Intent,
   NonIdealState,
   Classes,
-  Dialog,
   Overlay
 } from '@blueprintjs/core';
 import Card from './Card';
@@ -105,7 +104,7 @@ class Board extends Component {
       <div className={styles.board} ref={this.boardRef}>
         {cardData.length > 0 ? (
           <>
-            {cardData.map((c, id) => (
+            {cardData.map(c => (
               <Card
                 key={`${c.title}-${cardData.indexOf(c)}`}
                 card={c}
