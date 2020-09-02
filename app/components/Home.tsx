@@ -29,6 +29,7 @@ import {
 import MarkdownIcons from './MarkdownIcons';
 import { AppToaster, AppUpdateToaster } from './AppToaster';
 import brandIcon from '../resources/icon.png';
+import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -266,7 +267,7 @@ class Home extends Component {
       self.loadBoardCallback(boardMeta, text, stats);
     });
 
-    ipcRenderer.on('board-save-callback', (event, stats) => {
+    ipcRenderer.on('board-save-callback', (event, stats?) => {
       self.saveBoardCallback(stats);
     });
 
@@ -797,8 +798,13 @@ class Home extends Component {
         workspace.zip = zip;
         workspace.zipdata = data;
         this.setState({ workspace });
-        this.menuRef.current.forceUpdate();
-        this.boardRef.forceUpdate();
+        if (this.menuRef.current) {
+          this.menuRef.current.forceUpdate();
+        }
+        if (this.boardRef) {
+          this.boardRef.forceUpdate();
+        }
+        return 0;
       })
       .catch(error => {
         log.error(`Creating new secured workspace failed: ${error}`);
@@ -996,7 +1002,7 @@ class Home extends Component {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  saveBoardCallback(stats) {
+  saveBoardCallback(stats?) {
     const { boardData, workspace, settings } = this.state;
     const { sortBy } = settings;
     // eslint-disable-next-line no-param-reassign
@@ -1004,8 +1010,10 @@ class Home extends Component {
     const boardIndex = workspace.boards.findIndex(board => {
       return board.path === boardData.path;
     });
-    workspace.boards[boardIndex].modified = stats.mtimeMs;
-    boardData.modified = stats.mtimeMs;
+    if (stats) {
+      workspace.boards[boardIndex].modified = stats.mtimeMs;
+      boardData.modified = stats.mtimeMs;
+    }
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
@@ -1628,7 +1636,7 @@ class Home extends Component {
         );
       } else if (
         workspace.zipdata &&
-        (!workspace.password || workspace.wrongPassword !== false)
+        (!workspace.password || workspace.wrongPassword)
       ) {
         // secured workspace without password
         mainContent = (
