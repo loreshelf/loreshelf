@@ -602,7 +602,7 @@ const createWindow = async () => {
 
   let autoUpdateCheck = false;
 
-  ipcMain.on('update-check', auto => {
+  ipcMain.on('update-check', (event, auto) => {
     autoUpdateCheck = auto;
     autoUpdater.checkForUpdates();
   });

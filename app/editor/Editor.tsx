@@ -465,6 +465,7 @@ Still | renders | nicely
               // reset commands when user adds a space
               onChange(state.doc, this.saveChanges);
               this.updateDoc();
+              this.resetSuggestions();
             } else {
               const { $cursor } = transaction.selection;
               const cursor = $cursor.parentOffset;

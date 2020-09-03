@@ -29,7 +29,6 @@ import {
 import MarkdownIcons from './MarkdownIcons';
 import { AppToaster, AppUpdateToaster } from './AppToaster';
 import brandIcon from '../resources/icon.png';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -401,10 +400,10 @@ class Home extends Component {
 
     ipcRenderer.on('update-check-callback', (event, version, auto) => {
       const { appVersion } = self.state;
-      if (auto && version && appVersion !== version) {
+      if (version && appVersion !== version) {
         AppUpdateToaster.show({
           message: `New version ${version} available.`,
-          intent: Intent.DANGER,
+          intent: Intent.SUCCESS,
           action: {
             onClick: () => {
               self.setState({ updateDownloading: true });
@@ -413,6 +412,12 @@ class Home extends Component {
             text: 'Download'
           },
           timeout: 60000
+        });
+      } else if (!auto) {
+        AppUpdateToaster.show({
+          message: `No updates available.`,
+          intent: Intent.PRIMARY,
+          timeout: 3000
         });
       }
       const newVersion = version == null ? appVersion : version;
@@ -425,7 +430,7 @@ class Home extends Component {
       self.setState({ updateDownloading: false, appVersion: newVersion });
       AppUpdateToaster.show({
         message: `To install the update, the app must be restarted.`,
-        intent: Intent.DANGER,
+        intent: Intent.SUCCESS,
         action: {
           onClick: () => ipcRenderer.send('update-install'),
           text: 'Install and restart'

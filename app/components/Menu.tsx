@@ -16,8 +16,7 @@ import {
   Card,
   Tag,
   Tooltip,
-  Slider,
-  Spinner
+  Slider
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -30,7 +29,6 @@ import { SortOption, renderSort } from './SortBySelect';
 import BoardItem from './MenuItem';
 import brand from '../resources/brand.png';
 import { FilterOption, renderFilter } from './FilterBySelect';
-import latoWhite from '../resources/lato-white.png';
 
 const WorkspaceSelect = Select.ofType<Workspace>();
 const SortSelect = Select.ofType<SortOption>();
@@ -87,7 +85,8 @@ class Menu extends Component {
       newVaultPath: '',
       filterText: undefined,
       showPassword: false,
-      settingsOpen: false
+      settingsOpen: false,
+      licenseOpen: false
     };
 
     this.searchInputRef = React.createRef();
@@ -103,6 +102,8 @@ class Menu extends Component {
     this.newBoardConfirm = this.newBoardConfirm.bind(this);
     this.settingsOpen = this.settingsOpen.bind(this);
     this.settingsClose = this.settingsClose.bind(this);
+    this.licenseOpen = this.licenseOpen.bind(this);
+    this.licenseClose = this.licenseClose.bind(this);
     this.settingsApply = this.settingsApply.bind(this);
   }
 
@@ -153,6 +154,16 @@ class Menu extends Component {
     const { newSettings } = this.state;
     onSettingsChange(newSettings);
     this.settingsClose();
+  }
+
+  licenseOpen() {
+    this.setState({
+      licenseOpen: true
+    });
+  }
+
+  licenseClose() {
+    this.setState({ licenseOpen: false });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -280,7 +291,8 @@ class Menu extends Component {
       filterText,
       showPassword,
       settingsOpen,
-      newSettings
+      newSettings,
+      licenseOpen
     } = this.state;
 
     const { sortBy, filterBy } = settings;
@@ -697,7 +709,88 @@ class Menu extends Component {
                 width: '50px',
                 maxWidth: '50px'
               }}
-              onClick={this.settingsOpen}
+              onClick={e => {
+                let parent = e.target;
+                if (
+                  parent.tagName !== 'BUTTON' &&
+                  e.target.parentNode &&
+                  e.target.parentNode.parentNode &&
+                  e.target.parentNode.parentNode.tagName === 'BUTTON'
+                ) {
+                  parent = e.target.parentNode.offsetParent;
+                } else if (
+                  parent.tagName !== 'BUTTON' &&
+                  e.target.parentNode &&
+                  e.target.parentNode.parentNode &&
+                  e.target.parentNode.parentNode.parentNode &&
+                  e.target.parentNode.parentNode.parentNode.tagName === 'BUTTON'
+                ) {
+                  parent = e.target.parentNode.parentNode.offsetParent;
+                }
+                let updateButton = null;
+                if (
+                  (!newVersion || appVersion === newVersion) &&
+                  updateDownloading == null
+                ) {
+                  updateButton = (
+                    <MenuItem
+                      text="Check for updates"
+                      icon="automatic-updates"
+                      onClick={() => {
+                        ipcRenderer.send('update-check', false);
+                      }}
+                    />
+                  );
+                } else if (newVersion && appVersion !== newVersion) {
+                  updateButton = (
+                    <MenuItem
+                      text="Download updates"
+                      icon="download"
+                      onClick={() => ipcRenderer.send('update-download')}
+                      disabled={updateDownloading}
+                    />
+                  );
+                } else if (
+                  newVersion &&
+                  appVersion === newVersion &&
+                  updateDownloading === false
+                ) {
+                  updateButton = (
+                    <MenuItem
+                      text="Install and restart"
+                      icon="log-out"
+                      onClick={() => ipcRenderer.send('update-install')}
+                    />
+                  );
+                }
+                const settingsMenu = React.createElement(
+                  BJMenu,
+                  {},
+                  React.createElement(MenuItem, {
+                    onClick: this.settingsOpen,
+                    icon: 'settings',
+                    text: 'Configuration'
+                  }),
+                  updateButton,
+                  React.createElement(MenuDivider),
+                  React.createElement(MenuItem, {
+                    onClick: this.licenseOpen,
+                    icon: 'info-sign',
+                    text: 'License'
+                  })
+                );
+                ContextMenu.show(
+                  settingsMenu,
+                  {
+                    left: parent.offsetLeft + parent.offsetWidth + 1,
+                    top: parent.offsetTop
+                  },
+                  () => {
+                    // menu was closed; callback optional
+                  },
+                  true
+                );
+              }}
             />
           </ButtonGroup>
         </ButtonGroup>
@@ -895,10 +988,10 @@ class Menu extends Component {
         </Dialog>
         <Dialog
           className={Classes.DARK}
-          icon="cog"
+          icon="settings"
           onClose={this.settingsClose}
           isOpen={settingsOpen}
-          title="Settings"
+          title="Configuration"
         >
           <div className={Classes.DIALOG_BODY}>
             <Tag fill large minimal icon="two-columns">
@@ -932,71 +1025,40 @@ class Menu extends Component {
                 vertical={false}
               />
             </div>
-            <Tag fill large minimal icon="automatic-updates">
-              Updates
-            </Tag>
-            <ButtonGroup style={{ marginTop: '10px', marginBottom: '30px' }}>
-              {(!newVersion || appVersion === newVersion) &&
-                updateDownloading == null && (
-                  <Button
-                    style={{ marginRight: '10px' }}
-                    onClick={() => ipcRenderer.send('update-check', false)}
-                  >
-                    Check for updates
-                  </Button>
-                )}
-              {newVersion && appVersion !== newVersion && (
-                <Button
-                  style={{ marginRight: '10px' }}
-                  disabled={updateDownloading}
-                  onClick={() => ipcRenderer.send('update-download')}
-                >
-                  Download updates
-                </Button>
-              )}
-              {newVersion &&
-                appVersion === newVersion &&
-                updateDownloading === false && (
-                  <Button
-                    style={{ marginRight: '10px' }}
-                    onClick={() => ipcRenderer.send('update-install')}
-                  >
-                    Install and Restart
-                  </Button>
-                )}
-              {updateDownloading && <Spinner size={Spinner.SIZE_SMALL} />}
-              {appVersion === newVersion && (
-                <p>{`Up to date, v${appVersion}`}</p>
-              )}
-              {newVersion && appVersion !== newVersion && (
-                <p>{`Version ${newVersion} available`}</p>
-              )}
-            </ButtonGroup>
           </div>
           <div className={Classes.DIALOG_FOOTER}>
-            <Button
-              minimal
-              onClick={() => {
-                window.open('https://www.buymeacoffee.com/loreshelf', '_blank');
-              }}
-              style={{ padding: '0px', float: 'left' }}
-            >
-              <img
-                src={latoWhite}
-                alt="Buy Me A Coffee"
-                style={{
-                  height: '30px',
-                  width: '127px',
-                  margin: '0px',
-                  padding: '0px'
-                }}
-              />
-            </Button>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
               <Button onClick={this.settingsClose}>Close</Button>
               <Button intent={Intent.PRIMARY} onClick={this.settingsApply}>
                 Apply
               </Button>
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          className={Classes.DARK}
+          icon="info-sign"
+          onClose={this.licenseClose}
+          isOpen={licenseOpen}
+          title="License"
+        >
+          <div className={Classes.DIALOG_BODY}>
+            <p>
+              Loreshelf is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published
+              by the Free Software Foundation; version 3 of the License.
+            </p>
+
+            <p>
+              Loreshelf is distributed in the hope that it will be useful, but
+              WITHOUT ANY WARRANTY; without even the implied warranty of
+              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+              General Public License for more details.
+            </p>
+          </div>
+          <div className={Classes.DIALOG_FOOTER}>
+            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+              <Button onClick={this.licenseClose}>Close</Button>
             </div>
           </div>
         </Dialog>

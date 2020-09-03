@@ -39,30 +39,34 @@ interface DragItem {
 }
 
 const Card: React.FC<CardProps> = forwardRef(
-  ({
-    card,
-    workspace,
-    collapsed,
-    dividerIndex,
-    dividerLeft,
-    index,
-    moveCard,
-    hoverDivider,
-    resetDivider,
-    settings,
-    onEditCard,
-    onRemoveCard,
-    onEditTitle,
-    onRequestBoardsAsync,
-    onRequestBoardDataAsync,
-    onStartSpooling,
-    onStopSpooling,
-    onOpenImage,
-    onMoveToTop,
-    onMoveToBottom,
-    onToggleCollapse,
-    onOpenBoard
-  }) => {
+  (
+    {
+      card,
+      workspace,
+      collapsed,
+      dividerIndex,
+      dividerLeft,
+      index,
+      moveCard,
+      hoverDivider,
+      resetDivider,
+      settings,
+      onEditCard,
+      onRemoveCard,
+      onEditTitle,
+      onRequestBoardsAsync,
+      onRequestBoardDataAsync,
+      onStartSpooling,
+      onStopSpooling,
+      onOpenImage,
+      onMoveToTop,
+      onMoveToBottom,
+      onToggleCollapse,
+      onOpenBoard
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ref
+  ) => {
     const blueRef = useRef<BlueCard>(null);
     const titleRef = useRef<EditableText>(null);
 

@@ -1,7 +1,7 @@
 {
   "name": "loreshelf",
   "productName": "Loreshelf",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Concise notes, secure and lasting.",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
