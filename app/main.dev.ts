@@ -12,7 +12,7 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -650,7 +650,7 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
+  const menuBuilder = new MenuBuilder(app, mainWindow);
   menuBuilder.buildMenu();
 
   if (process.argv.length > 1) {

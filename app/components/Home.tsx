@@ -63,7 +63,8 @@ enum CONFIG {
   NOTEBOOKONSTARTUP = 'notebookOnStartup',
   SORTBY = 'sortBy',
   FILTERBY = 'filterBy',
-  UPDATELASTCHECKED = 'updateLastChecked'
+  UPDATELASTCHECKED = 'updateLastChecked',
+  NOTECARDWIDTH = 'notecardWidth'
 }
 
 const SORTING_METHODS = {
@@ -110,6 +111,7 @@ class Home extends Component {
       name: 'All',
       icon: 'calendar'
     });
+    const notecardWidth = CONFIG_STORE.get(CONFIG.NOTECARDWIDTH, 220);
 
     const updateDateStr = CONFIG_STORE.get(CONFIG.UPDATELASTCHECKED);
     const updateLastChecked = updateDateStr ? new Date(updateDateStr) : null;
@@ -120,7 +122,7 @@ class Home extends Component {
     const settings = {
       sortBy,
       filterBy,
-      notecardWidth: 220
+      notecardWidth
     };
 
     this.menuRef = React.createRef();
@@ -169,7 +171,7 @@ class Home extends Component {
     this.exportToPDF = this.exportToPDF.bind(this);
 
     window.onkeydown = e => {
-      if (e.ctrlKey) {
+      if (e.ctrlKey || e.metaKey) {
         document.body.className = 'ctrl';
       } else if (document.body.className === 'ctrl') {
         document.body.className = '';
@@ -499,7 +501,7 @@ class Home extends Component {
       CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
-    if (configWorkspaces.length !== existingWorkspaces.length) {
+    if (!configWorkspaces || configWorkspaces.length !== existingWorkspaces.length) {
       CONFIG_STORE.set(CONFIG.WORKSPACES, existingWorkspaces);
     }
     if (workspaceOnStartup && boardOnStartup) {
@@ -650,6 +652,7 @@ class Home extends Component {
         knownWorkspaces,
         workspace
       });
+      this.storeConfiguration();
       if (workspace.numBoards > 0) {
         if (!openBoardPath) {
           this.loadBoard(0);
@@ -1416,6 +1419,7 @@ class Home extends Component {
     if (newSettings.notecardWidth !== notecardWidth) {
       updateBoard = true;
       settings.notecardWidth = newSettings.notecardWidth;
+      CONFIG_STORE.set(CONFIG.NOTECARDWIDTH, newSettings.notecardWidth);
     }
     this.setState({ settings });
     if (updateBoard) {

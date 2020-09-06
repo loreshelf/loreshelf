@@ -23,6 +23,7 @@ import fs from 'fs';
 import { ipcRenderer } from 'electron';
 import moment from 'moment';
 import path from 'path';
+import os from 'os';
 import styles from './Menu.css';
 import { Workspace, workspaceSelectProps } from './Workspaces';
 import { SortOption, renderSort } from './SortBySelect';
@@ -113,6 +114,14 @@ class Menu extends Component {
 
     ipcRenderer.on('new-zip-select-callback', (event, workspacePath) => {
       self.setState({ newVaultPath: workspacePath });
+    });
+
+    ipcRenderer.on('license-open', () => {
+      self.setState({ licenseOpen: true });
+    });
+
+    ipcRenderer.on('preferences-open', () => {
+      self.setState({ settingsOpen: true });
     });
   }
 
@@ -728,40 +737,43 @@ class Menu extends Component {
                   parent = e.target.parentNode.parentNode.offsetParent;
                 }
                 let updateButton = null;
-                if (
-                  (!newVersion || appVersion === newVersion) &&
-                  updateDownloading == null
-                ) {
-                  updateButton = (
-                    <MenuItem
-                      text="Check for updates"
-                      icon="automatic-updates"
-                      onClick={() => {
-                        ipcRenderer.send('update-check', false);
-                      }}
-                    />
-                  );
-                } else if (newVersion && appVersion !== newVersion) {
-                  updateButton = (
-                    <MenuItem
-                      text="Download updates"
-                      icon="download"
-                      onClick={() => ipcRenderer.send('update-download')}
-                      disabled={updateDownloading}
-                    />
-                  );
-                } else if (
-                  newVersion &&
-                  appVersion === newVersion &&
-                  updateDownloading === false
-                ) {
-                  updateButton = (
-                    <MenuItem
-                      text="Install and restart"
-                      icon="log-out"
-                      onClick={() => ipcRenderer.send('update-install')}
-                    />
-                  );
+                const macos = os.platform() === 'darwin';
+                if (!macos) {
+                  if (
+                    (!newVersion || appVersion === newVersion) &&
+                    updateDownloading == null
+                  ) {
+                    updateButton = (
+                      <MenuItem
+                        text="Check for updates"
+                        icon="automatic-updates"
+                        onClick={() => {
+                          ipcRenderer.send('update-check', false);
+                        }}
+                      />
+                    );
+                  } else if (newVersion && appVersion !== newVersion) {
+                    updateButton = (
+                      <MenuItem
+                        text="Download updates"
+                        icon="download"
+                        onClick={() => ipcRenderer.send('update-download')}
+                        disabled={updateDownloading}
+                      />
+                    );
+                  } else if (
+                    newVersion &&
+                    appVersion === newVersion &&
+                    updateDownloading === false
+                  ) {
+                    updateButton = (
+                      <MenuItem
+                        text="Install and restart"
+                        icon="log-out"
+                        onClick={() => ipcRenderer.send('update-install')}
+                      />
+                    );
+                  }
                 }
                 const settingsMenu = React.createElement(
                   BJMenu,
@@ -769,7 +781,7 @@ class Menu extends Component {
                   React.createElement(MenuItem, {
                     onClick: this.settingsOpen,
                     icon: 'settings',
-                    text: 'Configuration'
+                    text: 'Preferences'
                   }),
                   updateButton,
                   React.createElement(MenuDivider),
@@ -991,7 +1003,7 @@ class Menu extends Component {
           icon="settings"
           onClose={this.settingsClose}
           isOpen={settingsOpen}
-          title="Configuration"
+          title="Preferences"
         >
           <div className={Classes.DIALOG_BODY}>
             <Tag fill large minimal icon="two-columns">
