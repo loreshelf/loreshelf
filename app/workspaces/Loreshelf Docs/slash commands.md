@@ -8,6 +8,8 @@ Headers can contain icons
 
 ## [*] Header with icon
 
+/icon-
+
 # Table
 
 Write /table and confirm with _Enter_.
