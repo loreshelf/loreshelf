@@ -108,14 +108,12 @@
       "output": "release"
     },
     "publish": {
-      "provider": "s3",
-      "endpoint": "http://192.168.0.16:9000",
-      "bucket": "test-update"
+      "provider": "github"
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ibek/loreshelf.git"
+    "url": "git+https://github.com/loreshelf/loreshelf.git"
   },
   "author": {
     "name": "Ivo Bek",
@@ -124,12 +122,12 @@
   },
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ibek/loreshelf.git/issues"
+    "url": "https://github.com/loreshelf/loreshelf.git/issues"
   },
   "keywords": [
     "markdown"
   ],
-  "homepage": "https://github.com/ibek/loreshelf.git#readme",
+  "homepage": "https://github.com/loreshelf/loreshelf.git#readme",
   "jest": {
     "testURL": "http://localhost/",
     "moduleNameMapper": {
