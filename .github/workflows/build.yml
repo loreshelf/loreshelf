@@ -1,4 +1,4 @@
-# This workflow builds, packages and releases Jotspin for Windows, Mac, and Linux
+# This workflow builds, packages and releases Loreshelf for Windows, Mac, and Linux
 
 name: Build/release
 
