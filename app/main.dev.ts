@@ -225,11 +225,20 @@ const createWindow = async () => {
     openBoardPath
   ) => {
     fs.access(workspacePath, fs.constants.W_OK, err => {
-      const readonly = err != null;
+      let readonly = err != null;
       if (watcher == null) {
         initializeWatcher(workspacePath);
       } else {
         watcher.add(workspacePath);
+      }
+      if (process.platform === 'win32') {
+        try {
+          const writeTestPath = path.join(workspacePath, '.loreshelf');
+          fs.writeFileSync(writeTestPath, 'canWrite?');
+          fs.unlinkSync(writeTestPath);
+        } catch (error) {
+          readonly = true;
+        }
       }
       fs.readdir(workspacePath, (err2, files) => {
         const stats = [];
@@ -327,11 +336,20 @@ const createWindow = async () => {
       if (!data.canceled) {
         const workspacePath = data.filePaths[0];
         fs.access(workspacePath, fs.constants.W_OK, err => {
-          const readonly = err != null;
+          let readonly = err != null;
           if (watcher == null) {
             initializeWatcher(workspacePath);
           } else {
             watcher.add(workspacePath);
+          }
+          if (process.platform === 'win32') {
+            try {
+              const writeTestPath = path.join(workspacePath, '.loreshelf');
+              fs.writeFileSync(writeTestPath, 'canWrite?');
+              fs.unlinkSync(writeTestPath);
+            } catch (error) {
+              readonly = true;
+            }
           }
           fs.readdir(workspacePath, (err2, files) => {
             if (!err2) {
