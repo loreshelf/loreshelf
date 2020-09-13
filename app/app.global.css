@@ -54,8 +54,7 @@ p a:hover {
 }
 
 .bp3-editable-text {
-  width: 170px;
-  overflow: hidden;
+  width: 100%;
 }
 
 .bp3-editable-text-content {
@@ -63,8 +62,10 @@ p a:hover {
 }
 
 .bp3-editable-text-input {
-  width: 170px;
+  outline: none;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #root {

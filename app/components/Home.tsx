@@ -501,7 +501,10 @@ class Home extends Component {
       CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
-    if (!configWorkspaces || configWorkspaces.length !== existingWorkspaces.length) {
+    if (
+      !configWorkspaces ||
+      configWorkspaces.length !== existingWorkspaces.length
+    ) {
       CONFIG_STORE.set(CONFIG.WORKSPACES, existingWorkspaces);
     }
     if (workspaceOnStartup && boardOnStartup) {
@@ -1099,8 +1102,8 @@ class Home extends Component {
         // this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
         const n = this.boardRef.boardRef.current.childNodes;
         const title =
-          n[n.length - 1].firstChild.firstChild.firstChild.lastChild.firstChild
-            .firstChild.firstElementChild;
+          n[n.length - 1].firstChild.firstChild.firstChild.firstChild.lastChild
+            .firstChild.firstChild.firstChild.firstElementChild;
         title.focus();
       }, 100);
     }
