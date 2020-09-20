@@ -20,7 +20,7 @@ import {
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import moment from 'moment';
 import path from 'path';
 import os from 'os';
@@ -287,7 +287,8 @@ class Menu extends Component {
       settings,
       onNewSecuredWorkspace,
       onExportToPDF,
-      onMoveBoardToWorkspace
+      onMoveBoardToWorkspace,
+      onOpenDocs
     } = this.props;
     const {
       newBoardOpen,
@@ -506,6 +507,14 @@ class Menu extends Component {
                     icon: 'log-in',
                     disabled: boardData == null,
                     text: 'Open on startup'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      shell.showItemInFolder(boardData.path);
+                    },
+                    icon: 'folder-shared-open',
+                    disabled: boardData == null,
+                    text: 'Open in folder'
                   }),
                   React.createElement(MenuDivider),
                   React.createElement(MenuItem, {
@@ -782,6 +791,11 @@ class Menu extends Component {
                     onClick: this.settingsOpen,
                     icon: 'settings',
                     text: 'Preferences'
+                  }),
+                  React.createElement(MenuItem, {
+                    onClick: onOpenDocs,
+                    icon: 'help',
+                    text: 'Documentation'
                   }),
                   updateButton,
                   React.createElement(MenuDivider),

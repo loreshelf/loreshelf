@@ -152,7 +152,7 @@ const createWindow = async () => {
     y: mainWindowStateKeeper.y,
     width: mainWindowStateKeeper.width,
     height: mainWindowStateKeeper.height,
-    icon: path.join(__dirname, '/resources/icon.png'),
+    icon: path.join(__dirname, `resources${path.sep}icon.png`),
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
         ? {
@@ -225,26 +225,17 @@ const createWindow = async () => {
     openBoardPath
   ) => {
     fs.access(workspacePath, fs.constants.W_OK, err => {
-      let readonly = err != null;
+      const readonly = err != null;
       if (watcher == null) {
         initializeWatcher(workspacePath);
       } else {
         watcher.add(workspacePath);
       }
-      if (process.platform === 'win32' || process.platform === 'darwin') {
-        try {
-          const writeTestPath = path.join(workspacePath, '.loreshelf');
-          fs.writeFileSync(writeTestPath, 'canWrite?');
-          fs.unlinkSync(writeTestPath);
-        } catch (error) {
-          readonly = true;
-        }
-      }
       fs.readdir(workspacePath, (err2, files) => {
         const stats = [];
         if (files) {
           files.forEach(filePath => {
-            stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+            stats.push(fs.statSync(`${workspacePath}${path.sep}${filePath}`));
           });
           event.reply(
             'workspace-load-callback',
@@ -279,8 +270,11 @@ const createWindow = async () => {
       }
       const loreshelfDocsWorkspacePath =
         process.env.NODE_ENV === 'development'
-          ? path.join(__dirname, '/workspaces/Loreshelf Docs')
-          : path.join(process.resourcesPath, '/workspaces/Loreshelf Docs');
+          ? path.join(__dirname, `workspaces${path.sep}Loreshelf Docs`)
+          : path.join(
+              process.resourcesPath,
+              `workspaces${path.sep}Loreshelf Docs`
+            );
       event.reply(
         'places-exist-callback',
         app.getVersion(),
@@ -295,11 +289,11 @@ const createWindow = async () => {
   ipcMain.on('get-started', event => {
     const getStartedWorkspacePath =
       process.env.NODE_ENV === 'development'
-        ? path.join(__dirname, '/workspaces/Get Started')
-        : path.join(process.resourcesPath, '/workspaces/Get Started');
+        ? path.join(__dirname, `workspaces${path.sep}Get Started`)
+        : path.join(process.resourcesPath, `workspaces${path.sep}Get Started`);
     const getStartedWorkspacePathTarget = path.join(
       app.getPath('userData'),
-      '/workspaces/'
+      'workspaces'
     );
     const getStartedWorkspacePathFinal = path.join(
       getStartedWorkspacePathTarget,
@@ -336,26 +330,19 @@ const createWindow = async () => {
       if (!data.canceled) {
         const workspacePath = data.filePaths[0];
         fs.access(workspacePath, fs.constants.W_OK, err => {
-          let readonly = err != null;
+          const readonly = err != null;
           if (watcher == null) {
             initializeWatcher(workspacePath);
           } else {
             watcher.add(workspacePath);
           }
-          if (process.platform === 'win32' || process.platform === 'darwin') {
-            try {
-              const writeTestPath = path.join(workspacePath, '.loreshelf');
-              fs.writeFileSync(writeTestPath, 'canWrite?');
-              fs.unlinkSync(writeTestPath);
-            } catch (error) {
-              readonly = true;
-            }
-          }
           fs.readdir(workspacePath, (err2, files) => {
             if (!err2) {
               const stats = [];
               files.forEach(filePath => {
-                stats.push(fs.statSync(`${workspacePath}/${filePath}`));
+                stats.push(
+                  fs.statSync(`${workspacePath}${path.sep}${filePath}`)
+                );
               });
               event.reply(
                 'workspace-add-callback',
@@ -456,12 +443,20 @@ const createWindow = async () => {
   ipcMain.on(
     'board-save',
     (event, boardPath, boardContent, isNew?, isInBackground?) => {
-      fs.writeFileSync(boardPath, boardContent, 'utf8');
-      const stats = fs.statSync(boardPath);
-      if (isNew) {
-        event.reply('board-new-callback', boardPath);
-      } else if (!isInBackground) {
-        event.reply('board-save-callback', stats);
+      try {
+        fs.writeFileSync(boardPath, boardContent, 'utf8');
+        const stats = fs.statSync(boardPath);
+        if (isNew) {
+          event.reply('board-new-callback', boardPath);
+        } else if (!isInBackground) {
+          event.reply('board-save-callback', stats);
+        }
+      } catch (error) {
+        if (isNew) {
+          event.reply('board-new-callback', null);
+        } else if (!isInBackground) {
+          event.reply('board-save-callback', null);
+        }
       }
     }
   );

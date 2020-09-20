@@ -268,12 +268,26 @@ class Home extends Component {
       self.loadBoardCallback(boardMeta, text, stats);
     });
 
-    ipcRenderer.on('board-save-callback', (event, stats?) => {
-      self.saveBoardCallback(stats);
+    ipcRenderer.on('board-save-callback', (event, stats?, error?) => {
+      if (error) {
+        AppToaster.show({
+          message: `Error when saving the notebook. Please check your permissions.`,
+          intent: Intent.DANGER
+        });
+      } else {
+        self.saveBoardCallback(stats);
+      }
     });
 
-    ipcRenderer.on('board-new-callback', (event, newBoardPath) => {
-      self.newBoardCallback(newBoardPath);
+    ipcRenderer.on('board-new-callback', (event, newBoardPath, error?) => {
+      if (error) {
+        AppToaster.show({
+          message: `Error when creating new notebook. Please check your permissions.`,
+          intent: Intent.DANGER
+        });
+      } else {
+        self.newBoardCallback(newBoardPath);
+      }
     });
 
     ipcRenderer.on('board-delete-callback', (event, removedBoardPath) => {
@@ -558,7 +572,7 @@ class Home extends Component {
     stats,
     readonly? = false
   ) {
-    const { settings } = this.state;
+    const { settings, loreshelfDocsWorkspacePath } = this.state;
     const { sortBy } = settings;
     let numBoards = 0;
     const boards = [];
@@ -593,7 +607,8 @@ class Home extends Component {
       });
     }
     workspace.numBoards = numBoards;
-    workspace.readonly = readonly;
+    workspace.readonly =
+      readonly || workspace.path === loreshelfDocsWorkspacePath;
     boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
@@ -1545,10 +1560,16 @@ class Home extends Component {
   }
 
   storeConfiguration() {
-    const { knownWorkspaces, updateLastChecked } = this.state;
+    const {
+      knownWorkspaces,
+      updateLastChecked,
+      loreshelfDocsWorkspacePath
+    } = this.state;
     const workspaces = [];
     knownWorkspaces.forEach(workspace => {
-      workspaces.push(workspace.path);
+      if (workspace.path !== loreshelfDocsWorkspacePath) {
+        workspaces.push(workspace.path);
+      }
     });
     const workspaceOnStartup = CONFIG_STORE.get(CONFIG.WORKSPACEONSTARTUP);
     if (!workspaces.includes(workspaceOnStartup)) {
@@ -1726,6 +1747,9 @@ class Home extends Component {
               onDuplicateBoard={this.duplicateBoard}
               onRenameBoard={this.renameBoard}
               onMoveBoardToWorkspace={this.moveBoardToWorkspace}
+              onOpenDocs={() => {
+                this.loadWorkspace(loreshelfDocsWorkspacePath, true);
+              }}
             />,
             mainContent
           ]
