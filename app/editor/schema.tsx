@@ -192,6 +192,7 @@ export const schema = new Schema({
         const dom = document.createElement('span');
         ReactDOM.render(
           <ImageNode
+            attrs={node.attrs}
             src={node.attrs.src}
             alt={node.attrs.alt}
             title={node.attrs.title}

@@ -5,6 +5,7 @@ const MARKDOWN_ICONS = [
     code: '[ ]',
     name: 'none',
     icon: 'circle',
+    next: 'tick-circle',
     svg:
       '<svg data-icon="circle" width="16" height="16" viewBox="0 0 16 16" style="fill: hsla(204, 33%, 97%, 1);"><desc>circle</desc><path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 14c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6z" fill-rule="evenodd"></path></svg>'
   },
@@ -12,6 +13,7 @@ const MARKDOWN_ICONS = [
     code: '[x]',
     name: 'yes',
     icon: 'tick-circle',
+    next: 'circle',
     intent: Intent.SUCCESS,
     svg:
       '<svg data-icon="tick-circle" width="16" height="16" viewBox="0 0 16 16" style="fill: #3dcc91;"><desc>tick-circle</desc><path d="M8 16c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm4-11c-.28 0-.53.11-.71.29L7 9.59l-2.29-2.3a1.003 1.003 0 00-1.42 1.42l3 3c.18.18.43.29.71.29s.53-.11.71-.29l5-5A1.003 1.003 0 0012 5z" fill-rule="evenodd"></path></svg>'

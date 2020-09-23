@@ -628,6 +628,10 @@ const createWindow = async () => {
     setImmediate(() => autoUpdater.quitAndInstall());
   });
 
+  ipcMain.on('refresh-and-save', () => {
+    mainWindow.webContents.send('refresh-and-save-callback');
+  });
+
   autoUpdater.on('update-available', info => {
     mainWindow.webContents.send(
       'update-check-callback',

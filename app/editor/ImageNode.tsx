@@ -2,16 +2,20 @@
 import React from 'react';
 import { Icon } from '@blueprintjs/core';
 import { findMarkdownIcon } from '../components/MarkdownIcons';
+import ImageNodeComponent from './ImageNodeComponent';
 
 function ImageNode(props) {
-  const { src, title, alt } = props;
+  const { src, title, alt, attrs } = props;
   if (alt === 'Icon') {
-    const mdi = findMarkdownIcon(src);
+    const mdi = findMarkdownIcon(attrs.src);
     const intent = mdi?.intent;
+    if (mdi.next) {
+      return <ImageNodeComponent attrs={attrs} />;
+    }
     return (
       <>
         &nbsp;
-        <Icon icon={src} intent={intent} />
+        <Icon icon={attrs.src} intent={intent} />
         &nbsp;
       </>
     );

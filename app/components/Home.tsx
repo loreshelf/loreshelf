@@ -455,6 +455,10 @@ class Home extends Component {
       });
     });
 
+    ipcRenderer.on('refresh-and-save-callback', () => {
+      self.autoSave();
+    });
+
     document.addEventListener('keyup', e => {
       if (e.ctrlKey || e.metaKey) {
         // eslint-disable-next-line default-case
