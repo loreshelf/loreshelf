@@ -12,7 +12,7 @@ import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
-import { addRowAfter, deleteRow } from 'prosemirror-tables';
+import { addRowAfter, deleteRow, addRowBefore } from 'prosemirror-tables';
 import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
@@ -356,6 +356,13 @@ Still | renders | nicely
             const menu = React.createElement(
               Menu,
               {}, // empty props
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  addRowBefore(view.state, view.dispatch);
+                },
+                disabled: workspace.readonly,
+                text: 'Add row before'
+              }),
               React.createElement(MenuItem, {
                 onClick: () => {
                   addRowAfter(view.state, view.dispatch);

@@ -4,7 +4,6 @@ import {
   setBlockType,
   chainCommands,
   toggleMark,
-  joinUp,
   newlineInCode,
   splitBlock,
   deleteSelection,
@@ -12,7 +11,6 @@ import {
   joinForward,
   selectNodeForward,
   liftEmptyBlock,
-  joinDown,
   lift
 } from 'prosemirror-commands';
 import {
@@ -29,7 +27,6 @@ import {
   sinkListItem
 } from 'prosemirror-schema-list';
 import { undo, redo } from 'prosemirror-history';
-import { undoInputRule } from 'prosemirror-inputrules';
 import { Selection } from 'prosemirror-state';
 
 const mac =
@@ -82,8 +79,52 @@ export function buildKeymap(schema) {
   ); */
   if (!mac) bind('Mod-y', redo);
 
-  bind('Alt-ArrowUp', joinUp);
-  bind('Alt-ArrowDown', joinDown);
+  // bind('Alt-ArrowUp', joinUp);
+  bind('Alt-ArrowUp', (state, dispatch) => {
+    const transaction = state.tr;
+    const { $cursor } = transaction.selection;
+
+    const startPos = $cursor.path[8];
+    const currentRow = $cursor.node(3);
+    const currentNodeSize = currentRow.nodeSize;
+    const rowBefore = $cursor.path[6].content.content[$cursor.path[7] - 1];
+    const beforeNodeSize = rowBefore.nodeSize;
+    const offsetPos = $cursor.pos - startPos;
+
+    let tr = state.tr.delete(startPos, startPos + currentNodeSize);
+    tr = tr.replaceWith(
+      startPos - beforeNodeSize - 1,
+      startPos - beforeNodeSize,
+      currentRow
+    );
+    tr = tr.setSelection(
+      Selection.near(tr.doc.resolve(startPos - beforeNodeSize + offsetPos))
+    );
+    dispatch(tr);
+  });
+  bind('Alt-ArrowDown', (state, dispatch) => {
+    const transaction = state.tr;
+    const { $cursor } = transaction.selection;
+
+    const startPos = $cursor.path[8];
+    const currentRow = $cursor.node(3);
+    const currentNodeSize = currentRow.nodeSize;
+    const rowAfter = $cursor.path[6].content.content[$cursor.path[7] + 1];
+    const afterNodeSize = rowAfter.nodeSize;
+    const offsetPos = $cursor.pos - startPos;
+
+    let tr = state.tr.delete(startPos, startPos + currentNodeSize);
+    tr = tr.replaceWith(
+      startPos + afterNodeSize - 1,
+      startPos + afterNodeSize,
+      currentRow
+    );
+    tr = tr.setSelection(
+      Selection.near(tr.doc.resolve(startPos + afterNodeSize + offsetPos))
+    );
+    dispatch(tr);
+  });
+  // bind('Alt-ArrowDown', joinDown);
   bind('Mod-BracketLeft', lift);
 
   if ((type = schema.marks.strong)) {
