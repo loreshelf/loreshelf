@@ -438,7 +438,7 @@ class Home extends Component {
       }
       const newVersion = version == null ? appVersion : version;
       self.setState({ updateLastChecked: Date.now(), newVersion });
-      self.storeConfiguration();
+      CONFIG_STORE.set(CONFIG.UPDATELASTCHECKED, updateLastChecked);
     });
 
     ipcRenderer.on('update-download-callback', () => {
@@ -513,6 +513,7 @@ class Home extends Component {
   ) {
     this.setState({ loreshelfDocsWorkspacePath });
     const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
+    console.log(`config: ${configWorkspaces}`);
     const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
     const isSecured = workspaceOnStartup && workspaceOnStartup.endsWith('.zip');
     if (!isSecured && !boardOnStartup && configBoardOnStartup) {
@@ -523,6 +524,7 @@ class Home extends Component {
       !configWorkspaces ||
       configWorkspaces.length !== existingWorkspaces.length
     ) {
+      console.log(existingWorkspaces);
       CONFIG_STORE.set(CONFIG.WORKSPACES, existingWorkspaces);
     }
     if (workspaceOnStartup && boardOnStartup) {
@@ -674,7 +676,6 @@ class Home extends Component {
         knownWorkspaces,
         workspace
       });
-      this.storeConfiguration();
       if (workspace.numBoards > 0) {
         if (!openBoardPath) {
           this.loadBoard(0);
@@ -1580,6 +1581,7 @@ class Home extends Component {
       CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
+    console.log(`workspaces:${workspaces}`);
     CONFIG_STORE.set(CONFIG.WORKSPACES, workspaces);
     CONFIG_STORE.set(CONFIG.UPDATELASTCHECKED, updateLastChecked);
   }
@@ -1782,7 +1784,7 @@ class Home extends Component {
                   userSelect: 'none'
                 }}
               >
-                Version 1.0.0
+                {`Version ${appVersion}`}
               </div>
               <ButtonGroup vertical style={{ margin: '0 auto' }}>
                 <Button

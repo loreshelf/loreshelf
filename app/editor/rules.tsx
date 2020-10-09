@@ -35,7 +35,7 @@ export function orderedListRule(nodeType) {
 // (dash, plush, or asterisk) at the start of a textblock into a
 // bullet list.
 export function bulletListRule(nodeType) {
-  return wrappingInputRule(/^\s*([-+*])\s$/, nodeType);
+  return wrappingInputRule(/^\s*([-*])\s$/, nodeType);
 }
 
 // : (NodeType) → InputRule
