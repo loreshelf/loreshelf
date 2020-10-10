@@ -1,4 +1,50 @@
 import { Selection } from 'prosemirror-state';
+import {
+  selectedRect,
+  addRow,
+  isInTable,
+  selectionCell
+} from 'prosemirror-tables';
+
+export function addRowAfter(state, dispatch) {
+  if (!isInTable(state)) return false;
+  if (dispatch) {
+    const transaction = state.tr;
+    const { $cursor } = transaction.selection;
+    if ($cursor.parent && $cursor.parent.type.name !== 'table_cell') {
+      return false;
+    }
+    const rect = selectedRect(state);
+    const cell = selectionCell(state);
+    const rowStart = cell.after();
+    if (dispatch) {
+      const tr = addRow(state.tr, rect, rect.bottom);
+      tr.setSelection(Selection.near(tr.doc.resolve(rowStart)));
+      dispatch(tr);
+    }
+  }
+  return true;
+}
+
+export function addRowBefore(state, dispatch) {
+  if (!isInTable(state)) return false;
+  if (dispatch) {
+    const transaction = state.tr;
+    const { $cursor } = transaction.selection;
+    if ($cursor.parent && $cursor.parent.type.name !== 'table_cell') {
+      return false;
+    }
+    const rect = selectedRect(state);
+    const cell = selectionCell(state);
+    const rowStart = cell.after();
+    if (dispatch) {
+      const tr = addRow(state.tr, rect, rect.top);
+      tr.setSelection(Selection.near(tr.doc.resolve(rowStart)));
+      dispatch(tr);
+    }
+  }
+  return true;
+}
 
 export function moveRowUp(state, dispatch, schema) {
   const transaction = state.tr;

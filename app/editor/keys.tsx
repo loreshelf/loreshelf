@@ -13,13 +13,7 @@ import {
   liftEmptyBlock,
   lift
 } from 'prosemirror-commands';
-import {
-  selectedRect,
-  addRow,
-  deleteRow,
-  isInTable,
-  selectionCell
-} from 'prosemirror-tables';
+import { deleteRow } from 'prosemirror-tables';
 import {
   wrapInList,
   splitListItem,
@@ -27,7 +21,7 @@ import {
   sinkListItem
 } from 'prosemirror-schema-list';
 import { undo, redo } from 'prosemirror-history';
-import { moveRowUp, moveRowDown } from './EditorCommands';
+import { addRowAfter, moveRowUp, moveRowDown } from './EditorCommands';
 
 const mac =
   typeof navigator !== 'undefined' ? /Mac/.test(navigator.platform) : false;
@@ -148,21 +142,6 @@ function deleteRowHere(state, dispatch) {
     return true;
   }
   return false;
-}
-
-function addRowAfter(state, dispatch) {
-  if (!isInTable(state)) return false;
-  if (dispatch) {
-    const rect = selectedRect(state);
-    const cell = selectionCell(state);
-    const rowStart = cell.after();
-    if (dispatch) {
-      const tr = addRow(state.tr, rect, rect.bottom);
-      tr.setSelection(Selection.near(tr.doc.resolve(rowStart)));
-      dispatch(tr);
-    }
-  }
-  return true;
 }
 
 export function buildTableKeymap(schema) {

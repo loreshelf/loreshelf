@@ -12,7 +12,7 @@ import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
-import { addRowAfter, deleteRow, addRowBefore } from 'prosemirror-tables';
+import { deleteRow } from 'prosemirror-tables';
 import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
@@ -22,7 +22,12 @@ import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 import COMMANDS from './SlashCommands';
 import { AppToaster } from '../components/AppToaster';
-import { moveRowUp, moveRowDown } from './EditorCommands';
+import {
+  addRowAfter,
+  addRowBefore,
+  moveRowUp,
+  moveRowDown
+} from './EditorCommands';
 
 const MAX_SUGGESTIONS = 7;
 
@@ -354,6 +359,10 @@ Still | renders | nicely
             }
           } else if (node.type === schema.nodes.table && event.which === 3) {
             // Right click for context menu
+            const transaction = view.state.tr;
+            const { $cursor } = transaction.selection;
+            const isNotTableCell =
+              $cursor.parent && $cursor.parent.type !== schema.nodes.table_cell;
             const menu = React.createElement(
               Menu,
               {}, // empty props
@@ -361,35 +370,35 @@ Still | renders | nicely
                 onClick: () => {
                   addRowBefore(view.state, view.dispatch);
                 },
-                disabled: workspace.readonly,
+                disabled: workspace.readonly || isNotTableCell,
                 text: 'Add row before'
               }),
               React.createElement(MenuItem, {
                 onClick: () => {
                   addRowAfter(view.state, view.dispatch);
                 },
-                disabled: workspace.readonly,
+                disabled: workspace.readonly || isNotTableCell,
                 text: 'Add row after'
               }),
               React.createElement(MenuItem, {
                 onClick: () => {
                   moveRowUp(view.state, view.dispatch, schema);
                 },
-                disabled: workspace.readonly,
+                disabled: workspace.readonly || isNotTableCell,
                 text: 'Move row up'
               }),
               React.createElement(MenuItem, {
                 onClick: () => {
                   moveRowDown(view.state, view.dispatch, schema);
                 },
-                disabled: workspace.readonly,
+                disabled: workspace.readonly || isNotTableCell,
                 text: 'Move row down'
               }),
               React.createElement(MenuItem, {
                 onClick: () => {
                   deleteRow(view.state, view.dispatch);
                 },
-                disabled: workspace.readonly,
+                disabled: workspace.readonly || isNotTableCell,
                 text: 'Delete row'
               }),
               React.createElement(MenuItem, {
