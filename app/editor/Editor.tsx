@@ -231,7 +231,7 @@ Still | renders | nicely
                     view.onOpenBoard(decodeURI(url.replace('file://', '')));
                     return true;
                   }
-                  if (!shell.openItem(url)) {
+                  if (!shell.openItem(decodeURI(url))) {
                     // currently doesn't work but in Electron 9 the API changes (openPath)
                     AppToaster.show({
                       message: `Cannot find and open '${decodeURI(url)}' file`,
