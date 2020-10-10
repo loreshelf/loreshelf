@@ -27,7 +27,7 @@ import {
   sinkListItem
 } from 'prosemirror-schema-list';
 import { undo, redo } from 'prosemirror-history';
-import { Selection } from 'prosemirror-state';
+import { moveRowUp, moveRowDown } from './EditorCommands';
 
 const mac =
   typeof navigator !== 'undefined' ? /Mac/.test(navigator.platform) : false;
@@ -81,48 +81,10 @@ export function buildKeymap(schema) {
 
   // bind('Alt-ArrowUp', joinUp);
   bind('Alt-ArrowUp', (state, dispatch) => {
-    const transaction = state.tr;
-    const { $cursor } = transaction.selection;
-
-    const startPos = $cursor.path[8];
-    const currentRow = $cursor.node(3);
-    const currentNodeSize = currentRow.nodeSize;
-    const rowBefore = $cursor.path[6].content.content[$cursor.path[7] - 1];
-    const beforeNodeSize = rowBefore.nodeSize;
-    const offsetPos = $cursor.pos - startPos;
-
-    let tr = state.tr.delete(startPos, startPos + currentNodeSize);
-    tr = tr.replaceWith(
-      startPos - beforeNodeSize - 1,
-      startPos - beforeNodeSize,
-      currentRow
-    );
-    tr = tr.setSelection(
-      Selection.near(tr.doc.resolve(startPos - beforeNodeSize + offsetPos))
-    );
-    dispatch(tr);
+    moveRowUp(state, dispatch, schema);
   });
   bind('Alt-ArrowDown', (state, dispatch) => {
-    const transaction = state.tr;
-    const { $cursor } = transaction.selection;
-
-    const startPos = $cursor.path[8];
-    const currentRow = $cursor.node(3);
-    const currentNodeSize = currentRow.nodeSize;
-    const rowAfter = $cursor.path[6].content.content[$cursor.path[7] + 1];
-    const afterNodeSize = rowAfter.nodeSize;
-    const offsetPos = $cursor.pos - startPos;
-
-    let tr = state.tr.delete(startPos, startPos + currentNodeSize);
-    tr = tr.replaceWith(
-      startPos + afterNodeSize - 1,
-      startPos + afterNodeSize,
-      currentRow
-    );
-    tr = tr.setSelection(
-      Selection.near(tr.doc.resolve(startPos + afterNodeSize + offsetPos))
-    );
-    dispatch(tr);
+    moveRowDown(state, dispatch, schema);
   });
   // bind('Alt-ArrowDown', joinDown);
   bind('Mod-BracketLeft', lift);
@@ -205,7 +167,6 @@ function addRowAfter(state, dispatch) {
 
 export function buildTableKeymap(schema) {
   const keys = {};
-  let type;
   function bind(key, cmd) {
     keys[key] = cmd;
   }

@@ -22,6 +22,7 @@ import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 import COMMANDS from './SlashCommands';
 import { AppToaster } from '../components/AppToaster';
+import { moveRowUp, moveRowDown } from './EditorCommands';
 
 const MAX_SUGGESTIONS = 7;
 
@@ -369,6 +370,20 @@ Still | renders | nicely
                 },
                 disabled: workspace.readonly,
                 text: 'Add row after'
+              }),
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  moveRowUp(view.state, view.dispatch, schema);
+                },
+                disabled: workspace.readonly,
+                text: 'Move row up'
+              }),
+              React.createElement(MenuItem, {
+                onClick: () => {
+                  moveRowDown(view.state, view.dispatch, schema);
+                },
+                disabled: workspace.readonly,
+                text: 'Move row down'
               }),
               React.createElement(MenuItem, {
                 onClick: () => {
