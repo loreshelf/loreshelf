@@ -23,26 +23,25 @@
 .card table {
   width: calc(100% + 12px);
   border-collapse: collapse;
-  margin: -6px;
+  margin: 5px -6px;
 }
 
 .spoolingCard th,
 .card th {
   text-align: center;
-  font-weight: bold;
+  font-weight: normal;
   width: 50%;
   padding: 5px 2px;
-  background: hsl(207, 23%, 37%);
 }
 
-.spoolingCard tr:not(:first-child),
-.card tr:not(:first-child) {
+.spoolingCard tbody tr,
+.card tbody tr {
   border-top: 1px solid hsl(206, 24%, 64%);
 }
 
 .spoolingCard th:not(:first-child),
 .card th:not(:first-child) {
-  border-left: 5px solid #30404d;
+  border-left: 1px solid hsl(206, 24%, 64%);
 }
 
 .spoolingCard td,
@@ -50,6 +49,11 @@
   text-align: left;
   padding: 0;
   padding-left: 5px;
+}
+
+.spoolingCard td:not(:first-child),
+.card td:not(:first-child) {
+  border-left: 1px solid hsl(206, 24%, 64%);
 }
 
 .spoolingStatus {
