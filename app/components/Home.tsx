@@ -513,7 +513,6 @@ class Home extends Component {
   ) {
     this.setState({ loreshelfDocsWorkspacePath });
     const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
-    console.log(`config: ${configWorkspaces}`);
     const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
     const isSecured = workspaceOnStartup && workspaceOnStartup.endsWith('.zip');
     if (!isSecured && !boardOnStartup && configBoardOnStartup) {
@@ -524,7 +523,6 @@ class Home extends Component {
       !configWorkspaces ||
       configWorkspaces.length !== existingWorkspaces.length
     ) {
-      console.log(existingWorkspaces);
       CONFIG_STORE.set(CONFIG.WORKSPACES, existingWorkspaces);
     }
     if (workspaceOnStartup && boardOnStartup) {

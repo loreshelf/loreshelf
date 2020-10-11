@@ -73,23 +73,16 @@ p a:hover {
 }
 
 .property {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 20px;
   min-height: 34px;
-  margin: 0 -5px;
+  font-weight: normal;
+  margin: 10px -5px;
   padding: 7px;
-  padding-left: 27px;
+  border-bottom: 1px solid hsl(206, 24%, 64%);
   width: calc(100% + 10px);
   min-width: calc(100% + 10px);
   text-align: left;
-}
-
-.property::before {
-  content: '# ';
-  font-size: 25px;
-  margin-left: -20px;
-  float: left;
-  color: #0081c9;
 }
 
 h3 {
