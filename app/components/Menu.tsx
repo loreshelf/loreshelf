@@ -325,7 +325,7 @@ class Menu extends Component {
         boardMeta.name.includes(filterText)
       );
     }
-    if (filterBy.name !== 'All') {
+    if (filterBy.name !== 'All' && filterBy.name !== undefined) {
       filteredBoards = filteredBoards.filter(boardMeta =>
         FILTERING_METHODS[filterBy.name](boardMeta.modified)
       );
@@ -641,7 +641,6 @@ class Menu extends Component {
                 filterable={false}
                 onItemSelect={selectedFilter => {
                   this.shouldUpdate = true;
-                  onFilterSelect(selectedFilter.name, selectedFilter.icon);
                   const newFilterSettings = { ...settings };
                   newFilterSettings.filterBy = selectedFilter;
                   onSettingsChange(newFilterSettings);

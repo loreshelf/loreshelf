@@ -1423,17 +1423,17 @@ class Home extends Component {
     const { settings, workspace } = this.state;
     const { sortBy, filterBy, notecardWidth } = settings;
     if (newSettings.sortBy !== sortBy) {
-      sortBy.method = newSettings.sortBy.sortName;
-      sortBy.asc = newSettings.sortBy.sortAsc;
-      sortBy.icon = newSettings.sortBy.sortIcon;
+      sortBy.method = newSettings.sortBy.name;
+      sortBy.asc = newSettings.sortBy.asc;
+      sortBy.icon = newSettings.sortBy.icon;
       workspace.boards.sort((a, b) => {
         return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
       });
       CONFIG_STORE.set(CONFIG.SORTBY, sortBy);
     }
     if (newSettings.filterBy !== filterBy) {
-      filterBy.name = newSettings.filterBy.filterName;
-      filterBy.icon = newSettings.filterBy.filterIcon;
+      filterBy.name = newSettings.filterBy.name;
+      filterBy.icon = newSettings.filterBy.icon;
       CONFIG_STORE.set(CONFIG.FILTERBY, filterBy);
     }
     let updateBoard = false;
@@ -1579,7 +1579,6 @@ class Home extends Component {
       CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
-    console.log(`workspaces:${workspaces}`);
     CONFIG_STORE.set(CONFIG.WORKSPACES, workspaces);
     CONFIG_STORE.set(CONFIG.UPDATELASTCHECKED, updateLastChecked);
   }
