@@ -57,10 +57,6 @@ p a:hover {
   width: 100%;
 }
 
-.bp3-editable-text-content {
-  text-overflow: clip;
-}
-
 .bp3-editable-text-input {
   outline: none;
   white-space: nowrap;
@@ -388,6 +384,10 @@ td img {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.55);
+}
+
+*:focus {
+  outline: 0 !important;
 }
 
 .bp3-editable-text-input::-webkit-input-placeholder {

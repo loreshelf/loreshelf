@@ -1369,7 +1369,7 @@ class Home extends Component {
       boardContent,
       stats
     );
-    if (spoolingCardIndex !== null) {
+    if (spoolingCardIndex !== undefined) {
       // Start spooling
       const cardIndex = spoolingBoardData.cards.findIndex(card => {
         return card.title === cardName;

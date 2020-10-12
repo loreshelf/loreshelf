@@ -106,7 +106,7 @@ ul ul {
   margin-block-end: 0px;
 }
 ul li {
-  color: #92f8e6;
+  color: hsla(204, 33%, 97%, 1) !important;
 }
 ul li p {
   color: hsla(204, 33%, 97%, 1) !important;
@@ -117,7 +117,7 @@ ol {
   margin-top: 10px;
 }
 ol li {
-  color: #92f8e6;
+  color: hsla(204, 33%, 97%, 1) !important;
 }
 ol li p {
   color: hsla(204, 33%, 97%, 1) !important;
@@ -182,6 +182,7 @@ td:not(:first-child) {
 }
 img {
   width: auto;
+  max-width: calc(100% + 10px);
   margin: 5px -5px;
   display: block;
   position: relative;

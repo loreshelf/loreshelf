@@ -361,25 +361,21 @@ const Card: React.FC<CardProps> = forwardRef(
                     position={Position.BOTTOM}
                     inheritDarkTheme
                   >
-                    <EditableText
-                      placeholder="Edit title..."
-                      disabled
-                      value={cardData.title}
-                    />
-                  </Tooltip>
-                  {cardData.title.length > 18 && (
                     <div
                       style={{
-                        marginLeft: '-19px',
-                        paddingLeft: '3px',
-                        paddingRight: '3px',
-                        backgroundColor: '#0081C9',
-                        zIndex: '2'
+                        width: `${notecardWidth - 50}px`,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis'
                       }}
                     >
-                      ...
+                      <EditableText
+                        placeholder="Edit title..."
+                        disabled
+                        value={cardData.title}
+                      />
                     </div>
-                  )}
+                  </Tooltip>
                   <Button
                     icon="fullscreen"
                     minimal

@@ -2,6 +2,7 @@
 /* eslint-disable no-restricted-syntax */
 import { MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown';
 import MarkdownIt from 'markdown-it';
+import path from 'path';
 import { Mark } from 'prosemirror-model';
 import { schema } from '../editor/schema';
 import Metadata from '../editor/Metadata';
@@ -411,7 +412,16 @@ export function md2html(sourcemd) {
     }
   });
   // eslint-disable-next-line global-require
-  const result = `<head><style>${defaultNotebookStyle}</style></head><body><div id="notebook">${newcards}</div></body>`;
+  const baseURI = document.getElementById('baseURI').href;
+  let result = `<head><base id="baseURI" href="${decodeURI(
+    baseURI
+  )}" /><style>${defaultNotebookStyle}</style></head><body><div id="notebook">${newcards}</div></body>`;
+  const reg = /<img.*?src="(.*?)"[^>]+>/g;
+  let imgSrc;
+  // eslint-disable-next-line no-cond-assign
+  while ((imgSrc = reg.exec(result)) !== null) {
+    result = result.replaceAll(imgSrc[1], decodeURI(imgSrc[1]));
+  }
   // console.log(result);
   return result;
 }

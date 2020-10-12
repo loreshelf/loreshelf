@@ -12,7 +12,7 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, dialog, protocol } from 'electron';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -141,6 +141,10 @@ const createWindow = async () => {
   ) {
     await installExtensions();
   }
+  protocol.registerFileProtocol('file', (request, callback) => {
+    const pathname = request.url.replace('file:///', '');
+    callback(pathname);
+  });
 
   const mainWindowStateKeeper = windowStateKeeper('main');
 
@@ -156,13 +160,15 @@ const createWindow = async () => {
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
         ? {
-            nodeIntegration: true
+            nodeIntegration: true,
+            enableRemoteModule: true
           }
         : {
-            nodeIntegration: true // TODO: change to false, more needs to be setup!
+            nodeIntegration: true, // TODO: change to false, more needs to be setup!
             // contextIsolation: true, // protect against prototype pollution
             // enableRemoteModule: false // turn off remote
             // ,preload: path.join(__dirname, '/dist/renderer.prod.js')
+            enableRemoteModule: true
           }
   });
 
@@ -566,7 +572,12 @@ const createWindow = async () => {
 
   ipcMain.on('export-pdf', (event, boardName, htmlSource) => {
     const winPDF = new BrowserWindow({
-      show: false
+      show: false,
+      webPreferences: {
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        webSecurity: false
+      }
     });
     winPDF.webContents.loadURL(
       `data:text/html;charset=utf-8;base64,${Buffer.from(htmlSource).toString(

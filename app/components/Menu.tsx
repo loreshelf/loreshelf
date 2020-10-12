@@ -668,7 +668,7 @@ class Menu extends Component {
               }}
               style={{ marginTop: '1px' }}
             />
-            <div style={{ height: '100%', overflowY: 'auto' }}>
+            <div style={{ height: '0', flex: '1 1 auto', overflowY: 'auto' }}>
               <ButtonGroup
                 vertical
                 minimal
