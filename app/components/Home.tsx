@@ -1118,7 +1118,7 @@ class Home extends Component {
       // This part very much depends on Board component structure!
       setTimeout(() => {
         // this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
-        const n = this.boardRef.boardRef.current.childNodes;
+        const n = this.boardRef.boardRef.current.firstChild.childNodes;
         const title =
           n[n.length - 1].firstChild.firstChild.firstChild.firstChild.lastChild
             .firstChild.firstChild.firstChild.firstElementChild;

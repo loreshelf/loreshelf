@@ -54,7 +54,7 @@ const COMMANDS = [
     }
   },
   {
-    name: 'metadata',
+    name: 'form',
     disabled: isNotInline,
     onSelect: (start, end, state, dispatch) => {
       const headerCells = [];

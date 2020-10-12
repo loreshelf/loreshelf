@@ -7,9 +7,6 @@
   box-sizing: border-box;
   flex-wrap: wrap;
   padding: 0;
-  padding-right: 30px;
-  padding-left: 30px;
-  padding-bottom: 30px;
   margin-top: 10px;
   overflow: -moz-scrollbars-vertical;
   overflow-y: scroll;
