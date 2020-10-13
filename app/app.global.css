@@ -290,6 +290,12 @@ td img {
   margin-bottom: -26px;
 }
 
+.metadata td img {
+  max-width: calc(100% + 9px);
+  margin: -3px -4px;
+  margin-bottom: -22px;
+}
+
 @keyframes up-right {
   0% {
     transform: scale(1);

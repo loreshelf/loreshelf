@@ -1483,8 +1483,12 @@ class Home extends Component {
 
   exportToPDF() {
     const { boardData } = this.state;
-    const htmlSource = md2html(this.getCurrentBoardMd());
-    ipcRenderer.send('export-pdf', boardData.name, htmlSource);
+    md2html(this.getCurrentBoardMd())
+      .then(htmlSource => {
+        ipcRenderer.send('export-pdf', boardData.name, htmlSource);
+        return 1;
+      })
+      .catch(error => {});
   }
 
   autoSave(immediatelyWhenNeeded?) {

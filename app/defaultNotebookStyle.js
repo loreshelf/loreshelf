@@ -148,6 +148,14 @@ td {
 td:not(:first-child) {
   border-left: 1px solid hsl(206, 24%, 64%);
 }
+td img {
+  max-width: calc(100% + 3px);
+  margin: -3px -4px;
+}
+.metadata td img {
+  max-width: calc(100% + 9px);
+  margin: -3px -4px;
+}
 .metadata {
   border-collapse: separate !important;
   border-spacing: 0 5px;

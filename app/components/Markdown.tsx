@@ -380,7 +380,33 @@ export function icons2svg(sourceMd) {
   return result;
 }
 
-export function md2html(sourcemd) {
+async function toDataURL(url) {
+  /** const xhr = new XMLHttpRequest();
+  xhr.open('GET', url, false); // `false` makes the request synchronous
+  xhr.send();
+  if (xhr.status === 200) {
+    // console.log(xhr.response);
+    const reader = new FileReaderSync();
+    reader.readAsDataURL(xhr.response);
+  } */
+  const response = await new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      resolve(xhr.response);
+    };
+    xhr.open('GET', url);
+    xhr.responseType = 'blob';
+    xhr.send();
+  });
+  const resultBase64 = await new Promise(resolve => {
+    const fileReader = new FileReader();
+    fileReader.onload = e => resolve(fileReader.result);
+    fileReader.readAsDataURL(response);
+  });
+  return resultBase64;
+}
+
+export async function md2html(sourcemd) {
   const md = new MarkdownIt();
   let transformedMd = metadata2table(sourcemd);
   transformedMd = icons2links(transformedMd);
@@ -420,7 +446,9 @@ export function md2html(sourcemd) {
   let imgSrc;
   // eslint-disable-next-line no-cond-assign
   while ((imgSrc = reg.exec(result)) !== null) {
-    result = result.replaceAll(imgSrc[1], decodeURI(imgSrc[1]));
+    // eslint-disable-next-line no-await-in-loop
+    const newImgSrc = await toDataURL(decodeURI(imgSrc[1]));
+    result = result.replaceAll(imgSrc[1], newImgSrc);
   }
   // console.log(result);
   return result;

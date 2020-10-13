@@ -161,14 +161,16 @@ const createWindow = async () => {
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
         ? {
             nodeIntegration: true,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            spellcheck: false
           }
         : {
             nodeIntegration: true, // TODO: change to false, more needs to be setup!
             // contextIsolation: true, // protect against prototype pollution
             // enableRemoteModule: false // turn off remote
             // ,preload: path.join(__dirname, '/dist/renderer.prod.js')
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            spellcheck: false
           }
   });
 
