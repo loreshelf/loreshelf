@@ -13,7 +13,7 @@ This is a mention which you can open.
 
 # Open Mention
 
-**CTRL + Click** on the mention label
+**CTRL + Click** on the mention label.
 
 # Create Mention
 

@@ -14,9 +14,19 @@ Write down the today date and current time automatically using the slash command
 
 [Date and time](@slash%20commands#Date%20and%20time "Open from 'slash commands'")
 
+# Form
+
+Structure information in forms.
+
+```metadata
+Keyshortcut to add row=Press *Enter*
+```
+
+Create a new form using slash commands [Form](@slash%20commands#Form "Open from 'slash commands'")
+
 # Table
 
-Structure information in tables
+Structure information in tables.
 
 | Question              | Answer        |
 | --------------------- | ------------- |

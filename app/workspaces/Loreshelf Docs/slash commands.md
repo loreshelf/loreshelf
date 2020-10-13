@@ -10,6 +10,28 @@ Headers can contain icons
 
 /icon-
 
+# Form
+
+Write /form and confirm with _Enter_.
+
+```metadata
+Example form property=Example form value
+```
+
+## Add new row
+
+Press _Enter_ when the cursor is in the form.
+
+Alternatively right click on the row and select **Add row after** from the context menu.
+
+## Remove row
+
+Right click on the row and select **Delete row** from the context menu.
+
+## Remove form
+
+Right click on the form and select **Remove table** from the context menu.
+
 # Table
 
 Write /table and confirm with _Enter_.

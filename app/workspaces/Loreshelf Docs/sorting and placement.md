@@ -18,11 +18,15 @@ Drag and drop a notecard to another notebook by dropping it on top of the notebo
 
 # Sort by name
 
-![Sort by name.png](../Loreshelf%20Docs/img/Sort%20by%20name.png)Sort list of notebooks on the left side by name ascending or descending using the sort switch button.
+![Sort by name.png](../Loreshelf%20Docs/img/Sort%20by%20name.png)
+
+Sort list of notebooks on the left side by name ascending or descending using the sort switch button.
 
 # Sort by last updated
 
-![Sort by last updated.png](../Loreshelf%20Docs/img/Sort%20by%20last%20updated.png)Sort list of notebooks on the left side by last updated ascending or descending using the sort switch button.
+![Sort by last updated.png](../Loreshelf%20Docs/img/Sort%20by%20last%20updated.png)
+
+Sort list of notebooks on the left side by last updated ascending or descending using the sort switch button.
 
 # Reorder notecards
 
@@ -34,4 +38,6 @@ Drag and drop a notecard to another notebook by dropping it on top of the notebo
 
 # Move notebook to workspace
 
-![Move notebook to workspace.png](../Loreshelf%20Docs/img/Move%20notebook%20to%20workspace.png)Right click on the notebook’s title and hover over **Move to workspace** and select the workspace where the current notebook should be moved to.
+![Move notebook to workspace.png](../Loreshelf%20Docs/img/Move%20notebook%20to%20workspace.png)
+
+Right click on the notebook’s title and hover over **Move to workspace** and select the workspace where the current notebook should be moved to.

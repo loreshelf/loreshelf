@@ -1,22 +1,6 @@
 # What is Loreshelf?
 
-Loreshelf is a **knowledge archive** that brings the following benefits:
-
-## Fast Access
-
-Switch quickly between notebooks and workspaces.
-
-## Structured Content
-
-The information is formated and given structure.
-
-## Responsive Views
-
-Notecards are listed next to each other.
-
-## Distributed Workspaces
-
-No central database. Every workspace can be stored elsewhere - in a Dropbox folder, a Github repository, an encrypted ZIP archive, etc.
+Loreshelf is a **distributed library** of collections for capturing data concisely.
 
 # Data Organization
 
@@ -32,7 +16,7 @@ Workspace is a folder of your notebooks.
 
 Notebooks are text files.
 
-Notecards are chapters of the notebooks.
+Notecards are records of the notebooks.
 
 # Open on startup
 

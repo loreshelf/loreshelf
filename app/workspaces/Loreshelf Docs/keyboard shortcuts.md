@@ -53,3 +53,7 @@ Press “Enter” which will add a row after the current one.
 ## Delete row
 
 Select the row with your mouse highlighting all the cells in the row and press “Delete”.
+
+## Move row up/down
+
+Place cursor to the row that you want to move and press ALT + UP/DOWN

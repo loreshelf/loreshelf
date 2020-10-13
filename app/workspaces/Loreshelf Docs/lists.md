@@ -38,6 +38,15 @@ Create ordered list by writing the number followed by dot:
 
 2. Second
 
+# Todo list
+
+Create bullet or ordered list and add check icon.
+
+- [ ]Task 1
+- [x]Task 2
+- [-]Task 3
+- [ ]Task 4[?]
+
 # Demote list
 
 To demote line to a lower list level, just hit your **Tab** key.
