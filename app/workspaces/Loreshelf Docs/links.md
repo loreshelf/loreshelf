@@ -22,6 +22,8 @@ In the notecard toolbar click on “**Add link to a file**”. This will open a 
 
 [Spreadsheet table.xls](../../Spreadsheet%20table.ods)
 
+(an example, it does not exist)
+
 # Notebook file link
 
 Follow the steps like in:

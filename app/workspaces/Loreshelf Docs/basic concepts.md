@@ -1,6 +1,8 @@
 # What is Loreshelf?
 
-Loreshelf is a **distributed library** of collections for capturing data concisely.
+Loreshelf is a **distributed library** of collections.
+
+Store and organize concise information most effectively with Loreshelf.
 
 # Data Organization
 
