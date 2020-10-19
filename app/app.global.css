@@ -342,6 +342,12 @@ td img {
   padding: 5px 5px;
 }
 
+table:not(.metadata) td {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
 .metadata td:nth-child(1) {
   background-color: #394b59;
   background-image: linear-gradient(
@@ -353,8 +359,8 @@ td img {
   border-radius: 3px 0 0 3px;
   color: #f5f8fa;
   text-align: left;
-  min-width: 30px;
-  width: 30px;
+  min-width: 50px;
+  width: 50px;
   max-width: 120px;
 }
 
