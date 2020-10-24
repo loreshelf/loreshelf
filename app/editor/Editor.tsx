@@ -3,7 +3,13 @@
 /* eslint-disable promise/always-return */
 /* eslint-disable react/prop-types */
 import React from 'react';
-import { Menu, MenuItem, ContextMenu, Intent } from '@blueprintjs/core';
+import {
+  Menu,
+  MenuItem,
+  ContextMenu,
+  Intent,
+  MenuDivider
+} from '@blueprintjs/core';
 import path from 'path';
 import log from 'electron-log';
 import { EditorState, Plugin, Selection } from 'prosemirror-state';
@@ -460,6 +466,55 @@ Still | renders | nicely
               true
             );
             return true;
+          }
+          if (event.which === 3) {
+            const selectedText = view.state.selection.content();
+            if (selectedText) {
+              const menu = React.createElement(
+                Menu,
+                {}, // empty props
+                React.createElement(MenuDivider, {
+                  title: 'Edit'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    document.execCommand('cut');
+                  },
+                  disabled: selectedText.size === 0,
+                  text: 'Cut',
+                  label: 'Ctrl+X',
+                  icon: 'cut'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    document.execCommand('copy');
+                  },
+                  disabled: selectedText.size === 0,
+                  text: 'Copy',
+                  label: 'Ctrl+C',
+                  icon: 'duplicate'
+                }),
+                React.createElement(MenuItem, {
+                  onClick: () => {
+                    document.execCommand('paste');
+                  },
+                  text: 'Paste',
+                  label: 'Ctrl+V',
+                  icon: 'clipboard'
+                })
+              );
+
+              // mouse position is available on event
+              ContextMenu.show(
+                menu,
+                { left: event.clientX, top: event.clientY },
+                () => {
+                  // menu was closed; callback optional
+                },
+                true
+              );
+              return true;
+            }
           }
           return isCTRL;
         }
