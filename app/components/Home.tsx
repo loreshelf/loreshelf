@@ -51,6 +51,9 @@ const CONFIG_SCHEMA = {
   filterBy: {
     name: 'string',
     icon: 'string'
+  },
+  rememberLastNotebook: {
+    type: 'boolean'
   }
 };
 
@@ -64,7 +67,8 @@ enum CONFIG {
   SORTBY = 'sortBy',
   FILTERBY = 'filterBy',
   UPDATELASTCHECKED = 'updateLastChecked',
-  NOTECARDWIDTH = 'notecardWidth'
+  NOTECARDWIDTH = 'notecardWidth',
+  REMEMBERLASTNOTEBOOK = 'rememberLastNotebook'
 }
 
 const SORTING_METHODS = {
@@ -112,6 +116,7 @@ class Home extends Component {
       icon: 'calendar'
     });
     const notecardWidth = CONFIG_STORE.get(CONFIG.NOTECARDWIDTH, 220);
+    const rememberLastNotebook = CONFIG_STORE.get(CONFIG.REMEMBERLASTNOTEBOOK);
 
     const updateDateStr = CONFIG_STORE.get(CONFIG.UPDATELASTCHECKED);
     const updateLastChecked = updateDateStr ? new Date(updateDateStr) : null;
@@ -122,7 +127,8 @@ class Home extends Component {
     const settings = {
       sortBy,
       filterBy,
-      notecardWidth
+      notecardWidth,
+      rememberLastNotebook
     };
 
     this.menuRef = React.createRef();
@@ -455,6 +461,13 @@ class Home extends Component {
       });
     });
 
+    ipcRenderer.on('remember-last-notebook', () => {
+      const { rememberLastNotebook } = self.state.settings;
+      if (rememberLastNotebook) {
+        self.setBoardOnStartup();
+      }
+    });
+
     ipcRenderer.on('refresh-and-save-callback', () => {
       self.autoSave();
     });
@@ -519,6 +532,10 @@ class Home extends Component {
       CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
       CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
     }
+    if (!boardOnStartup) {
+      // remember last notebook by default when no notebook is set to open on startup
+      this.setRememberLastNotebook(true);
+    }
     if (
       !configWorkspaces ||
       configWorkspaces.length !== existingWorkspaces.length
@@ -567,6 +584,13 @@ class Home extends Component {
         workspaceOnStartup: workspace.path
       });
     }
+  }
+
+  setRememberLastNotebook(val) {
+    CONFIG_STORE.set(CONFIG.REMEMBERLASTNOTEBOOK, val);
+    const { settings } = this.state;
+    settings.rememberLastNotebook = val;
+    this.setState({ settings });
   }
 
   updateWorkspace(
@@ -1421,7 +1445,7 @@ class Home extends Component {
 
   changeSettings(newSettings) {
     const { settings, workspace } = this.state;
-    const { sortBy, filterBy, notecardWidth } = settings;
+    const { sortBy, filterBy, notecardWidth, rememberLastNotebook } = settings;
     if (newSettings.sortBy !== sortBy) {
       sortBy.method = newSettings.sortBy.name;
       sortBy.asc = newSettings.sortBy.asc;
@@ -1435,6 +1459,14 @@ class Home extends Component {
       filterBy.name = newSettings.filterBy.name;
       filterBy.icon = newSettings.filterBy.icon;
       CONFIG_STORE.set(CONFIG.FILTERBY, filterBy);
+    }
+    if (newSettings.rememberLastNotebook !== rememberLastNotebook) {
+      this.setRememberLastNotebook(newSettings.rememberLastNotebook);
+      if (!newSettings.rememberLastNotebook) {
+        // remove the last onstartup values
+        CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
+        CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
+      }
     }
     let updateBoard = false;
     if (newSettings.notecardWidth !== notecardWidth) {
@@ -1745,7 +1777,10 @@ class Home extends Component {
                 ipcRenderer.send('workspace-close', workspacePath);
               }}
               onSwitchWorkspace={this.switchWorkspace}
-              onSetBoardOnStartup={this.setBoardOnStartup}
+              onSetBoardOnStartup={() => {
+                this.setBoardOnStartup();
+                this.setRememberLastNotebook(false);
+              }}
               onSettingsChange={this.changeSettings}
               onNewCard={this.newCard}
               onNewSecuredWorkspace={this.newSecuredWorkspace}

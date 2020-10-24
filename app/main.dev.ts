@@ -667,6 +667,7 @@ const createWindow = async () => {
   });
 
   mainWindow.on('close', () => {
+    mainWindow.webContents.send('remember-last-notebook');
     mainWindow.webContents.send('board-save');
     if (watcher != null) {
       watcher.close();

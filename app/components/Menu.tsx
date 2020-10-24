@@ -16,7 +16,8 @@ import {
   Card,
   Tag,
   Tooltip,
-  Slider
+  Slider,
+  Switch
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import fs from 'fs';
@@ -275,6 +276,7 @@ class Menu extends Component {
       knownWorkspaces,
       workspace,
       updateDownloading,
+      settings,
       newVersion,
       onSettingsChange,
       onSelectBoard,
@@ -284,7 +286,6 @@ class Menu extends Component {
       onSwitchWorkspace,
       onSetBoardOnStartup,
       onNewCard,
-      settings,
       onNewSecuredWorkspace,
       onExportToPDF,
       onMoveBoardToWorkspace,
@@ -1050,6 +1051,15 @@ class Menu extends Component {
                 vertical={false}
               />
             </div>
+            <Switch
+              checked={newSettings?.rememberLastNotebook}
+              label="Remember the last notebook and open it on startup"
+              disabled={settings?.rememberLastNotebook}
+              onChange={() => {
+                newSettings.rememberLastNotebook = !newSettings.rememberLastNotebook;
+                this.setState({ newSettings });
+              }}
+            />
           </div>
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
