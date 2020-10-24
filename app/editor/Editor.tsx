@@ -6,13 +6,18 @@ import React from 'react';
 import { Menu, MenuItem, ContextMenu, Intent } from '@blueprintjs/core';
 import path from 'path';
 import log from 'electron-log';
-import { EditorState, Plugin } from 'prosemirror-state';
+import { EditorState, Plugin, Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
-import { deleteRow } from 'prosemirror-tables';
+import {
+  deleteRow,
+  selectionCell,
+  isInTable,
+  nextCell
+} from 'prosemirror-tables';
 import { liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { ipcRenderer, clipboard, shell, nativeImage } from 'electron';
 import style from './Editor.css';
@@ -102,7 +107,7 @@ Still | renders | nicely
         Escape: () => {
           this.view.root.activeElement.blur();
         },
-        ArrowUp: () => {
+        ArrowUp: (state, dispatch) => {
           if (this.suggestionPos >= 0) {
             this.cancelTransaction = true;
             let selectedIndex = this.suggestionIndex - 1;
@@ -111,9 +116,21 @@ Still | renders | nicely
             }
             this.suggestionIndex = selectedIndex;
             this.updateDoc();
+          } else if (isInTable(state)) {
+            const $cell = nextCell(selectionCell(state), 'vert', -1);
+            if ($cell) {
+              const newPos = $cell
+                .node(0)
+                .resolve($cell.pos + $cell.nodeAfter.nodeSize - 1);
+              dispatch(
+                state.tr.setSelection(Selection.near(newPos)).scrollIntoView()
+              );
+              return true;
+            }
           }
+          return false;
         },
-        ArrowDown: () => {
+        ArrowDown: (state, dispatch) => {
           if (this.suggestionPos >= 0) {
             this.cancelTransaction = true;
             let selectedIndex = this.suggestionIndex + 1;
@@ -122,7 +139,19 @@ Still | renders | nicely
             }
             this.suggestionIndex = selectedIndex;
             this.updateDoc();
+          } else if (isInTable(state)) {
+            const $cell = nextCell(selectionCell(state), 'vert', 1);
+            if ($cell) {
+              const newPos = $cell
+                .node(0)
+                .resolve($cell.pos + $cell.nodeAfter.nodeSize - 1);
+              dispatch(
+                state.tr.setSelection(Selection.near(newPos)).scrollIntoView()
+              );
+              return true;
+            }
           }
+          return false;
         },
         Enter: () => {
           if (this.suggestionPos >= 0) {
@@ -368,7 +397,9 @@ Still | renders | nicely
             const transaction = view.state.tr;
             const { $cursor } = transaction.selection;
             const isNotTableCell =
-              $cursor.parent && $cursor.parent.type !== schema.nodes.table_cell;
+              $cursor &&
+              $cursor.parent &&
+              $cursor.parent.type !== schema.nodes.table_cell;
             const menu = React.createElement(
               Menu,
               {}, // empty props

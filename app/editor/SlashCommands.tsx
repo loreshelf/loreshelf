@@ -87,12 +87,10 @@ const COMMANDS = [
     onSelect: (start, end, state, dispatch) => {
       const headerCells = [];
       const cells = [];
-      const pros = schema.text('Pros');
-      const cons = schema.text('Cons');
       cells.push(schema.nodes.table_cell.createAndFill());
       cells.push(schema.nodes.table_cell.createAndFill());
-      headerCells.push(schema.nodes.table_header.createChecked(null, pros));
-      headerCells.push(schema.nodes.table_header.createChecked(null, cons));
+      headerCells.push(schema.nodes.table_header.createAndFill());
+      headerCells.push(schema.nodes.table_header.createAndFill());
       const headerRows = schema.nodes.table_row.createChecked(
         null,
         headerCells
