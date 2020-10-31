@@ -530,6 +530,11 @@ const createWindow = async () => {
     event.reply('board-rename-callback', oldBoardPath, newBoardPath);
   });
 
+  ipcMain.on('board-content', (event, boardPath) => {
+    const boardContent = fs.readFileSync(boardPath, 'utf8');
+    event.reply('board-content-callback', boardPath, boardContent);
+  });
+
   ipcMain.on(
     'board-spooling-load',
     (event, boardPath, spoolingCardIndex?, cardName?) => {

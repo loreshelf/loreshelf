@@ -1795,7 +1795,7 @@ class Home extends Component {
               }}
             />,
             mainContent,
-            <SidePanel key="sidePanel" />
+            <SidePanel key="sidePanel" workspace={workspace} />
           ]
         ) : (
           <NonIdealState>
