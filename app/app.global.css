@@ -391,7 +391,7 @@ table:not(.metadata) td {
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(16, 22, 26, 0.2);
 }
 
 /* Handle on hover */

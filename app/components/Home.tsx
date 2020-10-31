@@ -29,6 +29,7 @@ import {
 import MarkdownIcons from './MarkdownIcons';
 import { AppToaster, AppUpdateToaster } from './AppToaster';
 import brandIcon from '../resources/icon.png';
+import SidePanel from './SidePanel';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -1793,7 +1794,8 @@ class Home extends Component {
                 this.loadWorkspace(loreshelfDocsWorkspacePath, true);
               }}
             />,
-            mainContent
+            mainContent,
+            <SidePanel key="sidePanel" />
           ]
         ) : (
           <NonIdealState>

@@ -1,0 +1,16 @@
+.sidePanel {
+  margin-left: -51px;
+}
+
+.sidePanelContent {
+  background-color: rgb(48, 64, 77);
+  box-shadow: rgba(16, 22, 26, 0.2) 0 0 0 1px, rgba(16, 22, 26, 0.4) 0 1px 1px,
+    rgba(16, 22, 26, 0.4) 0 2px 6px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 10px;
+}

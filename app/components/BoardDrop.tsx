@@ -24,7 +24,7 @@ const BoardDrop: React.FC = ({ moveCard, children }) => {
       ref={ref}
       style={{
         paddingLeft: '30px',
-        paddingRight: '30px',
+        paddingRight: '67px',
         paddingBottom: '30px'
       }}
     >
