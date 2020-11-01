@@ -25,7 +25,6 @@ enum SidePanelContent {
 class SidePanel extends Component {
   constructor(props) {
     super(props);
-    const { workspace } = this.props;
     this.state = {
       open: false,
       content: SidePanelContent.SEARCH,
@@ -39,10 +38,17 @@ class SidePanel extends Component {
 
     // callback when content ready for indexing and search
     ipcRenderer.on('board-content-callback', (e, path, content) => {
+      const { workspace } = this.props;
       const boardIndex = workspace.boards.findIndex(board => {
         return board.path === path;
       });
       workspace.boards[boardIndex].content = content;
+      const undefinedBoard = workspace.boards.findIndex(b => {
+        return b.content === undefined;
+      });
+      if (undefinedBoard < 0) {
+        this.contentForSearchReady();
+      }
     });
   }
 
@@ -59,7 +65,6 @@ class SidePanel extends Component {
     wi.search(searchText, rs => {
       results.length = 0;
       const temp = {};
-      console.log(rs);
       rs.result.forEach(r => {
         const notebook = r.path.substring(
           r.path.lastIndexOf(nodePath.sep) + 1,
@@ -68,19 +73,30 @@ class SidePanel extends Component {
         if (!temp[notebook]) {
           temp[notebook] = { tags: [] };
         }
+        temp[notebook].path = r.path;
         temp[notebook].tags.push({ id: r.id, title: r.title });
+        if (temp[notebook].tags.length > 3) {
+          if (temp[notebook].more === undefined) {
+            temp[notebook].more = 1;
+          } else {
+            temp[notebook].more += 1;
+          }
+        }
       });
       Object.keys(temp).forEach(k => {
-        results.push({ notebook: k, notecards: temp[k].tags });
+        results.push({
+          notebook: k,
+          notecards: temp[k].tags,
+          more: temp[k].more,
+          path: temp[k].path
+        });
       });
       this.setState({ results });
     });
   }
 
   search() {
-    const { searchText } = this.state;
     const { workspace } = this.props;
-    console.log(searchText);
     // ipc set workspace.boards.content
     let allSet = true;
     workspace.boards.forEach(board => {
@@ -110,6 +126,16 @@ class SidePanel extends Component {
 
   render() {
     const { open, content, searchIn, searchText, results } = this.state;
+    const { boardPath, showonly, openBoard, onSwitchShowOnly } = this.props;
+    let totalResults = 0;
+    if (results) {
+      results.forEach(r => {
+        totalResults += r.notecards.length;
+        if (r.more) {
+          totalResults += r.more;
+        }
+      });
+    }
 
     return (
       <div className={styles.sidePanel}>
@@ -130,13 +156,13 @@ class SidePanel extends Component {
             <div className={styles.sidePanelContent}>
               <RadioGroup
                 label="Search in"
-                onChange={(e, x) => {
+                onChange={e => {
                   this.setState({ searchIn: e.target.value });
                 }}
                 selectedValue={searchIn}
               >
                 <Radio label="Current workspace" value="current" />
-                <Radio label="All workspaces" value="all" />
+                <Radio label="All workspaces" value="all" disabled />
               </RadioGroup>
               {searchIn === 'all' && (
                 <div>
@@ -183,19 +209,6 @@ class SidePanel extends Component {
               </ButtonGroup>
               <div
                 style={{
-                  width: 'calc(100% + 20px)',
-                  textAlign: 'center',
-                  background: '#202b33',
-                  clear: 'both',
-                  fontSize: 'small',
-                  padding: '5px 10px',
-                  marginLeft: '-10px'
-                }}
-              >
-                23 results
-              </div>
-              <div
-                style={{
                   minHeight: '0',
                   display: 'flex',
                   flex: '1',
@@ -203,13 +216,25 @@ class SidePanel extends Component {
                   margin: '0px -10px'
                 }}
               >
-                <ButtonGroup
-                  vertical
-                  fill
-                  style={{ overflow: 'auto', flex: '1' }}
-                >
-                  {results.length > 0 ? (
-                    <>
+                {results.length > 0 && (
+                  <>
+                    <div
+                      style={{
+                        width: 'calc(100% + 20px)',
+                        textAlign: 'center',
+                        background: '#202b33',
+                        fontSize: 'small',
+                        padding: '5px 10px',
+                        marginLeft: '-10px'
+                      }}
+                    >
+                      {`${totalResults} results`}
+                    </div>
+                    <ButtonGroup
+                      vertical
+                      fill
+                      style={{ overflow: 'auto', flex: '1' }}
+                    >
                       {results.map(r => (
                         <Card
                           interactive
@@ -218,35 +243,52 @@ class SidePanel extends Component {
                           style={{
                             padding: '5px',
                             margin: '10px 0px',
-                            background: '#455b6e'
+                            background:
+                              boardPath === r.path && showonly.enabled
+                                ? '#0081c9'
+                                : '#455b6e'
+                          }}
+                          onClick={() => {
+                            if (boardPath !== r.path || !showonly.notecards) {
+                              const notecards = [];
+                              r.notecards.forEach(n => {
+                                notecards.push(n.title);
+                              });
+                              openBoard(r.path, notecards);
+                            } else {
+                              onSwitchShowOnly();
+                            }
                           }}
                         >
                           <h3 style={{ padding: '0px 5px', minHeight: 'auto' }}>
                             {r.notebook}
                           </h3>
-                          {r.notecards.map(n => (
-                            <Tag
-                              key={n.id}
-                              fill
-                              style={{
-                                margin: '5px 0px'
-                              }}
+                          {r.notecards.map(
+                            (n, i) =>
+                              i < 3 && (
+                                <Tag
+                                  key={n.id}
+                                  fill
+                                  style={{
+                                    margin: '5px 0px'
+                                  }}
+                                >
+                                  {n.title}
+                                </Tag>
+                              )
+                          )}
+                          {r.more && (
+                            <div
+                              style={{ fontSize: 'small', textAlign: 'right' }}
                             >
-                              {n.title}
-                            </Tag>
-                          ))}
-                          <div
-                            style={{ fontSize: 'small', textAlign: 'right' }}
-                          >
-                            and 2 more
-                          </div>
+                              {`and ${r.more} more`}
+                            </div>
+                          )}
                         </Card>
                       ))}
-                    </>
-                  ) : (
-                    <div>No results</div>
-                  )}
-                </ButtonGroup>
+                    </ButtonGroup>
+                  </>
+                )}
               </div>
             </div>
           )}

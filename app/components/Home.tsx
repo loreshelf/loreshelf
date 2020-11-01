@@ -147,7 +147,8 @@ class Home extends Component {
       showPassword: false,
       loading: true,
       appVersion: '?',
-      updateLastChecked
+      updateLastChecked,
+      showonly: { enabled: false, notecards: null }
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -927,8 +928,8 @@ class Home extends Component {
     }
   }
 
-  loadBoard(boardMetaIndex) {
-    const { workspace } = this.state;
+  loadBoard(boardMetaIndex, showonlyNotecards?) {
+    const { workspace, showonly } = this.state;
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
     if (workspace.zip) {
@@ -951,6 +952,13 @@ class Home extends Component {
         });
     } else {
       ipcRenderer.send('board-read', boardMeta);
+    }
+    if (showonlyNotecards) {
+      showonly.enabled = true;
+      showonly.notecards = showonlyNotecards;
+      this.setState({ showonly });
+    } else {
+      showonly.enabled = false;
     }
   }
 
@@ -1008,13 +1016,13 @@ class Home extends Component {
     this.loadBoardWithPath(boardPath);
   }
 
-  loadBoardWithPath(boardPath) {
+  loadBoardWithPath(boardPath, showonlyNotecards?) {
     const { workspace } = this.state;
     const boardIndex = workspace.boards.findIndex(board => {
       return board.path === boardPath;
     });
     if (boardIndex >= 0) {
-      this.loadBoard(boardIndex);
+      this.loadBoard(boardIndex, showonlyNotecards);
     }
   }
 
@@ -1631,7 +1639,8 @@ class Home extends Component {
       loading,
       loreshelfDocsWorkspacePath,
       updateDownloading,
-      newVersion
+      newVersion,
+      showonly
     } = this.state;
 
     if (loading) {
@@ -1670,6 +1679,7 @@ class Home extends Component {
     );
 
     const boardStatus = boardData && boardData.status ? boardData.status : '';
+    const boardPath = boardData && boardData.path ? boardData.path : '';
 
     const unlockWorkspace = () => {
       const password = this.pwdInput.value;
@@ -1695,6 +1705,7 @@ class Home extends Component {
             boardData={boardData}
             workspace={workspace}
             settings={settings}
+            showonly={showonly}
             onEditTitle={this.editTitle}
             onEditCard={this.editCard}
             onNewCard={this.newCard}
@@ -1795,7 +1806,18 @@ class Home extends Component {
               }}
             />,
             mainContent,
-            <SidePanel key="sidePanel" workspace={workspace} />
+            <SidePanel
+              key="sidePanel"
+              workspace={workspace}
+              boardPath={boardPath}
+              showonly={showonly}
+              openBoard={this.loadBoardWithPath}
+              onSwitchShowOnly={() => {
+                showonly.enabled = !showonly.enabled;
+                this.setState({ showonly });
+                this.boardRef.forceUpdate();
+              }}
+            />
           ]
         ) : (
           <NonIdealState>

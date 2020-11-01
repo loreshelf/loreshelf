@@ -66,6 +66,7 @@ class Board extends Component {
       boardData,
       workspace,
       settings,
+      showonly,
       onEditCard,
       onNewCard,
       onRemoveCard,
@@ -112,39 +113,46 @@ class Board extends Component {
         <BoardDrop moveCard={moveCard}>
           {cardData.length > 0 ? (
             <>
-              {cardData.map(c => (
-                <Card
-                  key={`${c.title}-${cardData.indexOf(c)}`}
-                  card={c}
-                  workspace={workspace}
-                  settings={settings}
-                  collapsed={collapsed}
-                  index={cardData.indexOf(c)}
-                  resetDivider={resetDivider}
-                  dividerIndex={dividerIndex}
-                  dividerLeft={dividerLeft}
-                  moveCard={moveCard}
-                  hoverDivider={hoverDivider}
-                  onEditCard={onEditCard}
-                  onRemoveCard={onRemoveCard}
-                  onEditTitle={onEditTitle}
-                  onRequestBoardsAsync={onRequestBoardsAsync}
-                  onRequestBoardDataAsync={onRequestBoardDataAsync}
-                  onStartSpooling={onStartSpooling}
-                  onStopSpooling={onStopSpooling}
-                  onOpenImage={this.openImage}
-                  onMoveToTop={() => {
-                    onReorderCards(cardData.indexOf(c), 0);
-                  }}
-                  onMoveToBottom={() => {
-                    onReorderCards(cardData.indexOf(c), cardData.length - 1);
-                  }}
-                  onToggleCollapse={() => {
-                    this.setState({ collapsed: !collapsed });
-                  }}
-                  onOpenBoard={onOpenBoard}
-                />
-              ))}
+              {cardData.map(
+                c =>
+                  (!showonly.enabled ||
+                    showonly.notecards.includes(c.title)) && (
+                    <Card
+                      key={`${c.title}-${cardData.indexOf(c)}`}
+                      card={c}
+                      workspace={workspace}
+                      settings={settings}
+                      collapsed={collapsed}
+                      index={cardData.indexOf(c)}
+                      resetDivider={resetDivider}
+                      dividerIndex={dividerIndex}
+                      dividerLeft={dividerLeft}
+                      moveCard={moveCard}
+                      hoverDivider={hoverDivider}
+                      onEditCard={onEditCard}
+                      onRemoveCard={onRemoveCard}
+                      onEditTitle={onEditTitle}
+                      onRequestBoardsAsync={onRequestBoardsAsync}
+                      onRequestBoardDataAsync={onRequestBoardDataAsync}
+                      onStartSpooling={onStartSpooling}
+                      onStopSpooling={onStopSpooling}
+                      onOpenImage={this.openImage}
+                      onMoveToTop={() => {
+                        onReorderCards(cardData.indexOf(c), 0);
+                      }}
+                      onMoveToBottom={() => {
+                        onReorderCards(
+                          cardData.indexOf(c),
+                          cardData.length - 1
+                        );
+                      }}
+                      onToggleCollapse={() => {
+                        this.setState({ collapsed: !collapsed });
+                      }}
+                      onOpenBoard={onOpenBoard}
+                    />
+                  )
+              )}
               {cardData.length === dividerIndex && (
                 <div
                   style={{

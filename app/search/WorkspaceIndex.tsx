@@ -84,7 +84,7 @@ class WorkspaceIndex {
   }
 
   search(text, callback) {
-    this.index.search(text, { limit: 5, page: true }, callback);
+    this.index.search(text, { limit: 10, page: true }, callback);
   }
 }
 
