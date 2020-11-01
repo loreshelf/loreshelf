@@ -74,7 +74,12 @@ class SidePanel extends Component {
           temp[notebook] = { tags: [] };
         }
         temp[notebook].path = r.path;
-        temp[notebook].tags.push({ id: r.id, title: r.title });
+        const existingTitle = temp[notebook].tags.findIndex(tag => {
+          return tag.title === r.title;
+        });
+        if (existingTitle < 0) {
+          temp[notebook].tags.push({ id: r.id, title: r.title });
+        }
         if (temp[notebook].tags.length > 3) {
           if (temp[notebook].more === undefined) {
             temp[notebook].more = 1;
@@ -96,11 +101,16 @@ class SidePanel extends Component {
   }
 
   search() {
-    const { workspace } = this.props;
+    const { workspace, showonly } = this.props;
+    showonly.enabled = false;
+    showonly.notecards = [];
     // ipc set workspace.boards.content
     let allSet = true;
     workspace.boards.forEach(board => {
-      if (board.content === undefined) {
+      if (
+        board.content === undefined ||
+        (board.indexmtime && board.modified !== board.indexmtime)
+      ) {
         allSet = false;
         ipcRenderer.send('board-content', board.path);
       }
@@ -249,7 +259,11 @@ class SidePanel extends Component {
                                 : '#455b6e'
                           }}
                           onClick={() => {
-                            if (boardPath !== r.path || !showonly.notecards) {
+                            if (
+                              boardPath !== r.path ||
+                              !showonly.notecards ||
+                              showonly.notecards.length === 0
+                            ) {
                               const notecards = [];
                               r.notecards.forEach(n => {
                                 notecards.push(n.title);

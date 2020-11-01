@@ -12,26 +12,42 @@ class WorkspaceIndex {
     this.addBoard = this.addBoard.bind(this);
     this.updateIndex = this.updateIndex.bind(this);
     this.search = this.search.bind(this);
+    const removeDialects = str => {
+      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+    FlexSearch.registerEncoder('Lextra', str => {
+      str = removeDialects(str); // custom
+      str = FlexSearch.encode('extra', str); // built-in
+      return str;
+    });
+    FlexSearch.registerEncoder('Licase', str => {
+      str = removeDialects(str); // custom
+      str = FlexSearch.encode('icase', str); // built-in
+      return str;
+    });
 
     this.createIndex(workspace);
   }
 
   createIndex(workspace) {
     this.index = new FlexSearch('balance', {
+      filter(value) {
+        return value.length > 1;
+      },
       doc: {
         id: 'id',
         field: {
           title: {
-            encode: 'extra',
+            encode: 'Lextra',
             tokenize: 'forward',
-            threshold: 7,
+            threshold: 1,
             boost: 2
           },
           path: {
             encode: false
           },
           content: {
-            encode: 'icase'
+            encode: 'Licase'
           }
         }
       }
@@ -73,7 +89,7 @@ class WorkspaceIndex {
       if (board.modified !== board.indexmtime) {
         if (board.ids) {
           board.ids.forEach(id => {
-            this.index.remove(id);
+            this.index.remove({ id });
           });
         }
         board.ids = [];

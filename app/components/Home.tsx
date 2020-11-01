@@ -957,6 +957,7 @@ class Home extends Component {
       showonly.enabled = true;
       showonly.notecards = showonlyNotecards;
       this.setState({ showonly });
+      this.boardRef.forceUpdate();
     } else {
       showonly.enabled = false;
     }
