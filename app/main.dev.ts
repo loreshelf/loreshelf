@@ -156,6 +156,8 @@ const createWindow = async () => {
     y: mainWindowStateKeeper.y,
     width: mainWindowStateKeeper.width,
     height: mainWindowStateKeeper.height,
+    minWidth: 700,
+    minHeight: 350,
     icon: path.join(__dirname, `resources${path.sep}icon.png`),
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'

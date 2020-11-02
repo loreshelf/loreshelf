@@ -71,7 +71,7 @@ class SidePanel extends Component {
           r.path.length - 3
         );
         if (!temp[notebook]) {
-          temp[notebook] = { tags: [] };
+          temp[notebook] = { tags: [], total: 0 };
         }
         temp[notebook].path = r.path;
         const existingTitle = temp[notebook].tags.findIndex(tag => {
@@ -80,6 +80,7 @@ class SidePanel extends Component {
         if (existingTitle < 0) {
           temp[notebook].tags.push({ id: r.id, title: r.title });
         }
+        temp[notebook].total += 1;
         if (temp[notebook].tags.length > 3) {
           if (temp[notebook].more === undefined) {
             temp[notebook].more = 1;
@@ -93,7 +94,8 @@ class SidePanel extends Component {
           notebook: k,
           notecards: temp[k].tags,
           more: temp[k].more,
-          path: temp[k].path
+          path: temp[k].path,
+          total: temp[k].total
         });
       });
       this.setState({ results });
@@ -103,7 +105,7 @@ class SidePanel extends Component {
   search() {
     const { workspace, showonly } = this.props;
     showonly.enabled = false;
-    showonly.notecards = [];
+    showonly.searchResult = null;
     // ipc set workspace.boards.content
     let allSet = true;
     workspace.boards.forEach(board => {
@@ -140,10 +142,7 @@ class SidePanel extends Component {
     let totalResults = 0;
     if (results) {
       results.forEach(r => {
-        totalResults += r.notecards.length;
-        if (r.more) {
-          totalResults += r.more;
-        }
+        totalResults += r.total;
       });
     }
 
@@ -261,14 +260,14 @@ class SidePanel extends Component {
                           onClick={() => {
                             if (
                               boardPath !== r.path ||
-                              !showonly.notecards ||
-                              showonly.notecards.length === 0
+                              !showonly.searchResult ||
+                              showonly.searchResult.notecards.length === 0
                             ) {
                               const notecards = [];
                               r.notecards.forEach(n => {
                                 notecards.push(n.title);
                               });
-                              openBoard(r.path, notecards);
+                              openBoard(r.path, { notecards, total: r.total });
                             } else {
                               onSwitchShowOnly();
                             }

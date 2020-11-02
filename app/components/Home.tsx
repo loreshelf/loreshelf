@@ -177,6 +177,7 @@ class Home extends Component {
     this.newSecuredWorkspace = this.newSecuredWorkspace.bind(this);
     this.onStartupCallback = this.onStartupCallback.bind(this);
     this.exportToPDF = this.exportToPDF.bind(this);
+    this.switchShowOnly = this.switchShowOnly.bind(this);
 
     window.onkeydown = e => {
       if (e.ctrlKey || e.metaKey) {
@@ -928,7 +929,7 @@ class Home extends Component {
     }
   }
 
-  loadBoard(boardMetaIndex, showonlyNotecards?) {
+  loadBoard(boardMetaIndex, searchResult?) {
     const { workspace, showonly } = this.state;
     workspace.selectedBoard = boardMetaIndex;
     const boardMeta = workspace.boards[boardMetaIndex];
@@ -953,9 +954,9 @@ class Home extends Component {
     } else {
       ipcRenderer.send('board-read', boardMeta);
     }
-    if (showonlyNotecards) {
+    if (searchResult) {
       showonly.enabled = true;
-      showonly.notecards = showonlyNotecards;
+      showonly.searchResult = searchResult;
       this.setState({ showonly });
       this.boardRef.forceUpdate();
     } else {
@@ -1017,13 +1018,13 @@ class Home extends Component {
     this.loadBoardWithPath(boardPath);
   }
 
-  loadBoardWithPath(boardPath, showonlyNotecards?) {
+  loadBoardWithPath(boardPath, searchResult?) {
     const { workspace } = this.state;
     const boardIndex = workspace.boards.findIndex(board => {
       return board.path === boardPath;
     });
     if (boardIndex >= 0) {
-      this.loadBoard(boardIndex, showonlyNotecards);
+      this.loadBoard(boardIndex, searchResult);
     }
   }
 
@@ -1533,6 +1534,13 @@ class Home extends Component {
       .catch(error => {});
   }
 
+  switchShowOnly() {
+    const { showonly } = this.state;
+    showonly.enabled = !showonly.enabled;
+    this.setState({ showonly });
+    this.boardRef.forceUpdate();
+  }
+
   autoSave(immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
@@ -1717,6 +1725,7 @@ class Home extends Component {
             onStartSpooling={this.startSpooling}
             onStopSpooling={this.stopSpooling}
             onOpenBoard={this.openBoard}
+            onSwitchShowOnly={this.switchShowOnly}
           />
         );
       } else if (
@@ -1813,11 +1822,7 @@ class Home extends Component {
               boardPath={boardPath}
               showonly={showonly}
               openBoard={this.loadBoardWithPath}
-              onSwitchShowOnly={() => {
-                showonly.enabled = !showonly.enabled;
-                this.setState({ showonly });
-                this.boardRef.forceUpdate();
-              }}
+              onSwitchShowOnly={this.switchShowOnly}
             />
           ]
         ) : (

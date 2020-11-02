@@ -76,7 +76,8 @@ class Board extends Component {
       onRequestBoardDataAsync,
       onStartSpooling,
       onStopSpooling,
-      onOpenBoard
+      onOpenBoard,
+      onSwitchShowOnly
     } = this.props;
     const { dividerIndex, dividerLeft, imageSrc, collapsed } = this.state;
     const cardData = boardData && boardData.cards ? boardData.cards : [];
@@ -110,13 +111,25 @@ class Board extends Component {
     };
     return (
       <div className={styles.board} ref={this.boardRef}>
+        {showonly.enabled && (
+          <div style={{ flex: '1 1 auto', width: '100%', padding: '5px 10px' }}>
+            {`Displaying ${showonly.searchResult.total} of ${cardData.length} notecards `}
+            <Button
+              minimal
+              onClick={onSwitchShowOnly}
+              style={{ color: '#92f8e6' }}
+            >
+              (show all)
+            </Button>
+          </div>
+        )}
         <BoardDrop moveCard={moveCard}>
           {cardData.length > 0 ? (
             <>
               {cardData.map(
                 c =>
                   (!showonly.enabled ||
-                    showonly.notecards.includes(c.title)) && (
+                    showonly.searchResult.notecards.includes(c.title)) && (
                     <Card
                       key={`${c.title}-${cardData.indexOf(c)}`}
                       card={c}
