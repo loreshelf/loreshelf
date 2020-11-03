@@ -1,7 +1,6 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
-import { ipcRenderer } from 'electron';
 import nodePath from 'path';
 import {
   Button,
@@ -35,36 +34,15 @@ class SidePanel extends Component {
     };
     this.search = this.search.bind(this);
     this.selectSearch = this.selectSearch.bind(this);
-
-    // callback when content ready for indexing and search
-    ipcRenderer.on('board-content-callback', (e, path, content) => {
-      const { workspace } = this.props;
-      const boardIndex = workspace.boards.findIndex(board => {
-        return board.path === path;
-      });
-      workspace.boards[boardIndex].content = content;
-      const undefinedBoard = workspace.boards.findIndex(b => {
-        return b.content === undefined;
-      });
-      if (undefinedBoard < 0) {
-        this.contentForSearchReady();
-      }
-    });
+    this.searchReady = this.searchReady.bind(this);
   }
 
-  contentForSearchReady() {
+  searchReady() {
     const { workspaceIndex, searchText, results } = this.state;
-    const { workspace } = this.props;
-    let wi = workspaceIndex;
-    if (wi == null) {
-      wi = new WorkspaceIndex(workspace);
-      this.setState({ workspaceIndex: wi });
-    } else {
-      wi.updateIndex();
-    }
-    wi.search(searchText, rs => {
+    workspaceIndex.search(searchText, rs => {
       results.length = 0;
       const temp = {};
+      console.log(rs);
       rs.result.forEach(r => {
         const notebook = r.path.substring(
           r.path.lastIndexOf(nodePath.sep) + 1,
@@ -104,21 +82,18 @@ class SidePanel extends Component {
 
   search() {
     const { workspace, showonly } = this.props;
+    const { workspaceIndex } = this.state;
     showonly.enabled = false;
     showonly.searchResult = null;
-    // ipc set workspace.boards.content
-    let allSet = true;
-    workspace.boards.forEach(board => {
-      if (
-        board.content === undefined ||
-        (board.indexmtime && board.modified !== board.indexmtime)
-      ) {
-        allSet = false;
-        ipcRenderer.send('board-content', board.path);
-      }
-    });
-    if (allSet) {
-      this.contentForSearchReady();
+    let wi = workspaceIndex;
+    if (wi == null) {
+      wi = new WorkspaceIndex(workspace);
+      this.setState({ workspaceIndex: wi });
+      wi.createIndex(workspace, this.searchReady);
+    } else if (!wi.sameWorkspace(workspace)) {
+      wi.createIndex(workspace, this.searchReady);
+    } else {
+      wi.updateIndex(this.searchReady);
     }
   }
 
