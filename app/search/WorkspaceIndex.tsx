@@ -4,6 +4,7 @@ import MarkdownIt from 'markdown-it';
 import moment from 'moment';
 import { ipcRenderer } from 'electron';
 import { plainTextPlugin } from '../components/Markdown';
+import stopWords from './StopWords';
 
 class WorkspaceIndex {
   constructor(workspace) {
@@ -16,19 +17,6 @@ class WorkspaceIndex {
     this.updateIndex = this.updateIndex.bind(this);
     this.search = this.search.bind(this);
     this.refreshIndex = this.refreshIndex.bind(this);
-    const removeDialects = str => {
-      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    };
-    /** FlexSearch.registerEncoder('Lextra', str => {
-      str = removeDialects(str); // custom
-      str = FlexSearch.encode('extra', str); // built-in
-      return str;
-    });
-    FlexSearch.registerEncoder('Licase', str => {
-      str = removeDialects(str); // custom
-      str = FlexSearch.encode('icase', str); // built-in
-      return str;
-    }); */
 
     // callback when content ready for indexing and search
     ipcRenderer.on('board-content-callback', (e, path, content) => {
@@ -38,7 +26,7 @@ class WorkspaceIndex {
       });
       this.workspace.boards[boardIndex].content = content;
       const undefinedBoard = this.workspace.boards.findIndex(b => {
-        return b && b.content === undefined;
+        return b && b.content === undefined && b.modified !== b.indexmtime;
       });
       if (undefinedBoard < 0) {
         this.refreshIndex();
@@ -47,37 +35,15 @@ class WorkspaceIndex {
   }
 
   createIndex(workspace, callback) {
-    /** this.index = new FlexSearch('balance', {
-      filter(value) {
-        return value.length > 1;
-      },
-      doc: {
-        id: 'id',
-        field: {
-          title: {
-            encode: 'Lextra',
-            tokenize: 'forward',
-            threshold: 1,
-            boost: 2
-          },
-          path: {
-            encode: false
-          },
-          content: {
-            encode: 'Licase'
-          }
-        }
-      }
-    }); */
-    this.index = new MiniSearch({
-      fields: ['title', 'content'],
-      storeFields: ['title', 'path']
-    });
     this.id = 1;
     this.workspace = workspace;
+    const removeDialects = str => {
+      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
     // old index cache
     localStorage.removeItem(workspace.path);
-    // this.indexedBoards = localStorage.getItem(workspace.path); // string to object =>
+    this.indexedBoards = localStorage.getItem(workspace.path); // string to object =>
+    let init = true;
     if (this.indexedBoards) {
       this.indexedBoards = JSON.parse(this.indexedBoards);
       const outOfDate = this.indexedBoards.boards.findIndex(board => {
@@ -88,11 +54,13 @@ class WorkspaceIndex {
       });
       if (outOfDate < 0) {
         // up to date
-        this.index.import(this.indexedBoards.index, {
-          index: true,
-          doc: true
+        this.index = MiniSearch.loadJSON(this.indexedBoards.index, {
+          fields: ['title', 'content'],
+          storeFields: ['title', 'path'],
+          processTerm: (term, _fieldName) =>
+            stopWords.has(term) ? null : removeDialects(term.toLowerCase())
         });
-        console.log(this.index.info());
+        init = false;
         let maxId = 0;
         this.indexedBoards.boards.forEach(board => {
           const boardIndex = this.workspace.boards.findIndex(b => {
@@ -110,8 +78,16 @@ class WorkspaceIndex {
         this.id = maxId + 1;
       } else {
         localStorage.removeItem(workspace.path);
-        this.indexBoards = null;
+        this.indexedBoards = null;
       }
+    }
+    if (init) {
+      this.index = new MiniSearch({
+        fields: ['title', 'content'],
+        storeFields: ['title', 'path'],
+        processTerm: (term, _fieldName) =>
+          stopWords.has(term) ? null : removeDialects(term.toLowerCase())
+      });
     }
     this.updateIndex(callback);
   }
@@ -130,14 +106,6 @@ class WorkspaceIndex {
           src = md.substring(notEmpty + 2);
         }
         this.md.render(src);
-        /** this.index.add([
-          {
-            id: this.id,
-            content: this.md.plainText,
-            title,
-            path: board.path
-          }
-        ]); */
         docs.push({
           content: this.md.plainText,
           title,
@@ -161,13 +129,31 @@ class WorkspaceIndex {
   updateIndex(callback) {
     let allSet = true;
     this.callback = callback;
+    if (this.indexedBoards) {
+      const outOfDate = this.indexedBoards.boards.findIndex(board => {
+        const boardIndex = this.workspace.boards.findIndex(b => {
+          return b.path === board.path && b.modified === board.modified;
+        });
+        return boardIndex < 0;
+      });
+      console.log(outOfDate);
+      if (outOfDate >= 0) {
+        console.log('remove All');
+        localStorage.removeItem(workspace.path);
+        this.indexedBoards = null;
+        this.workspace.boards.forEach(board => {
+          board.ids = [];
+        });
+      }
+    }
     this.workspace.boards.forEach(board => {
       if (
         board &&
         (board.content === undefined ||
           (board.indexmtime && board.modified !== board.indexmtime))
       ) {
-        if (board.ids && board.ids.length > 0) {
+        console.log(board);
+        if (board.content && board.ids && board.ids.length > 0) {
           const docs = this.getNotecardDocs(board.content, board.path);
           let i = 0;
           docs.forEach(doc => {
@@ -177,8 +163,10 @@ class WorkspaceIndex {
           this.index.removeAll(docs);
           board.ids = [];
         }
-        allSet = false;
-        ipcRenderer.send('board-content', board.path);
+        if (!board.ids || board.ids.length === 0) {
+          allSet = false;
+          ipcRenderer.send('board-content', board.path);
+        }
       }
     });
     if (allSet) {
@@ -187,7 +175,8 @@ class WorkspaceIndex {
   }
 
   refreshIndex() {
-    /** if (!this.indexedBoards) {
+    console.log('refreshIndex');
+    if (!this.indexedBoards) {
       this.indexedBoards = { boards: [] };
       this.workspace.boards.forEach(board => {
         const isOld = moment(board.modified).isBefore(
@@ -209,10 +198,7 @@ class WorkspaceIndex {
       if (this.indexedBoards.boards.length === 0) {
         this.indexedBoards = null;
       } else {
-        this.indexedBoards.index = this.index.export({
-          index: true,
-          doc: true
-        });
+        this.indexedBoards.index = JSON.stringify(this.index);
         console.log('export');
         console.log(this.indexedBoards);
         localStorage.setItem(
@@ -220,9 +206,10 @@ class WorkspaceIndex {
           JSON.stringify(this.indexedBoards)
         );
       }
-    } */
+    }
     this.workspace.boards.forEach(board => {
       if (board.modified !== board.indexmtime) {
+        console.log('outdated');
         board.ids = [];
         board.indexmtime = board.modified;
         this.addBoard(board);
