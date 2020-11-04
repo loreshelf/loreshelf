@@ -3,6 +3,7 @@ import MiniSearch from 'minisearch';
 import MarkdownIt from 'markdown-it';
 import moment from 'moment';
 import { ipcRenderer } from 'electron';
+import LZString from 'lz-string';
 import { plainTextPlugin } from '../components/Markdown';
 import stopWords from './StopWords';
 
@@ -20,7 +21,6 @@ class WorkspaceIndex {
 
     // callback when content ready for indexing and search
     ipcRenderer.on('board-content-callback', (e, path, content) => {
-      console.log(this.workspace.boards);
       const boardIndex = this.workspace.boards.findIndex(board => {
         return board.path === path;
       });
@@ -41,11 +41,13 @@ class WorkspaceIndex {
       return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     };
     // old index cache
-    localStorage.removeItem(workspace.path);
+    // localStorage.removeItem(workspace.path);
     this.indexedBoards = localStorage.getItem(workspace.path); // string to object =>
     let init = true;
     if (this.indexedBoards) {
-      this.indexedBoards = JSON.parse(this.indexedBoards);
+      this.indexedBoards = JSON.parse(
+        LZString.decompressFromBase64(this.indexedBoards)
+      );
       const outOfDate = this.indexedBoards.boards.findIndex(board => {
         const boardIndex = this.workspace.boards.findIndex(b => {
           return b.path === board.path && b.modified === board.modified;
@@ -136,9 +138,7 @@ class WorkspaceIndex {
         });
         return boardIndex < 0;
       });
-      console.log(outOfDate);
       if (outOfDate >= 0) {
-        console.log('remove All');
         localStorage.removeItem(workspace.path);
         this.indexedBoards = null;
         this.workspace.boards.forEach(board => {
@@ -152,7 +152,6 @@ class WorkspaceIndex {
         (board.content === undefined ||
           (board.indexmtime && board.modified !== board.indexmtime))
       ) {
-        console.log(board);
         if (board.content && board.ids && board.ids.length > 0) {
           const docs = this.getNotecardDocs(board.content, board.path);
           let i = 0;
@@ -175,7 +174,6 @@ class WorkspaceIndex {
   }
 
   refreshIndex() {
-    console.log('refreshIndex');
     if (!this.indexedBoards) {
       this.indexedBoards = { boards: [] };
       this.workspace.boards.forEach(board => {
@@ -199,17 +197,14 @@ class WorkspaceIndex {
         this.indexedBoards = null;
       } else {
         this.indexedBoards.index = JSON.stringify(this.index);
-        console.log('export');
-        console.log(this.indexedBoards);
-        localStorage.setItem(
-          this.workspace.path,
+        const compressed = LZString.compressToBase64(
           JSON.stringify(this.indexedBoards)
         );
+        localStorage.setItem(this.workspace.path, compressed);
       }
     }
     this.workspace.boards.forEach(board => {
       if (board.modified !== board.indexmtime) {
-        console.log('outdated');
         board.ids = [];
         board.indexmtime = board.modified;
         this.addBoard(board);
@@ -221,7 +216,7 @@ class WorkspaceIndex {
   search(text, callback) {
     const result = this.index.search(text, {
       boost: { title: 2 },
-      prefix: term => term.length > 3,
+      prefix: term => term.length > 2,
       fuzzy: term => (term.length > 3 ? 0.2 : null)
     });
     callback({ result });

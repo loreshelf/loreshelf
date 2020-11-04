@@ -278,6 +278,7 @@
     "electron-store": "^5.1.1",
     "electron-updater": "^4.2.0",
     "history": "^4.10.1",
+    "lz-string": "^1.4.4",
     "minisearch": "^3.0.1",
     "moment": "^2.26.0",
     "prosemirror-markdown": "^1.4.4",

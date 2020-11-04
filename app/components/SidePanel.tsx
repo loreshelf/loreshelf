@@ -39,7 +39,6 @@ class SidePanel extends Component {
 
   searchReady() {
     const { workspaceIndex, searchText, results } = this.state;
-    console.log('search Ready');
     workspaceIndex.search(searchText, rs => {
       results.length = 0;
       const temp = {};
