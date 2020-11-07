@@ -1819,6 +1819,7 @@ class Home extends Component {
             <SidePanel
               key="sidePanel"
               workspace={workspace}
+              knownWorkspaces={knownWorkspaces}
               boardPath={boardPath}
               showonly={showonly}
               openBoard={this.loadBoardWithPath}

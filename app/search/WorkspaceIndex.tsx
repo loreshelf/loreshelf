@@ -7,8 +7,26 @@ import LZString from 'lz-string';
 import { plainTextPlugin } from '../components/Markdown';
 import stopWords from './StopWords';
 
+function checkIndexUsage(knownWorkspaces) {
+  let k = 0;
+  while (k < localStorage.length) {
+    const key = localStorage.key(k);
+    if (key?.startsWith('index:')) {
+      const path = key.substring(6);
+      const i = knownWorkspaces.findIndex(workspace => {
+        return workspace.path === path;
+      });
+      if (i < 0) {
+        localStorage.removeItem(`index:${path}`);
+      }
+    }
+    k += 1;
+  }
+}
+
 class WorkspaceIndex {
-  constructor(workspace) {
+  constructor(workspace, knownWorkspaces) {
+    checkIndexUsage(knownWorkspaces);
     const md = new MarkdownIt();
     md.use(plainTextPlugin);
     this.md = md;
@@ -34,6 +52,16 @@ class WorkspaceIndex {
     });
   }
 
+  removeIndex(workspacePath) {
+    localStorage.removeItem(`index:${workspacePath}`);
+    this.indexedBoards = null;
+    if (this.workspace && this.workspace.boards) {
+      this.workspace.boards.forEach(board => {
+        board.ids = [];
+      });
+    }
+  }
+
   createIndex(workspace, callback) {
     this.id = 1;
     this.workspace = workspace;
@@ -41,46 +69,50 @@ class WorkspaceIndex {
       return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     };
     // old index cache
-    // localStorage.removeItem(workspace.path);
-    this.indexedBoards = localStorage.getItem(workspace.path); // string to object =>
+    // localStorage.removeItem(`index:${path}`);
+    this.indexedBoards = localStorage.getItem(`index:${this.workspace.path}`); // string to object =>
     let init = true;
     if (this.indexedBoards) {
       this.indexedBoards = JSON.parse(
         LZString.decompressFromBase64(this.indexedBoards)
       );
-      const outOfDate = this.indexedBoards.boards.findIndex(board => {
-        const boardIndex = this.workspace.boards.findIndex(b => {
-          return b.path === board.path && b.modified === board.modified;
-        });
-        return boardIndex < 0;
-      });
-      if (outOfDate < 0) {
-        // up to date
-        this.index = MiniSearch.loadJSON(this.indexedBoards.index, {
-          fields: ['title', 'content'],
-          storeFields: ['title', 'path'],
-          processTerm: (term, _fieldName) =>
-            stopWords.has(term) ? null : removeDialects(term.toLowerCase())
-        });
-        init = false;
-        let maxId = 0;
-        this.indexedBoards.boards.forEach(board => {
-          const boardIndex = this.workspace.boards.findIndex(b => {
-            return b && b.path === board.path;
-          });
-          this.workspace.boards[boardIndex].indexmtime = this.workspace.boards[
-            boardIndex
-          ].modified;
-          this.workspace.boards[boardIndex].ids = board.ids;
-          const m = Math.max(...board.ids);
-          if (m > maxId) {
-            maxId = m;
-          }
-        });
-        this.id = maxId + 1;
+      if (this.indexedBoards === null) {
+        // error, remove and reindex
+        this.removeIndex(workspace.path);
       } else {
-        localStorage.removeItem(workspace.path);
-        this.indexedBoards = null;
+        const outOfDate = this.indexedBoards.boards.findIndex(board => {
+          const boardIndex = this.workspace.boards.findIndex(b => {
+            return b.path === board.path && b.modified === board.modified;
+          });
+          return boardIndex < 0;
+        });
+        if (outOfDate < 0) {
+          // up to date
+          this.index = MiniSearch.loadJSON(this.indexedBoards.index, {
+            fields: ['title', 'content'],
+            storeFields: ['title', 'path'],
+            processTerm: (term, _fieldName) =>
+              stopWords.has(term) ? null : removeDialects(term.toLowerCase())
+          });
+          init = false;
+          let maxId = 0;
+          this.indexedBoards.boards.forEach(board => {
+            const boardIndex = this.workspace.boards.findIndex(b => {
+              return b && b.path === board.path;
+            });
+            this.workspace.boards[
+              boardIndex
+            ].indexmtime = this.workspace.boards[boardIndex].modified;
+            this.workspace.boards[boardIndex].ids = board.ids;
+            const m = Math.max(...board.ids);
+            if (m > maxId) {
+              maxId = m;
+            }
+          });
+          this.id = maxId + 1;
+        } else {
+          this.removeIndex(workspace.path);
+        }
       }
     }
     if (init) {
@@ -139,11 +171,7 @@ class WorkspaceIndex {
         return boardIndex < 0;
       });
       if (outOfDate >= 0) {
-        localStorage.removeItem(workspace.path);
-        this.indexedBoards = null;
-        this.workspace.boards.forEach(board => {
-          board.ids = [];
-        });
+        this.removeIndex(workspace.path);
       }
     }
     this.workspace.boards.forEach(board => {
@@ -200,7 +228,7 @@ class WorkspaceIndex {
         const compressed = LZString.compressToBase64(
           JSON.stringify(this.indexedBoards)
         );
-        localStorage.setItem(this.workspace.path, compressed);
+        localStorage.setItem(`index:${this.workspace.path}`, compressed);
       }
     }
     this.workspace.boards.forEach(board => {

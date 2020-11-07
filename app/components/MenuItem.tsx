@@ -26,7 +26,7 @@ const Card: React.FC = ({ disabled, onClick, moveCard, children }) => {
   drop(ref);
   const active = isOver && !disabled;
   return (
-    <div ref={ref}>
+    <div ref={ref} id={`menu-${children?.toString().replaceAll(' ', '_')}`}>
       <Button
         className={disabled ? styles['menuItem-disabled'] : styles.menuItem}
         active={active}

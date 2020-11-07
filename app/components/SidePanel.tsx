@@ -9,8 +9,7 @@ import {
   Elevation,
   InputGroup,
   Intent,
-  Radio,
-  RadioGroup,
+  Spinner,
   Tag
 } from '@blueprintjs/core';
 import WorkspaceIndex from '../search/WorkspaceIndex';
@@ -21,73 +20,101 @@ enum SidePanelContent {
   PINNED
 }
 
+enum SearchStatus {
+  DONE = 1,
+  SEARCHING
+}
+
 class SidePanel extends Component {
   constructor(props) {
     super(props);
     this.state = {
       open: false,
       content: SidePanelContent.SEARCH,
-      searchIn: 'current',
       searchText: '',
       workspaceIndex: null,
-      results: []
+      results: null,
+      searchStatus: SearchStatus.DONE
     };
     this.search = this.search.bind(this);
     this.selectSearch = this.selectSearch.bind(this);
     this.searchReady = this.searchReady.bind(this);
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    const { workspace } = this.props;
+    if (workspace !== nextProps.workspace) {
+      this.setState({ results: null, searchText: '' });
+    }
+    return true;
+  }
+
   searchReady() {
     const { workspaceIndex, searchText, results } = this.state;
-    workspaceIndex.search(searchText, rs => {
-      results.length = 0;
-      const temp = {};
-      console.log(rs);
-      rs.result.forEach(r => {
-        const notebook = r.path.substring(
-          r.path.lastIndexOf(nodePath.sep) + 1,
-          r.path.length - 3
-        );
-        if (!temp[notebook]) {
-          temp[notebook] = { tags: [], total: 0 };
+    if (workspaceIndex) {
+      workspaceIndex.search(searchText, rs => {
+        let newResults = results;
+        if (newResults === null) {
+          newResults = [];
+        } else {
+          newResults.length = 0;
         }
-        temp[notebook].path = r.path;
-        const existingTitle = temp[notebook].tags.findIndex(tag => {
-          return tag.title === r.title;
-        });
-        if (existingTitle < 0) {
-          temp[notebook].tags.push({ id: r.id, title: r.title });
-        }
-        temp[notebook].total += 1;
-        if (temp[notebook].tags.length > 3) {
-          if (temp[notebook].more === undefined) {
-            temp[notebook].more = 1;
-          } else {
-            temp[notebook].more += 1;
+        const temp = {};
+        rs.result.forEach(r => {
+          const notebook = r.path.substring(
+            r.path.lastIndexOf(nodePath.sep) + 1,
+            r.path.length - 3
+          );
+          if (!temp[notebook]) {
+            temp[notebook] = { tags: [], total: 0 };
           }
-        }
-      });
-      Object.keys(temp).forEach(k => {
-        results.push({
-          notebook: k,
-          notecards: temp[k].tags,
-          more: temp[k].more,
-          path: temp[k].path,
-          total: temp[k].total
+          temp[notebook].path = r.path;
+          const existingTitle = temp[notebook].tags.findIndex(tag => {
+            return tag.title === r.title;
+          });
+          if (existingTitle < 0) {
+            temp[notebook].tags.push({ id: r.id, title: r.title });
+          }
+          temp[notebook].total += 1;
+          if (temp[notebook].tags.length > 3) {
+            if (temp[notebook].more === undefined) {
+              temp[notebook].more = 1;
+            } else {
+              temp[notebook].more += 1;
+            }
+          }
         });
+        Object.keys(temp).forEach(k => {
+          newResults.push({
+            notebook: k,
+            notecards: temp[k].tags,
+            more: temp[k].more,
+            path: temp[k].path,
+            total: temp[k].total
+          });
+        });
+        this.setState({ results: newResults, searchStatus: SearchStatus.DONE });
       });
-      this.setState({ results });
-    });
+    } else {
+      let newResults = results;
+      if (newResults === null) {
+        newResults = [];
+      } else {
+        newResults.length = 0;
+      }
+      this.setState({ results: newResults, searchStatus: SearchStatus.DONE });
+    }
   }
 
   search() {
-    const { workspace, showonly } = this.props;
+    this.setState({ searchStatus: SearchStatus.SEARCHING });
+    const { workspace, knownWorkspaces, showonly } = this.props;
     const { workspaceIndex } = this.state;
     showonly.enabled = false;
     showonly.searchResult = null;
     let wi = workspaceIndex;
     if (wi == null) {
-      wi = new WorkspaceIndex(workspace);
+      wi = new WorkspaceIndex(workspace, knownWorkspaces);
       this.setState({ workspaceIndex: wi });
       wi.createIndex(workspace, this.searchReady);
     } else if (!wi.sameWorkspace(workspace)) {
@@ -112,8 +139,14 @@ class SidePanel extends Component {
   }
 
   render() {
-    const { open, content, searchIn, searchText, results } = this.state;
-    const { boardPath, showonly, openBoard, onSwitchShowOnly } = this.props;
+    const { open, content, searchText, results, searchStatus } = this.state;
+    const {
+      workspace,
+      boardPath,
+      showonly,
+      openBoard,
+      onSwitchShowOnly
+    } = this.props;
     let totalResults = 0;
     if (results) {
       results.forEach(r => {
@@ -128,6 +161,7 @@ class SidePanel extends Component {
             <Button
               icon="search"
               onClick={this.selectSearch}
+              disabled={!workspace}
               large
               intent={
                 content === SidePanelContent.SEARCH && open
@@ -138,37 +172,29 @@ class SidePanel extends Component {
           </ButtonGroup>
           {open && content === SidePanelContent.SEARCH && (
             <div className={styles.sidePanelContent}>
-              <RadioGroup
-                label="Search in"
-                onChange={e => {
-                  this.setState({ searchIn: e.target.value });
+              <div
+                style={{
+                  borderBottom: '1px solid hsl(206, 24%, 64%)',
+                  width: 'calc(100% + 20px)',
+                  marginLeft: '-10px',
+                  padding: '0px 10px',
+                  paddingBottom: '5px'
                 }}
-                selectedValue={searchIn}
               >
-                <Radio label="Current workspace" value="current" />
-                <Radio label="All workspaces" value="all" disabled />
-              </RadioGroup>
-              {searchIn === 'all' && (
-                <div>
-                  <div style={{ fontSize: 'small' }}>Indexed data from:</div>
-                  <div
-                    style={{
-                      textAlign: 'right',
-                      fontSize: 'small'
-                    }}
-                  >
-                    14:23 Oct 30
-                  </div>
-                </div>
-              )}
+                Search in:
+              </div>
+              <div style={{ textAlign: 'right', padding: '10px 0px' }}>
+                {workspace.name}
+              </div>
               <InputGroup
                 type="text"
                 placeholder="Enter text..."
+                disabled={searchStatus === SearchStatus.SEARCHING}
                 onChange={e => {
                   this.setState({ searchText: e.target.value });
                 }}
                 onKeyPress={e => {
-                  if (e.which === 13) {
+                  if (e.which === 13 && searchStatus === SearchStatus.DONE) {
                     // Enter
                     this.search();
                   }
@@ -176,21 +202,14 @@ class SidePanel extends Component {
                 value={searchText}
               />
               <ButtonGroup fill style={{ margin: '15px 0px' }}>
-                {searchIn === 'all' && (
-                  <Button
-                    icon="inbox-geo"
-                    outlined
-                    intent={Intent.DANGER}
-                    title="Refresh global search index"
-                    style={{ marginRight: '10px' }}
-                  />
-                )}
                 <Button
                   intent={Intent.PRIMARY}
                   text="Search"
+                  disabled={searchStatus === SearchStatus.SEARCHING}
                   onClick={this.search}
                 />
               </ButtonGroup>
+              {searchStatus === SearchStatus.SEARCHING && <Spinner />}
               <div
                 style={{
                   minHeight: '0',
@@ -200,19 +219,19 @@ class SidePanel extends Component {
                   margin: '0px -10px'
                 }}
               >
-                {results.length > 0 && (
+                {searchStatus === SearchStatus.DONE && results && (
                   <>
                     <div
                       style={{
-                        width: 'calc(100% + 20px)',
+                        width: '100%',
                         textAlign: 'center',
                         background: '#202b33',
                         fontSize: 'small',
-                        padding: '5px 10px',
-                        marginLeft: '-10px'
+                        padding: '5px 10px'
                       }}
                     >
-                      {`${totalResults} results`}
+                      {totalResults === 0 && <div>No results</div>}
+                      {totalResults > 0 && `${totalResults} results`}
                     </div>
                     <ButtonGroup
                       vertical
@@ -242,7 +261,14 @@ class SidePanel extends Component {
                               r.notecards.forEach(n => {
                                 notecards.push(n.title);
                               });
-                              openBoard(r.path, { notecards, total: r.total });
+                              openBoard(r.path, {
+                                notecards,
+                                total: r.total
+                              });
+                              const menuItem = document.getElementById(
+                                `menu-${r.notebook.replaceAll(' ', '_')}`
+                              );
+                              menuItem.scrollIntoView({ behavior: 'smooth' });
                             } else {
                               onSwitchShowOnly();
                             }
@@ -267,7 +293,10 @@ class SidePanel extends Component {
                           )}
                           {r.more && (
                             <div
-                              style={{ fontSize: 'small', textAlign: 'right' }}
+                              style={{
+                                fontSize: 'small',
+                                textAlign: 'right'
+                              }}
                             >
                               {`and ${r.more} more`}
                             </div>
