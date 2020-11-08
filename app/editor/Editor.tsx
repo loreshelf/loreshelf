@@ -655,6 +655,10 @@ Still | renders | nicely
     this.view.onStartSpooling = onStartSpooling;
     this.view.onOpenBoard = onOpenBoard;
     this.view.onOpenImage = onOpenImage;
+    this.view.dom.onblur = () => {
+      const sel = document.getSelection();
+      sel.removeAllRanges();
+    };
 
     this.selectSuggestion = this.selectSuggestion.bind(this);
     this.onUndo = this.onUndo.bind(this);
@@ -688,6 +692,10 @@ Still | renders | nicely
       this.view.onStartSpooling = onStartSpooling;
       this.view.onOpenBoard = onOpenBoard;
       this.view.onOpenImage = onOpenImage;
+      this.view.dom.onblur = () => {
+        const sel = document.getSelection();
+        sel.removeAllRanges();
+      };
       this.originalDoc = doc;
     }
   }

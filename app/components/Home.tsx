@@ -134,6 +134,7 @@ class Home extends Component {
 
     this.menuRef = React.createRef();
     this.boardRef = React.createRef();
+    this.sidePanelRef = React.createRef();
 
     this.state = {
       workspace,
@@ -743,15 +744,11 @@ class Home extends Component {
           const stats = [];
           const zipFiles = Object.values(zip.files);
           workspace.zip = zip;
-          const currDate = new Date();
           zipFiles.forEach(zo => {
             if (zo.name.endsWith('.md')) {
               files.push(zo.name);
               stats.push({
-                mtimeMs: new Date(
-                  new Date(zo.date).getTime() +
-                    currDate.getTimezoneOffset() * 60000
-                )
+                mtimeMs: new Date(new Date(zo.date).getTime())
               });
             }
           });
@@ -1077,6 +1074,15 @@ class Home extends Component {
     if (stats) {
       workspace.boards[boardIndex].modified = stats.mtimeMs;
       boardData.modified = stats.mtimeMs;
+    } else if (workspace.zip) {
+      const zipFiles = Object.values(workspace.zip.files);
+      const zipFile = zipFiles.find(zo => {
+        const boardPath = nodePath.join(workspace.path, zo.name);
+        return boardPath === boardData.path;
+      });
+      const modifiedTime = new Date(new Date(zipFile.date).getTime());
+      workspace.boards[boardIndex].modified = modifiedTime;
+      boardData.modified = modifiedTime;
     }
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
@@ -1247,6 +1253,12 @@ class Home extends Component {
       if (saveTimer) {
         clearTimeout(saveTimer);
         this.setState({ saveTimer: undefined });
+      }
+      const board = workspace.boards.find(b => {
+        return b.path === boardData.path;
+      });
+      if (board.content) {
+        this.sidePanelRef.current.removeBoardFromIndex(board);
       }
       if (workspace.zipdata) {
         const { zip } = workspace;
@@ -1664,7 +1676,7 @@ class Home extends Component {
       );
     }
 
-    const { menuRef } = this;
+    const { menuRef, sidePanelRef } = this;
     const CreateBoard = (
       <Button
         intent={Intent.PRIMARY}
@@ -1818,6 +1830,7 @@ class Home extends Component {
             mainContent,
             <SidePanel
               key="sidePanel"
+              ref={sidePanelRef}
               workspace={workspace}
               knownWorkspaces={knownWorkspaces}
               boardPath={boardPath}

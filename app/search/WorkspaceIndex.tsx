@@ -36,20 +36,25 @@ class WorkspaceIndex {
     this.updateIndex = this.updateIndex.bind(this);
     this.search = this.search.bind(this);
     this.refreshIndex = this.refreshIndex.bind(this);
+    this.boardContentCallback = this.boardContentCallback.bind(this);
 
     // callback when content ready for indexing and search
     ipcRenderer.on('board-content-callback', (e, path, content) => {
-      const boardIndex = this.workspace.boards.findIndex(board => {
-        return board.path === path;
-      });
-      this.workspace.boards[boardIndex].content = content;
-      const undefinedBoard = this.workspace.boards.findIndex(b => {
-        return b && b.content === undefined && b.modified !== b.indexmtime;
-      });
-      if (undefinedBoard < 0) {
-        this.refreshIndex();
-      }
+      this.boardContentCallback(path, content);
     });
+  }
+
+  boardContentCallback(path, content) {
+    const boardIndex = this.workspace.boards.findIndex(board => {
+      return board.path === path;
+    });
+    this.workspace.boards[boardIndex].content = content;
+    const undefinedBoard = this.workspace.boards.findIndex(b => {
+      return b && b.content === undefined && b.modified !== b.indexmtime;
+    });
+    if (undefinedBoard < 0) {
+      this.refreshIndex();
+    }
   }
 
   removeIndex(workspacePath) {
@@ -58,6 +63,7 @@ class WorkspaceIndex {
     if (this.workspace && this.workspace.boards) {
       this.workspace.boards.forEach(board => {
         board.ids = [];
+        board.indexmtime = -1;
       });
     }
   }
@@ -160,6 +166,17 @@ class WorkspaceIndex {
     this.index.addAll(docs);
   }
 
+  removeBoard(board) {
+    const docs = this.getNotecardDocs(board.content, board.path);
+    let i = 0;
+    docs.forEach(doc => {
+      doc.id = board.ids[i];
+      i += 1;
+    });
+    this.index.removeAll(docs);
+    board.ids = [];
+  }
+
   updateIndex(callback) {
     let allSet = true;
     this.callback = callback;
@@ -171,9 +188,10 @@ class WorkspaceIndex {
         return boardIndex < 0;
       });
       if (outOfDate >= 0) {
-        this.removeIndex(workspace.path);
+        this.removeIndex(this.workspace.path);
       }
     }
+    console.log(this.workspace);
     this.workspace.boards.forEach(board => {
       if (
         board &&
@@ -181,18 +199,25 @@ class WorkspaceIndex {
           (board.indexmtime && board.modified !== board.indexmtime))
       ) {
         if (board.content && board.ids && board.ids.length > 0) {
-          const docs = this.getNotecardDocs(board.content, board.path);
-          let i = 0;
-          docs.forEach(doc => {
-            doc.id = board.ids[i];
-            i += 1;
-          });
-          this.index.removeAll(docs);
-          board.ids = [];
+          this.removeBoard(board);
         }
         if (!board.ids || board.ids.length === 0) {
           allSet = false;
-          ipcRenderer.send('board-content', board.path);
+          if (this.workspace.zip) {
+            const zipObject = this.workspace.zip.file(`${board.name}.md`);
+            // eslint-disable-next-line promise/catch-or-return
+            zipObject
+              .async('string')
+              .then(content => {
+                this.boardContentCallback(board.path, content);
+                return true;
+              })
+              .catch(error => {
+                console.log(error);
+              });
+          } else {
+            ipcRenderer.send('board-content', board.path);
+          }
         }
       }
     });
@@ -232,6 +257,7 @@ class WorkspaceIndex {
       }
     }
     this.workspace.boards.forEach(board => {
+      console.log(board);
       if (board.modified !== board.indexmtime) {
         board.ids = [];
         board.indexmtime = board.modified;

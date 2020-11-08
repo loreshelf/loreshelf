@@ -49,6 +49,22 @@ class SidePanel extends Component {
     return true;
   }
 
+  removeBoardFromIndex(board) {
+    const { workspaceIndex, results } = this.state;
+    if (workspaceIndex && board.content) {
+      workspaceIndex.removeBoard(board);
+    }
+    if (results && results.length > 0) {
+      const i = results.findIndex(r => {
+        return r.path === board.path;
+      });
+      if (i >= 0) {
+        results.splice(i, 1);
+        this.setState({ results });
+      }
+    }
+  }
+
   searchReady() {
     const { workspaceIndex, searchText, results } = this.state;
     if (workspaceIndex) {

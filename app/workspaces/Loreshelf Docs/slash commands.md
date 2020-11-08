@@ -36,7 +36,7 @@ Right click on the form and select **Remove table** from the context menu.
 
 Write /table and confirm with _Enter_.
 
-| Pros          | Cons           |
+| Column 1      | Column 2       |
 | ------------- | -------------- |
 | Example table | with 2 columns |
 
