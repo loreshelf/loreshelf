@@ -398,7 +398,13 @@ Still | renders | nicely
             if (isCTRL) {
               openImage();
             }
-          } else if (node.type === schema.nodes.table && event.which === 3) {
+          } else if (
+            (node.type === schema.nodes.table_cell ||
+              node.type === schema.nodes.table_row ||
+              node.type === schema.nodes.table ||
+              node.type === schema.nodes.table_header) &&
+            event.which === 3
+          ) {
             // Right click for context menu
             const transaction = view.state.tr;
             const { $cursor } = transaction.selection;
@@ -466,8 +472,7 @@ Still | renders | nicely
               true
             );
             return true;
-          }
-          if (event.which === 3) {
+          } else if (event.which === 3) {
             const selectedText = view.state.selection.content();
             if (selectedText) {
               const menu = React.createElement(
