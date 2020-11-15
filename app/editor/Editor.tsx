@@ -342,7 +342,9 @@ Still | renders | nicely
                 }
               }
             }
-          } else if (node.type === schema.nodes.image) {
+          }
+
+          if (node.type === schema.nodes.image) {
             const openImage = () => {
               view.onOpenImage(node.attrs.src);
               return true;
@@ -398,7 +400,9 @@ Still | renders | nicely
             if (isCTRL) {
               openImage();
             }
-          } else if (
+          }
+
+          if (
             (node.type === schema.nodes.table_cell ||
               node.type === schema.nodes.table_row ||
               node.type === schema.nodes.table ||
@@ -472,7 +476,9 @@ Still | renders | nicely
               true
             );
             return true;
-          } else if (event.which === 3) {
+          }
+
+          if (event.which === 3) {
             const selectedText = view.state.selection.content();
             if (selectedText) {
               const menu = React.createElement(
@@ -660,10 +666,11 @@ Still | renders | nicely
     this.view.onStartSpooling = onStartSpooling;
     this.view.onOpenBoard = onOpenBoard;
     this.view.onOpenImage = onOpenImage;
-    this.view.dom.onblur = () => {
+    /** this.view.dom.onblur = () => {
+     * context menu doesn't work then
       const sel = document.getSelection();
       sel.removeAllRanges();
-    };
+    }; */
 
     this.selectSuggestion = this.selectSuggestion.bind(this);
     this.onUndo = this.onUndo.bind(this);
@@ -697,10 +704,10 @@ Still | renders | nicely
       this.view.onStartSpooling = onStartSpooling;
       this.view.onOpenBoard = onOpenBoard;
       this.view.onOpenImage = onOpenImage;
-      this.view.dom.onblur = () => {
+      /** this.view.dom.onblur = () => {
         const sel = document.getSelection();
         sel.removeAllRanges();
-      };
+      }; */
       this.originalDoc = doc;
     }
   }

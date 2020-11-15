@@ -191,7 +191,6 @@ class WorkspaceIndex {
         this.removeIndex(this.workspace.path);
       }
     }
-    console.log(this.workspace);
     this.workspace.boards.forEach(board => {
       if (
         board &&
@@ -257,7 +256,6 @@ class WorkspaceIndex {
       }
     }
     this.workspace.boards.forEach(board => {
-      console.log(board);
       if (board.modified !== board.indexmtime) {
         board.ids = [];
         board.indexmtime = board.modified;
