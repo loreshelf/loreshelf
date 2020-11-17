@@ -495,7 +495,6 @@ const createWindow = async () => {
 
   ipcMain.on('board-delete', (event, boardPath) => {
     fs.unlinkSync(boardPath);
-    event.reply('board-delete-callback', boardPath);
   });
 
   ipcMain.on('board-move-card', (event, boardPath, title, cardContent) => {

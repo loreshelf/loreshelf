@@ -300,10 +300,6 @@ class Home extends Component {
       }
     });
 
-    ipcRenderer.on('board-delete-callback', (event, removedBoardPath) => {
-      self.deleteBoardCallback(removedBoardPath);
-    });
-
     ipcRenderer.on(
       'board-rename-callback',
       (event, oldBoardPath, newBoardPath) => {
@@ -383,7 +379,7 @@ class Home extends Component {
     });
 
     ipcRenderer.on('event-board-removed', (event, removedBoardPath) => {
-      const { knownWorkspaces, boardData, ignoreRenameEvent } = self.state;
+      const { ignoreRenameEvent } = self.state;
       if (
         ignoreRenameEvent &&
         ignoreRenameEvent.length === 2 &&
@@ -391,37 +387,7 @@ class Home extends Component {
       ) {
         return;
       }
-      const workspacePath = removedBoardPath.substring(
-        0,
-        removedBoardPath.lastIndexOf(nodePath.sep)
-      );
-      const workspaceIndex = knownWorkspaces.findIndex(w => {
-        return w.path === workspacePath;
-      });
-      const workspace = knownWorkspaces[workspaceIndex];
-      let boardIndex = workspace.boards.findIndex(board => {
-        return board.path === removedBoardPath;
-      });
-      workspace.boards.splice(boardIndex, 1);
-      workspace.numBoards -= 1;
-      if (removedBoardPath === boardData.path) {
-        if (boardIndex >= workspace.boards.length) {
-          if (workspace.boards.length > 0) {
-            boardIndex = 0;
-          } else {
-            boardIndex = -1;
-          }
-        }
-        self.setState({ workspace, knownWorkspaces, boardData: undefined });
-      } else {
-        boardIndex = -1;
-      }
-      // select next board
-      if (boardIndex >= 0) {
-        self.loadBoard(boardIndex);
-      } else if (self.menuRef.current) {
-        self.menuRef.current.forceUpdate();
-      }
+      self.deleteBoardCallback(removedBoardPath);
     });
 
     ipcRenderer.on('update-check-callback', (event, version, auto) => {
@@ -461,7 +427,7 @@ class Home extends Component {
           onClick: () => ipcRenderer.send('update-install'),
           text: 'Install and restart'
         },
-        timeout: 60000
+        timeout: 360000
       });
     });
 
@@ -1271,7 +1237,7 @@ class Home extends Component {
   }
 
   deleteBoardCallback(removedBoardPath) {
-    const { workspace, knownWorkspaces } = this.state;
+    const { workspace, knownWorkspaces, boardData } = this.state;
     let boardIndex = workspace.boards.findIndex(board => {
       return board.path === removedBoardPath;
     });
@@ -1280,14 +1246,18 @@ class Home extends Component {
       return w.path === workspace.path;
     });
     knownWorkspaces[workspaceIndex].numBoards -= 1;
-    if (boardIndex >= workspace.boards.length) {
-      if (workspace.boards.length > 0) {
-        boardIndex = 0;
-      } else {
-        boardIndex = -1;
+    if (removedBoardPath === boardData.path) {
+      if (boardIndex >= workspace.boards.length) {
+        if (workspace.boards.length > 0) {
+          boardIndex = 0;
+        } else {
+          boardIndex = -1;
+        }
       }
+      this.setState({ workspace, knownWorkspaces, boardData: undefined });
+    } else {
+      boardIndex = -1;
     }
-    this.setState({ workspace, knownWorkspaces, boardData: undefined });
     // select next board
     if (boardIndex >= 0) {
       this.loadBoard(boardIndex);
