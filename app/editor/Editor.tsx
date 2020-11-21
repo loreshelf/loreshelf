@@ -457,7 +457,10 @@ Still | renders | nicely
               React.createElement(MenuItem, {
                 onClick: () => {
                   view.dispatch(
-                    view.state.tr.delete(nodePos, nodePos + node.nodeSize)
+                    view.state.tr.delete(
+                      $cursor.path[2],
+                      $cursor.path[2] + $cursor.path[3].nodeSize
+                    )
                   );
                 },
                 intent: Intent.DANGER,

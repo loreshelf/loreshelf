@@ -193,15 +193,9 @@ class Menu extends Component {
   }
 
   newBoardConfirm() {
-    const { newBoardName, newBoardType } = this.state;
-    const {
-      workspacePath,
-      onNewBoard,
-      onDuplicateBoard,
-      onRenameBoard
-    } = this.props;
-    const status = this.handleNameChange(newBoardName, workspacePath);
-    if (status === Intent.NONE) {
+    const { newBoardName, newBoardType, newBoardIntent } = this.state;
+    const { onNewBoard, onDuplicateBoard, onRenameBoard } = this.props;
+    if (newBoardIntent === Intent.NONE) {
       if (newBoardType === NewBoardType.CREATE) {
         onNewBoard(newBoardName);
       } else if (newBoardType === NewBoardType.DUPLICATE) {
@@ -856,7 +850,11 @@ class Menu extends Component {
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
               <Button onClick={this.newBoardClose}>Close</Button>
-              <Button intent={Intent.PRIMARY} onClick={this.newBoardConfirm}>
+              <Button
+                intent={Intent.PRIMARY}
+                disabled={newBoardIntent === Intent.DANGER}
+                onClick={this.newBoardConfirm}
+              >
                 Confirm
               </Button>
             </div>
