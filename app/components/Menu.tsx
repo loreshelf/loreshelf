@@ -369,6 +369,87 @@ class Menu extends Component {
       }
     });
 
+    const boardMenu = e => {
+      e.preventDefault();
+      let parent = e.target;
+      if (parent.tagName !== 'BUTTON') {
+        parent = e.target.offsetParent;
+      }
+      const boardContextMenu = React.createElement(
+        BJMenu,
+        {},
+        React.createElement(MenuItem, {
+          onClick: () => {
+            this.duplicateBoardOpen();
+          },
+          icon: 'duplicate',
+          disabled: boardData == null,
+          text: 'Duplicate'
+        }),
+        React.createElement(
+          MenuItem,
+          {
+            icon: 'flows',
+            disabled: boardData == null || workspace.readonly,
+            text: 'Move to workspace'
+          },
+          listOfWorkspaces
+        ),
+        React.createElement(MenuItem, {
+          onClick: () => {
+            this.renameBoardOpen();
+          },
+          icon: 'edit',
+          disabled: boardData == null || workspace.readonly,
+          text: 'Rename'
+        }),
+        React.createElement(MenuItem, {
+          onClick: () => {
+            onExportToPDF();
+          },
+          icon: 'export',
+          disabled: boardData == null,
+          text: 'Export to PDF'
+        }),
+        React.createElement(MenuItem, {
+          onClick: () => {
+            onSetBoardOnStartup();
+          },
+          icon: 'log-in',
+          disabled: boardData == null,
+          text: 'Open on startup'
+        }),
+        React.createElement(MenuItem, {
+          onClick: () => {
+            shell.showItemInFolder(boardData.path);
+          },
+          icon: 'folder-shared-open',
+          disabled: boardData == null,
+          text: 'Open in folder'
+        }),
+        React.createElement(MenuDivider),
+        React.createElement(MenuItem, {
+          onClick: onDeleteBoard,
+          icon: 'trash',
+          disabled: boardData == null || workspace.readonly,
+          intent: Intent.DANGER,
+          text: 'Delete'
+        })
+      );
+
+      ContextMenu.show(
+        boardContextMenu,
+        {
+          left: parent.offsetLeft + parent.offsetWidth + 1,
+          top: parent.offsetTop
+        },
+        () => {
+          // menu was closed; callback optional
+        },
+        true
+      );
+    };
+
     return (
       <div className={styles.menu}>
         <ButtonGroup vertical fill>
@@ -453,86 +534,8 @@ class Menu extends Component {
             <Button
               active
               key="selectedBoard"
-              onContextMenu={e => {
-                e.preventDefault();
-                let parent = e.target;
-                if (parent.tagName !== 'BUTTON') {
-                  parent = e.target.offsetParent;
-                }
-                const boardContextMenu = React.createElement(
-                  BJMenu,
-                  {},
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      this.duplicateBoardOpen();
-                    },
-                    icon: 'duplicate',
-                    disabled: boardData == null,
-                    text: 'Duplicate'
-                  }),
-                  React.createElement(
-                    MenuItem,
-                    {
-                      icon: 'flows',
-                      disabled: boardData == null || workspace.readonly,
-                      text: 'Move to workspace'
-                    },
-                    listOfWorkspaces
-                  ),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      this.renameBoardOpen();
-                    },
-                    icon: 'edit',
-                    disabled: boardData == null || workspace.readonly,
-                    text: 'Rename'
-                  }),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      onExportToPDF();
-                    },
-                    icon: 'export',
-                    disabled: boardData == null,
-                    text: 'Export to PDF'
-                  }),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      onSetBoardOnStartup();
-                    },
-                    icon: 'log-in',
-                    disabled: boardData == null,
-                    text: 'Open on startup'
-                  }),
-                  React.createElement(MenuItem, {
-                    onClick: () => {
-                      shell.showItemInFolder(boardData.path);
-                    },
-                    icon: 'folder-shared-open',
-                    disabled: boardData == null,
-                    text: 'Open in folder'
-                  }),
-                  React.createElement(MenuDivider),
-                  React.createElement(MenuItem, {
-                    onClick: onDeleteBoard,
-                    icon: 'trash',
-                    disabled: boardData == null || workspace.readonly,
-                    intent: Intent.DANGER,
-                    text: 'Delete'
-                  })
-                );
-
-                ContextMenu.show(
-                  boardContextMenu,
-                  {
-                    left: parent.offsetLeft + parent.offsetWidth + 1,
-                    top: parent.offsetTop
-                  },
-                  () => {
-                    // menu was closed; callback optional
-                  },
-                  true
-                );
-              }}
+              onClick={boardMenu}
+              onContextMenu={boardMenu}
             >
               {boardName}
             </Button>

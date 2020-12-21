@@ -31,11 +31,12 @@ class ImageNodeComponent extends Component {
     const intent = mdi?.intent;
 
     return (
-      <>
-        &nbsp;
-        <Icon icon={icon} intent={intent} onClick={this.changeToNextIcon} />
-        &nbsp;
-      </>
+      <Icon
+        icon={icon}
+        intent={intent}
+        onClick={this.changeToNextIcon}
+        style={{ padding: '0px 5px' }}
+      />
     );
   }
 }

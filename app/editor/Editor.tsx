@@ -337,7 +337,11 @@ Still | renders | nicely
                   );
                   return true;
                 }
-                if (isCTRL) {
+                if (
+                  isCTRL ||
+                  event.target.className === 'openUrlIcon' ||
+                  event.target.className === 'cardLinkIcon'
+                ) {
                   return openUrl();
                 }
               }

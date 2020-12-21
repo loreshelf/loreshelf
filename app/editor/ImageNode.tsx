@@ -13,11 +13,7 @@ function ImageNode(props) {
       return <ImageNodeComponent attrs={attrs} />;
     }
     return (
-      <>
-        &nbsp;
-        <Icon icon={attrs.src} intent={intent} />
-        &nbsp;
-      </>
+      <Icon icon={attrs.src} intent={intent} style={{ padding: '0px 5px' }} />
     );
   }
   return <img src={src} title={title} alt={alt} />;

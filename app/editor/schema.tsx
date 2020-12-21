@@ -355,14 +355,23 @@ export const schema = new Schema({
       ],
       toDOM(node) {
         return [
-          'a',
+          'span',
           {
-            href: node.attrs.href,
-            title: node.attrs.title !== 'null' ? node.attrs.title : undefined,
-            ...{
-              class: node.attrs.href.startsWith('@') ? 'cardLink' : 'regular'
-            }
-          }
+            class: node.attrs.href.startsWith('@')
+              ? 'cardLinkIcon'
+              : 'openUrlIcon'
+          },
+          [
+            'a',
+            {
+              href: node.attrs.href,
+              title: node.attrs.title !== 'null' ? node.attrs.title : undefined,
+              ...{
+                class: node.attrs.href.startsWith('@') ? 'cardLink' : 'regular'
+              }
+            },
+            0
+          ]
         ];
       }
     },

@@ -179,18 +179,22 @@ h3 {
   padding-right: 3px;
 }
 
-.regular::after {
+.openUrlIcon::after {
   font-weight: 900;
   font-family: 'Font Awesome\ 5 Free', sans-serif;
   display: inline-block;
   content: ' \f35d';
+  cursor: pointer;
+  color: #92f8e6;
 }
 
-.cardLink::after {
+.cardLinkIcon::after {
   font-weight: 900;
   font-family: 'Font Awesome\ 5 Free', sans-serif;
   display: inline-block;
   content: ' \f105';
+  cursor: pointer;
+  color: #92f8e6;
 }
 
 h6 {
