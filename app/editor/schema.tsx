@@ -357,6 +357,7 @@ export const schema = new Schema({
         return [
           'span',
           {
+            href: node.attrs.href,
             class: node.attrs.href.startsWith('@')
               ? 'cardLinkIcon'
               : 'openUrlIcon'
