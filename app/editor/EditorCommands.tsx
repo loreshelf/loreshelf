@@ -46,30 +46,18 @@ export function addRowBefore(state, dispatch) {
   return true;
 }
 
-export function moveRowUp(state, dispatch, schema) {
-  const transaction = state.tr;
-  const { $cursor } = transaction.selection;
-  if ($cursor.parent && $cursor.parent.type !== schema.nodes.table_cell) {
-    return;
-  }
-  if ($cursor.path.length < 8) {
-    return;
-  }
-  if ($cursor.path[7] - 1 < 0) {
-    // Cannot move upper than to the top
-    return;
-  }
-
-  const startPos = $cursor.path[8];
-  const currentRow = $cursor.node(3);
-  const currentNodeSize = currentRow.nodeSize;
-  const rowBefore = $cursor.path[6].content.content[$cursor.path[7] - 1];
-  const beforeNodeSize = rowBefore.nodeSize;
-  const offsetPos = $cursor.pos - startPos;
-
+function replaceBlockBefore(
+  state,
+  dispatch,
+  startPos,
+  currentRow,
+  currentNodeSize,
+  beforeNodeSize,
+  offsetPos
+) {
   let tr = state.tr.delete(startPos, startPos + currentNodeSize);
   tr = tr.replaceWith(
-    startPos - beforeNodeSize - 1,
+    startPos - beforeNodeSize,
     startPos - beforeNodeSize,
     currentRow
   );
@@ -79,28 +67,15 @@ export function moveRowUp(state, dispatch, schema) {
   dispatch(tr);
 }
 
-export function moveRowDown(state, dispatch, schema) {
-  const transaction = state.tr;
-  const { $cursor } = transaction.selection;
-
-  if ($cursor.parent && $cursor.parent.type !== schema.nodes.table_cell) {
-    return;
-  }
-  if ($cursor.path.length < 8) {
-    return;
-  }
-  if ($cursor.path[7] + 1 > $cursor.path[6].content.content.length - 1) {
-    // Cannot move lower than to the bottom
-    return;
-  }
-
-  const startPos = $cursor.path[8];
-  const currentRow = $cursor.node(3);
-  const currentNodeSize = currentRow.nodeSize;
-  const rowAfter = $cursor.path[6].content.content[$cursor.path[7] + 1];
-  const afterNodeSize = rowAfter.nodeSize;
-  const offsetPos = $cursor.pos - startPos;
-
+function replaceBlockAfter(
+  state,
+  dispatch,
+  startPos,
+  currentRow,
+  currentNodeSize,
+  afterNodeSize,
+  offsetPos
+) {
   let tr = state.tr.delete(startPos, startPos + currentNodeSize);
   tr = tr.replaceWith(
     startPos + afterNodeSize - 1,
@@ -111,4 +86,153 @@ export function moveRowDown(state, dispatch, schema) {
     Selection.near(tr.doc.resolve(startPos + afterNodeSize + offsetPos))
   );
   dispatch(tr);
+}
+
+export function moveRowUp(state, dispatch, schema) {
+  const transaction = state.tr;
+  const { $cursor } = transaction.selection;
+  if (!$cursor || !$cursor.parent) {
+    // click on img for example
+    return;
+  }
+  if (
+    $cursor.path.length > 6 &&
+    $cursor.path[6].type === schema.nodes.list_item
+  ) {
+    if ($cursor.path[4] - 1 >= 0) {
+      const startPos = $cursor.path[5];
+      const currentRow = $cursor.path[6];
+      const currentNodeSize = currentRow.nodeSize;
+      const rowBefore = $cursor.path[3].content.content[$cursor.path[4] - 1];
+      const beforeNodeSize = rowBefore.nodeSize;
+      const offsetPos = $cursor.pos - startPos;
+
+      replaceBlockBefore(
+        state,
+        dispatch,
+        startPos,
+        currentRow,
+        currentNodeSize,
+        beforeNodeSize,
+        offsetPos
+      );
+      return;
+    }
+  }
+  if (
+    $cursor.path.length > 7 &&
+    $cursor.parent.type === schema.nodes.table_cell
+  ) {
+    if ($cursor.path[7] - 1 >= 0) {
+      const startPos = $cursor.path[8];
+      const currentRow = $cursor.node(3);
+      const currentNodeSize = currentRow.nodeSize;
+      const rowBefore = $cursor.path[6].content.content[$cursor.path[7] - 1];
+      const beforeNodeSize = rowBefore.nodeSize;
+      const offsetPos = $cursor.pos - startPos;
+
+      replaceBlockBefore(
+        state,
+        dispatch,
+        startPos,
+        currentRow,
+        currentNodeSize,
+        beforeNodeSize,
+        offsetPos
+      );
+      return;
+    }
+  }
+  if ($cursor.path[1] - 1 >= 0) {
+    const startPos = $cursor.path[2];
+    const currentRow = $cursor.path[3];
+    const currentNodeSize = currentRow.nodeSize;
+    const rowBefore = $cursor.path[0].content.content[$cursor.path[1] - 1];
+    const beforeNodeSize = rowBefore.nodeSize;
+    const offsetPos = $cursor.pos - startPos;
+
+    replaceBlockBefore(
+      state,
+      dispatch,
+      startPos,
+      currentRow,
+      currentNodeSize,
+      beforeNodeSize,
+      offsetPos
+    );
+  }
+}
+
+export function moveRowDown(state, dispatch, schema) {
+  const transaction = state.tr;
+  const { $cursor } = transaction.selection;
+
+  if (
+    $cursor.path.length > 6 &&
+    $cursor.path[6].type === schema.nodes.list_item
+  ) {
+    if ($cursor.path[4] + 1 < $cursor.path[3].content.content.length) {
+      const startPos = $cursor.path[5];
+      const currentRow = $cursor.path[6];
+      const currentNodeSize = currentRow.nodeSize;
+      const rowAfter = $cursor.path[3].content.content[$cursor.path[4] + 1];
+      const afterNodeSize = rowAfter.nodeSize;
+      const offsetPos = $cursor.pos - startPos;
+
+      replaceBlockAfter(
+        state,
+        dispatch,
+        startPos,
+        currentRow,
+        currentNodeSize,
+        afterNodeSize,
+        offsetPos
+      );
+      return;
+    }
+  }
+
+  if (
+    $cursor.path.length > 7 &&
+    $cursor.parent.type === schema.nodes.table_cell
+  ) {
+    if ($cursor.path[7] + 1 < $cursor.path[6].content.content.length) {
+      const startPos = $cursor.path[8];
+      const currentRow = $cursor.node(3);
+      const currentNodeSize = currentRow.nodeSize;
+      const rowAfter = $cursor.path[6].content.content[$cursor.path[7] + 1];
+      const afterNodeSize = rowAfter.nodeSize;
+      const offsetPos = $cursor.pos - startPos;
+
+      replaceBlockAfter(
+        state,
+        dispatch,
+        startPos,
+        currentRow,
+        currentNodeSize,
+        afterNodeSize,
+        offsetPos
+      );
+      return;
+    }
+  }
+
+  if ($cursor.path[1] + 1 < $cursor.path[0].content.content.length) {
+    const startPos = $cursor.path[2];
+    const currentRow = $cursor.path[3];
+    const currentNodeSize = currentRow.nodeSize;
+    const rowAfter = $cursor.path[0].content.content[$cursor.path[1] + 1];
+    const afterNodeSize = rowAfter.nodeSize;
+    const offsetPos = $cursor.pos - startPos;
+
+    replaceBlockAfter(
+      state,
+      dispatch,
+      startPos,
+      currentRow,
+      currentNodeSize,
+      afterNodeSize,
+      offsetPos
+    );
+  }
 }
