@@ -33,6 +33,7 @@ import SuggestionsPopup from './SuggestionsPopup';
 import { schema } from './schema';
 import COMMANDS from './SlashCommands';
 import { AppToaster } from '../components/AppToaster';
+import { getMeta } from '../utils/CoreFunctions';
 import {
   addRowAfter,
   addRowBefore,
@@ -339,8 +340,68 @@ Still | renders | nicely
                         );
                         view.dispatch(tr);
                       },
+                      disabled: workspace.readonly,
                       text: 'Icon only (toggle)'
                     }),
+                    React.createElement(MenuItem, {
+                      onClick: () => {
+                        fetch(url)
+                          .then(response => {
+                            return response.text();
+                          })
+                          .then(html => {
+                            const parser = new DOMParser();
+                            const htmlDoc = parser.parseFromString(
+                              html,
+                              'text/html'
+                            );
+
+                            // Get the image file
+                            let title = htmlDoc.querySelector('title');
+                            title = title
+                              ? title.textContent
+                              : getMeta(htmlDoc, 'title');
+                            if (!title) {
+                              title = url;
+                            }
+                            const description = getMeta(htmlDoc, 'description');
+                            const linkNode = view.state.doc.nodeAt(pos);
+                            const len = node.content.content.length;
+                            let startPos = nodePos + 1;
+                            for (let i = 0; i < len; i += 1) {
+                              const child = node.content.content[i];
+                              if (child === linkNode) {
+                                break;
+                              }
+                              startPos += child.nodeSize;
+                            }
+                            let tr = view.state.tr.delete(
+                              startPos,
+                              startPos + linkNode.nodeSize
+                            );
+                            tr = tr.insertText(title, startPos);
+                            tr = tr.addMark(
+                              startPos,
+                              startPos + title.length + 1,
+                              schema.marks.link.create({
+                                href: url,
+                                title: description
+                              })
+                            );
+                            view.dispatch(tr);
+                          })
+                          .catch(err => {
+                            console.log(err);
+                          });
+                      },
+                      disabled:
+                        workspace.readonly ||
+                        node.content.content[0].marks[0].attrs.href.startsWith(
+                          '@'
+                        ),
+                      text: 'Download link info'
+                    }),
+                    React.createElement(MenuDivider),
                     React.createElement(MenuItem, {
                       onClick: () => {
                         const linkNode = view.state.doc.nodeAt(pos);
@@ -418,6 +479,7 @@ Still | renders | nicely
                   },
                   text: 'Copy image'
                 }),
+                React.createElement(MenuDivider),
                 React.createElement(MenuItem, {
                   onClick: () => {
                     view.dispatch(
@@ -491,6 +553,7 @@ Still | renders | nicely
                 disabled: workspace.readonly || isNotTableCell,
                 text: 'Move row down'
               }),
+              React.createElement(MenuDivider),
               React.createElement(MenuItem, {
                 onClick: () => {
                   deleteRow(view.state, view.dispatch);

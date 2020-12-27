@@ -26,3 +26,16 @@ export function timeSince(date) {
   }
   return `${Math.floor(seconds)} seconds ago`;
 }
+
+export function getMeta(htmlDoc, metaName) {
+  const metas = htmlDoc.getElementsByTagName('meta');
+
+  for (let i = 0; i < metas.length; i += 1) {
+    const name = metas[i].getAttribute('name');
+    if (name && name.toUpperCase() === metaName.toUpperCase()) {
+      return metas[i].getAttribute('content');
+    }
+  }
+
+  return '';
+}
