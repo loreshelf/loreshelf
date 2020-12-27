@@ -197,6 +197,10 @@ h3 {
   color: #92f8e6;
 }
 
+.linkIconOnly {
+  display: none;
+}
+
 h6 {
   font-size: 30px;
   text-align: center;

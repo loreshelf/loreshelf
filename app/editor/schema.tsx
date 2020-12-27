@@ -354,6 +354,12 @@ export const schema = new Schema({
         }
       ],
       toDOM(node) {
+        const title =
+          node.attrs.title !== 'null' ? node.attrs.title : undefined;
+        let iconOnly = false;
+        if (title && title.startsWith('*')) {
+          iconOnly = true;
+        }
         return [
           'span',
           {
@@ -366,9 +372,9 @@ export const schema = new Schema({
             'a',
             {
               href: node.attrs.href,
-              title: node.attrs.title !== 'null' ? node.attrs.title : undefined,
+              title,
               ...{
-                class: node.attrs.href.startsWith('@') ? 'cardLink' : 'regular'
+                class: iconOnly ? 'linkIconOnly' : ''
               }
             },
             0

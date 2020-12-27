@@ -225,8 +225,13 @@ Still | renders | nicely
           ) {
             const dom = view.domAtPos(pos);
             const parent = dom.node.parentNode;
-            if (parent && parent.href) {
-              const url = parent.href;
+            const icon =
+              dom.node.childNodes.length > 0 &&
+              dom.node.childNodes[0].getAttribute
+                ? dom.node.childNodes[0].getAttribute('href')
+                : null;
+            if ((parent && parent.href) || icon) {
+              const url = parent.href ? parent.href : icon;
               if (url) {
                 const openUrl = () => {
                   if (url.startsWith('http') || url.startsWith('www.')) {
@@ -300,6 +305,41 @@ Still | renders | nicely
                         clipboard.writeText(url);
                       },
                       text: 'Copy to clipboard'
+                    }),
+                    React.createElement(MenuItem, {
+                      onClick: () => {
+                        const linkNode = view.state.doc.nodeAt(pos);
+                        const len = node.content.content.length;
+                        let startPos = nodePos + 1;
+                        for (let i = 0; i < len; i += 1) {
+                          const child = node.content.content[i];
+                          if (child === linkNode) {
+                            break;
+                          }
+                          startPos += child.nodeSize;
+                        }
+                        const { href, title } = linkNode.marks[0].attrs;
+                        let newTitle;
+                        if (title && title.startsWith('*')) {
+                          newTitle = title.substring(1);
+                        } else if (title) {
+                          newTitle = `*${title}`;
+                        } else {
+                          newTitle = '*';
+                        }
+                        let tr = view.state.tr.removeMark(
+                          startPos,
+                          startPos + linkNode.nodeSize,
+                          linkNode.marks[0]
+                        );
+                        tr = tr.addMark(
+                          startPos,
+                          startPos + linkNode.nodeSize,
+                          schema.marks.link.create({ href, title: newTitle })
+                        );
+                        view.dispatch(tr);
+                      },
+                      text: 'Icon only (toggle)'
                     }),
                     React.createElement(MenuItem, {
                       onClick: () => {

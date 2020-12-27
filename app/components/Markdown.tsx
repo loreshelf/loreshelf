@@ -496,10 +496,3 @@ export function plainTextPlugin(md) {
 
   md.core.ruler.push('plainText', plainTextRule);
 }
-
-const md = new MarkdownIt();
-md.use(plainTextPlugin);
-md.render(
-  '# hgf ghg \n\nyour markdown content\n\n| Date | A |\n| --- | --- |\n| 12.3.2020 |  |'
-);
-console.log(md.plainText);
