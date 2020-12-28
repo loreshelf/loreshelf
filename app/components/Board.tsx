@@ -178,6 +178,7 @@ class Board extends Component {
               )}
               <Overlay
                 className={Classes.DARK}
+                transitionDuration={0}
                 isOpen={imageSrc !== null}
                 onClose={this.closeImage}
               >
