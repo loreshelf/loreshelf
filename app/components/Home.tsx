@@ -30,7 +30,6 @@ import MarkdownIcons from './MarkdownIcons';
 import { AppToaster, AppUpdateToaster } from './AppToaster';
 import brandIcon from '../resources/icon.png';
 import SidePanel from './SidePanel';
-import StatusBar from './StatusBar';
 
 const CONFIG_SCHEMA = {
   workspaces: {
@@ -1832,8 +1831,7 @@ class Home extends Component {
               showonly={showonly}
               openBoard={this.loadBoardWithPath}
               onSwitchShowOnly={this.switchShowOnly}
-            />,
-            <StatusBar key="statusBar" />
+            />
           ]
         ) : (
           <NonIdealState>

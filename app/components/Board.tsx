@@ -13,6 +13,7 @@ import {
 import Card from './Card';
 import BoardDrop from './BoardDrop';
 import styles from './Board.css';
+import StatusBar from './StatusBar';
 
 class Board extends Component {
   constructor(props) {
@@ -212,6 +213,7 @@ class Board extends Component {
             />
           )}
         </BoardDrop>
+        <StatusBar key="statusBar" onOpenImage={this.openImage} />
       </div>
     );
   }

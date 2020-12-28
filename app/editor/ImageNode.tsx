@@ -16,7 +16,7 @@ function ImageNode(props) {
       <Icon icon={attrs.src} intent={intent} style={{ padding: '0px 5px' }} />
     );
   }
-  return <img src={src} title={title} alt={alt} />;
+  return <img src={src} title={title} alt={alt} className="nodeImg" />;
 }
 
 export default ImageNode;
