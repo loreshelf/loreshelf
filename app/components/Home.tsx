@@ -56,6 +56,9 @@ const CONFIG_SCHEMA = {
   },
   rememberLastNotebook: {
     type: 'boolean'
+  },
+  globalAppKeyEnabled: {
+    type: 'boolean'
   }
 };
 
@@ -70,7 +73,8 @@ enum CONFIG {
   FILTERBY = 'filterBy',
   UPDATELASTCHECKED = 'updateLastChecked',
   NOTECARDWIDTH = 'notecardWidth',
-  REMEMBERLASTNOTEBOOK = 'rememberLastNotebook'
+  REMEMBERLASTNOTEBOOK = 'rememberLastNotebook',
+  GLOBALAPPKEYENABLED = 'globalAppKeyEnabled'
 }
 
 const SORTING_METHODS = {
@@ -119,6 +123,7 @@ class Home extends Component {
     });
     const notecardWidth = CONFIG_STORE.get(CONFIG.NOTECARDWIDTH, 220);
     const rememberLastNotebook = CONFIG_STORE.get(CONFIG.REMEMBERLASTNOTEBOOK);
+    const globalAppKeyEnabled = CONFIG_STORE.get(CONFIG.GLOBALAPPKEYENABLED);
 
     const updateDateStr = CONFIG_STORE.get(CONFIG.UPDATELASTCHECKED);
     const updateLastChecked = updateDateStr ? new Date(updateDateStr) : null;
@@ -130,7 +135,8 @@ class Home extends Component {
       sortBy,
       filterBy,
       notecardWidth,
-      rememberLastNotebook
+      rememberLastNotebook,
+      globalAppKeyEnabled: globalAppKeyEnabled || false
     };
 
     this.menuRef = React.createRef();
@@ -495,6 +501,10 @@ class Home extends Component {
     existingWorkspaces,
     loreshelfDocsWorkspacePath
   ) {
+    const { settings } = this.state;
+    if (settings.globalAppKeyEnabled) {
+      ipcRenderer.send('toggle-global-app-key', true);
+    }
     this.setState({ loreshelfDocsWorkspacePath });
     const configWorkspaces = CONFIG_STORE.get(CONFIG.WORKSPACES);
     const configBoardOnStartup = CONFIG_STORE.get(CONFIG.NOTEBOOKONSTARTUP);
@@ -1439,7 +1449,13 @@ class Home extends Component {
 
   changeSettings(newSettings) {
     const { settings, workspace } = this.state;
-    const { sortBy, filterBy, notecardWidth, rememberLastNotebook } = settings;
+    const {
+      sortBy,
+      filterBy,
+      notecardWidth,
+      rememberLastNotebook,
+      globalAppKeyEnabled
+    } = settings;
     if (newSettings.sortBy !== sortBy) {
       sortBy.method = newSettings.sortBy.name;
       sortBy.asc = newSettings.sortBy.asc;
@@ -1461,6 +1477,14 @@ class Home extends Component {
         CONFIG_STORE.delete(CONFIG.WORKSPACEONSTARTUP);
         CONFIG_STORE.delete(CONFIG.NOTEBOOKONSTARTUP);
       }
+    }
+    if (newSettings.globalAppKeyEnabled !== globalAppKeyEnabled) {
+      settings.globalAppKeyEnabled = newSettings.globalAppKeyEnabled;
+      CONFIG_STORE.set(
+        CONFIG.GLOBALAPPKEYENABLED,
+        settings.globalAppKeyEnabled
+      );
+      ipcRenderer.send('toggle-global-app-key', settings.globalAppKeyEnabled);
     }
     let updateBoard = false;
     if (newSettings.notecardWidth !== notecardWidth) {

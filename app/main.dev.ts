@@ -12,7 +12,15 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, shell, BrowserWindow, ipcMain, dialog, protocol } from 'electron';
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  protocol,
+  globalShortcut
+} from 'electron';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -651,6 +659,20 @@ const createWindow = async () => {
     mainWindow.webContents.send('refresh-and-save-callback');
   });
 
+  ipcMain.on('toggle-global-app-key', (event, enable) => {
+    if (enable) {
+      globalShortcut.register('Alt+C', () => {
+        mainWindow?.focus();
+      });
+    } else if (globalShortcut.isRegistered('Alt+C')) {
+      globalShortcut.unregister('Alt+C');
+    }
+  });
+
+  ipcMain.on('toggle-keep-above', (event, enable) => {
+    mainWindow?.setAlwaysOnTop(enable, 'status');
+  });
+
   autoUpdater.on('update-available', info => {
     mainWindow.webContents.send(
       'update-check-callback',
@@ -680,6 +702,9 @@ const createWindow = async () => {
     }
     if (boardWatcher != null) {
       boardWatcher.close();
+    }
+    if (globalShortcut.isRegistered('Alt+C')) {
+      globalShortcut.unregister('Alt+C');
     }
   });
 

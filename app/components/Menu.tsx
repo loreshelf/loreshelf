@@ -88,7 +88,8 @@ class Menu extends Component {
       filterText: undefined,
       showPassword: false,
       settingsOpen: false,
-      licenseOpen: false
+      licenseOpen: false,
+      keepAbove: false
     };
 
     this.searchInputRef = React.createRef();
@@ -297,7 +298,8 @@ class Menu extends Component {
       showPassword,
       settingsOpen,
       newSettings,
-      licenseOpen
+      licenseOpen,
+      keepAbove
     } = this.state;
 
     const { sortBy, filterBy } = settings;
@@ -795,6 +797,15 @@ class Menu extends Component {
                     text: 'Documentation'
                   }),
                   updateButton,
+                  React.createElement(MenuItem, {
+                    onClick: () => {
+                      ipcRenderer.send('toggle-keep-above', !keepAbove);
+                      this.setState({ keepAbove: !keepAbove });
+                    },
+                    icon: 'applications',
+                    active: keepAbove,
+                    text: 'Keep Above'
+                  }),
                   React.createElement(MenuDivider),
                   React.createElement(MenuItem, {
                     onClick: this.licenseOpen,
@@ -1058,6 +1069,14 @@ class Menu extends Component {
               disabled={settings?.rememberLastNotebook}
               onChange={() => {
                 newSettings.rememberLastNotebook = !newSettings.rememberLastNotebook;
+                this.setState({ newSettings });
+              }}
+            />
+            <Switch
+              checked={newSettings?.globalAppKeyEnabled}
+              label="Enable global key ALT+C to focus the app"
+              onChange={() => {
+                newSettings.globalAppKeyEnabled = !newSettings.globalAppKeyEnabled;
                 this.setState({ newSettings });
               }}
             />
