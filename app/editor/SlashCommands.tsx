@@ -105,6 +105,30 @@ const COMMANDS = [
     }
   },
   {
+    name: 'code',
+    disabled: isNotInline,
+    onSelect: (start, end, state, dispatch) => {
+      const insert = schema.nodes.code_block.createAndFill();
+      const tr = state.tr.replaceWith(start, end, insert);
+      tr.setSelection(Selection.near(tr.doc.resolve(start + 1)));
+      dispatch(tr);
+    }
+  },
+  {
+    name: 'code-inline',
+    onSelect: (start, end, state, dispatch, cursor) => {
+      const label = 'code ';
+      let tr = state.tr.insertText(label, start, cursor);
+      tr = tr.addMark(
+        start,
+        start + label.length - 1,
+        schema.marks.code.create()
+      );
+      tr.setSelection(TextSelection.create(tr.doc, start + label.length - 1));
+      dispatch(tr);
+    }
+  },
+  {
     name: 'quote',
     disabled: isNotInline,
     onSelect: (start, end, state, dispatch) => {

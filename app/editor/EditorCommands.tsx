@@ -236,3 +236,18 @@ export function moveRowDown(state, dispatch, schema) {
     );
   }
 }
+
+export function codeTabIndent(schema) {
+  return (state, dispatch) => {
+    const { $cursor } = state.tr.selection;
+    if (
+      $cursor &&
+      $cursor.path.length > 3 &&
+      $cursor.path[3].type === schema.nodes.code_block
+    ) {
+      dispatch(state.tr.insertText('  ', $cursor.pos));
+      return true;
+    }
+    return false;
+  };
+}

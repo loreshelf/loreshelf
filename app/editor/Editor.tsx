@@ -15,6 +15,7 @@ import log from 'electron-log';
 import { EditorState, Plugin, Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { defaultMarkdownSerializer } from 'prosemirror-markdown';
+import { selectParentNode } from 'prosemirror-commands';
 import 'prosemirror-view/style/prosemirror.css';
 import { keymap } from 'prosemirror-keymap';
 import { redo, undo } from 'prosemirror-history';
@@ -38,7 +39,8 @@ import {
   addRowAfter,
   addRowBefore,
   moveRowUp,
-  moveRowDown
+  moveRowDown,
+  codeTabIndent
 } from './EditorCommands';
 
 const MAX_SUGGESTIONS = 7;
@@ -171,7 +173,11 @@ Still | renders | nicely
           }
         },
         Tab: (state, dispatch) => {
-          return sinkListItem(schema.nodes.list_item)(state, dispatch);
+          let done = sinkListItem(schema.nodes.list_item)(state, dispatch);
+          if (!done) {
+            done = codeTabIndent(schema)(state, dispatch);
+          }
+          return done;
         },
         'Shift-Tab': (state, dispatch) => {
           return liftListItem(schema.nodes.list_item)(state, dispatch);
@@ -207,6 +213,9 @@ Still | renders | nicely
               this.updateDoc();
             }
           }
+        },
+        'Mod-a': (state, dispatch) => {
+          return selectParentNode(state, dispatch);
         }
       })
     );
