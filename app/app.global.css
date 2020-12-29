@@ -251,6 +251,32 @@ blockquote::after {
   margin-top: -0.5em;
 }
 
+code,
+pre {
+  color: #30404d;
+  background-color: #f6f8fa;
+}
+
+code {
+  padding: 0 3px;
+  overflow: hidden;
+}
+
+pre code {
+  display: inline-block;
+  margin: 0 3px;
+  margin-top: 3px;
+  max-width: calc(100% - 3px);
+  max-height: 100px;
+}
+
+pre {
+  margin: 0 -5px;
+  font-size: 85%;
+  width: calc(100% + 10px);
+  max-width: calc(100% + 10px);
+}
+
 hr {
   border-width: 0;
   border-bottom: 2px dashed hsl(207, 23%, 37%);

@@ -2,6 +2,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import { clipboard } from 'electron';
 import { Button } from '@blueprintjs/core';
 
 class StatusBar extends Component {
@@ -9,17 +10,18 @@ class StatusBar extends Component {
     super(props);
     this.state = {
       content: null,
-      imgSrc: null
+      imgSrc: null,
+      codeSrc: null
     };
     const { onOpenImage } = props;
     window.onmouseover = e => {
-      const { content, imgSrc } = this.state;
+      const { content, imgSrc, codeSrc } = this.state;
       const url = e.target.getAttribute('href');
       if (content !== url) {
         const newStatus = url ? decodeURI(url) : null;
         this.setState({ content: newStatus });
       }
-      const { className } = e.target;
+      const { className, nodeName } = e.target;
       if (!imgSrc) {
         if (className === 'nodeImg') {
           const newButton = React.createElement(Button, {
@@ -54,6 +56,53 @@ class StatusBar extends Component {
       ) {
         document.getElementById('overlayOpenButton').remove();
         this.setState({ imgSrc: null });
+      }
+      // Copy button in code block
+      if (
+        (!codeSrc &&
+          nodeName === 'CODE' &&
+          e.target.parentNode.nodeName === 'PRE') ||
+        nodeName === 'PRE'
+      ) {
+        const newButton = React.createElement(Button, {
+          icon: 'duplicate',
+          small: true,
+          onClick: () => {
+            // eslint-disable-next-line react/destructuring-assignment
+            const src = this.state.codeSrc;
+            clipboard.writeText(src);
+          }
+        });
+        const exists = document.getElementById('overlayCopyButton');
+        if (exists) {
+          exists.remove();
+        }
+        const buttonContainer = document.createElement('div');
+        buttonContainer.setAttribute('id', 'overlayCopyButton');
+        buttonContainer.style.float = 'right';
+        buttonContainer.style.height = '0px';
+        let newCodeSrc;
+        if (nodeName === 'PRE') {
+          newCodeSrc = e.target.firstChild.textContent;
+          e.target.prepend(buttonContainer);
+        } else {
+          newCodeSrc = e.target.textContent;
+          e.target.parentNode.prepend(buttonContainer);
+        }
+        ReactDOM.render(newButton, buttonContainer);
+        this.setState({ codeSrc: newCodeSrc });
+      } else if (
+        codeSrc &&
+        nodeName !== 'CODE' &&
+        nodeName !== 'PRE' &&
+        e.target.parentNode.id !== 'overlayCopyButton' &&
+        e.target.parentNode.parentNode.id !== 'overlayCopyButton' &&
+        e.target.parentNode.parentNode.parentNode.id !== 'overlayCopyButton' &&
+        e.target.parentNode.parentNode.parentNode.parentNode.id !==
+          'overlayCopyButton'
+      ) {
+        document.getElementById('overlayCopyButton').remove();
+        this.setState({ codeSrc: null });
       }
     };
   }
