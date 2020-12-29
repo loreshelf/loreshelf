@@ -111,16 +111,16 @@ export function buildKeymap(schema) {
     const br = type;
     const cmd = chainCommands(exitCode, (state, dispatch) => {
       const { $cursor } = state.selection;
-      if (
+      /** if (
         $cursor &&
         $cursor.parent &&
         $cursor.parent.type.name !== 'table_cell' &&
         $cursor.parent.type.name !== 'table_header'
-      ) {
-        dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView());
-        return true;
-      }
-      return false;
+      ) { */
+      dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView());
+      return true;
+      /** }
+      return false; */
     });
     bind('Mod-Enter', cmd);
     bind('Shift-Enter', cmd);

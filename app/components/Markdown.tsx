@@ -59,14 +59,20 @@ class MarkdownParseState {
   }
 
   parseTokens(toks) {
-    for (let i = 0; i < toks.length; i += 1) {
+    for (let i = 0; toks && i < toks.length; i += 1) {
       const tok = toks[i];
-      const handler = this.tokenHandlers[tok.type];
-      if (!handler)
-        throw new Error(
+      let handler = this.tokenHandlers[tok.type];
+      if (tok.type === 'html_inline' && tok.content !== '<br>') {
+        handler = this.tokenHandlers.text;
+        tok.type = 'text';
+      }
+      if (handler) {
+        handler(this, tok);
+      } /** else {
+        console.log(
           `Token type \`${tok.type}\` not supported by Markdown parser`
         );
-      handler(this, tok);
+      } */
     }
   }
 
@@ -110,62 +116,62 @@ class CustomMarkdownParser extends MarkdownParser {
   }
 }
 
-const markdownParser = new CustomMarkdownParser(
-  schema,
-  MarkdownIt('default', { html: false }),
-  {
-    blockquote: { block: 'blockquote' },
-    paragraph: { block: 'paragraph' },
-    inline: { block: 'text' },
-    list_item: { block: 'list_item' },
-    bullet_list: { block: 'bullet_list' },
-    ordered_list: {
-      block: 'ordered_list',
-      getAttrs: tok => ({ order: +tok.attrGet('start') || 1 })
-    },
-    heading: {
-      block: 'heading',
-      getAttrs: tok => ({
-        level: +tok.tag.slice(1),
-        class: +tok.tag.slice(1) === 2 ? 'property' : undefined
-      })
-    },
-    code_block: {
-      block: 'code_block'
-    },
-    fence: {
-      block: 'code_block',
-      getAttrs: tok => ({ params: tok.info || '' })
-    },
-    hr: { node: 'horizontal_rule' },
-    image: {
-      node: 'image',
-      getAttrs: tok => ({
-        src: decodeURI(tok.attrGet('src')),
-        title: tok.attrGet('title') || null,
-        alt: (tok.children[0] && tok.children[0].content) || null
-      })
-    },
-    hardbreak: { node: 'hard_break' },
-    s: { mark: 'strikethrough' },
-    em: { mark: 'em' },
-    strong: { mark: 'strong' },
-    link: {
-      mark: 'link',
-      getAttrs: tok => ({
-        href: decodeURI(tok.attrGet('href')),
-        title: tok.attrGet('title') || undefined
-      })
-    },
-    code_inline: { mark: 'code' },
-    table: { block: 'table' },
-    thead: { block: 'table_head' },
-    tr: { block: 'table_row' },
-    th: { block: 'table_header' },
-    tbody: { block: 'table_body' },
-    td: { block: 'table_cell' }
-  }
-);
+const mdit = MarkdownIt('default', { html: true });
+mdit.disable('html_block');
+
+const markdownParser = new CustomMarkdownParser(schema, mdit, {
+  blockquote: { block: 'blockquote' },
+  paragraph: { block: 'paragraph' },
+  inline: { block: 'text' },
+  list_item: { block: 'list_item' },
+  bullet_list: { block: 'bullet_list' },
+  ordered_list: {
+    block: 'ordered_list',
+    getAttrs: tok => ({ order: +tok.attrGet('start') || 1 })
+  },
+  heading: {
+    block: 'heading',
+    getAttrs: tok => ({
+      level: +tok.tag.slice(1),
+      class: +tok.tag.slice(1) === 2 ? 'property' : undefined
+    })
+  },
+  code_block: {
+    block: 'code_block'
+  },
+  fence: {
+    block: 'code_block',
+    getAttrs: tok => ({ params: tok.info || '' })
+  },
+  hr: { node: 'horizontal_rule' },
+  image: {
+    node: 'image',
+    getAttrs: tok => ({
+      src: decodeURI(tok.attrGet('src')),
+      title: tok.attrGet('title') || null,
+      alt: (tok.children[0] && tok.children[0].content) || null
+    })
+  },
+  hardbreak: { node: 'hard_break' },
+  html_inline: { node: 'hard_break' },
+  s: { mark: 'strikethrough' },
+  em: { mark: 'em' },
+  strong: { mark: 'strong' },
+  link: {
+    mark: 'link',
+    getAttrs: tok => ({
+      href: decodeURI(tok.attrGet('href')),
+      title: tok.attrGet('title') || undefined
+    })
+  },
+  code_inline: { mark: 'code' },
+  table: { block: 'table' },
+  thead: { block: 'table_head' },
+  tr: { block: 'table_row' },
+  th: { block: 'table_header' },
+  tbody: { block: 'table_body' },
+  td: { block: 'table_cell' }
+});
 
 function escapeRegExp(stringToGoIntoTheRegex) {
   return stringToGoIntoTheRegex.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -253,7 +259,11 @@ const markdownSerializer = new MarkdownSerializer(
     hard_break(state, node, parent, index) {
       for (let i = index + 1; i < parent.childCount; i += 1)
         if (parent.child(i).type !== node.type) {
-          state.write('\n');
+          if (parent.type === schema.nodes.table_cell) {
+            state.write('<br>');
+          } else {
+            state.write('\\\n');
+          }
           return;
         }
     },
