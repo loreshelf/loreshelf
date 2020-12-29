@@ -95,6 +95,10 @@ export function buildKeymap(schema) {
     bind('Shift-Mod-c', toggleMark(type));
     bind('Shift-Mod-C', toggleMark(type));
   }
+  if ((type = schema.marks.strikethrough)) {
+    bind('Shift-Mod-x', toggleMark(type));
+    bind('Shift-Mod-X', toggleMark(type));
+  }
   if ((type = schema.marks.code)) bind('Mod-`', toggleMark(type));
 
   if ((type = schema.nodes.bullet_list)) {
