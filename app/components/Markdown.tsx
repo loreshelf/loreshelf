@@ -2,7 +2,6 @@
 /* eslint-disable no-restricted-syntax */
 import { MarkdownParser, MarkdownSerializer } from 'prosemirror-markdown';
 import MarkdownIt from 'markdown-it';
-import path from 'path';
 import { Mark } from 'prosemirror-model';
 import { schema } from '../editor/schema';
 import Metadata from '../editor/Metadata';
@@ -254,7 +253,7 @@ const markdownSerializer = new MarkdownSerializer(
     hard_break(state, node, parent, index) {
       for (let i = index + 1; i < parent.childCount; i += 1)
         if (parent.child(i).type !== node.type) {
-          state.write('\\n');
+          state.write('\n');
           return;
         }
     },

@@ -11,7 +11,8 @@ import {
   joinForward,
   selectNodeForward,
   liftEmptyBlock,
-  lift
+  lift,
+  exitCode
 } from 'prosemirror-commands';
 import { deleteRow } from 'prosemirror-tables';
 import {
@@ -102,33 +103,39 @@ export function buildKeymap(schema) {
   if ((type = schema.marks.code)) bind('Mod-`', toggleMark(type));
 
   if ((type = schema.nodes.bullet_list)) {
-    bind('Shift-Ctrl-8', wrapInList(type));
+    bind('Shift-Mod-8', wrapInList(type));
   }
-  if ((type = schema.nodes.ordered_list))
-    bind('Shift-Ctrl-9', wrapInList(type));
-  if ((type = schema.nodes.blockquote)) bind('Ctrl->', wrapIn(type));
-  /** Causes problems in the table
+  if ((type = schema.nodes.ordered_list)) bind('Shift-Mod-9', wrapInList(type));
+  if ((type = schema.nodes.blockquote)) bind('Mod->', wrapIn(type));
   if ((type = schema.nodes.hard_break)) {
     const br = type;
     const cmd = chainCommands(exitCode, (state, dispatch) => {
-      dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView());
-      return true;
+      const { $cursor } = state.selection;
+      if (
+        $cursor &&
+        $cursor.parent &&
+        $cursor.parent.type.name !== 'table_cell' &&
+        $cursor.parent.type.name !== 'table_header'
+      ) {
+        dispatch(state.tr.replaceSelectionWith(br.create()).scrollIntoView());
+        return true;
+      }
+      return false;
     });
     bind('Mod-Enter', cmd);
     bind('Shift-Enter', cmd);
-    if (mac) bind('Ctrl-Enter', cmd);
-  } */
+  }
   if ((type = schema.nodes.list_item)) {
     bind('Enter', splitListItem(type));
     bind('Mod-[', liftListItem(type));
     bind('Mod-]', sinkListItem(type));
   }
-  if ((type = schema.nodes.paragraph)) bind('Shift-Ctrl-0', setBlockType(type));
+  if ((type = schema.nodes.paragraph)) bind('Shift-Mod-0', setBlockType(type));
   if ((type = schema.nodes.code_block))
-    bind('Shift-Ctrl-\\', setBlockType(type));
+    bind('Shift-Mod-\\', setBlockType(type));
   if ((type = schema.nodes.heading))
     for (let i = 1; i <= 6; i += 1)
-      bind(`Shift-Ctrl-${i}`, setBlockType(type, { level: i }));
+      bind(`Shift-Mod-${i}`, setBlockType(type, { level: i }));
   if ((type = schema.nodes.horizontal_rule)) {
     const hr = type;
     bind('Mod-_', (state, dispatch) => {
