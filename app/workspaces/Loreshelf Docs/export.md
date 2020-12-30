@@ -1,8 +1,8 @@
 # Markdown to PDF
 
-![Export to PDF.png](../Loreshelf%20Docs/img/Export%20to%20PDF.png)Right click on the notebook’s title
+![Export to PDF.png](img/Export%20to%20PDF.png)
 
-Right click on the current notebook’s name and choose **Export to PDF** from the context menu.
+Click on the current notebook’s name and choose **Export to PDF** from the context menu.
 
 # Slideshow
 

@@ -6,7 +6,7 @@ Copy and paste an URL to your image. It should end with and be in “**png**”,
 
 # Local image
 
-![Add a local image.png](../Loreshelf%20Docs/img/Add%20a%20local%20image.png)
+![Add a local image.png](img/Add%20a%20local%20image.png)
 
 In the block toolbar click on “Add a local image“. This will open a dialog to select an image. After confirmation the image is inserted to the block.
 
@@ -18,3 +18,9 @@ Right click on the image will show more options:
 - Copy image to clipboard
 - Copy link to image
 - Remove image
+
+# Open image
+
+Click on the zoom button in the top left corner of the image to enlarge it.
+
+![Image zoom icon.png](img/Image%20zoom%20icon.png)

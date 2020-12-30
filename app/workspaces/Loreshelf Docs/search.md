@@ -7,7 +7,7 @@ Click on the search icon which will open the side bar, enter the search text and
 - Sorted by score
 - OR join is used when searching multiple terms
 
-![Search.png](../Loreshelf%20Docs/img/Search.png)
+![Search.png](img/Search.png)
 
 # Search indexing
 

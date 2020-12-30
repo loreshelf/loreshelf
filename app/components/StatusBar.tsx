@@ -39,7 +39,7 @@ class StatusBar extends Component {
           }
           const buttonContainer = document.createElement('div');
           buttonContainer.setAttribute('id', 'overlayOpenButton');
-          buttonContainer.style.float = 'right';
+          buttonContainer.style.float = 'left';
           buttonContainer.style.height = '0px';
           e.target.parentNode.prepend(buttonContainer);
           ReactDOM.render(newButton, buttonContainer);
@@ -54,7 +54,10 @@ class StatusBar extends Component {
         e.target.parentNode.parentNode.parentNode.parentNode.id !==
           'overlayOpenButton'
       ) {
-        document.getElementById('overlayOpenButton').remove();
+        const b = document.getElementById('overlayOpenButton');
+        if (b) {
+          b.remove();
+        }
         this.setState({ imgSrc: null });
       }
       // Copy button in code block
@@ -101,7 +104,10 @@ class StatusBar extends Component {
         e.target.parentNode.parentNode.parentNode.parentNode.id !==
           'overlayCopyButton'
       ) {
-        document.getElementById('overlayCopyButton').remove();
+        const b = document.getElementById('overlayCopyButton');
+        if (b) {
+          b.remove();
+        }
         this.setState({ codeSrc: null });
       }
     };

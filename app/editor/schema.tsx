@@ -189,7 +189,9 @@ export const schema = new Schema({
       ],
       toDOM(node) {
         // return ['img', node.attrs];
-        const dom = document.createElement('div');
+        const dom = document.createElement(
+          node.attrs.alt === 'Icon' ? 'span' : 'div'
+        );
         ReactDOM.render(
           <ImageNode
             attrs={node.attrs}

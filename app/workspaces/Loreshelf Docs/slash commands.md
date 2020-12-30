@@ -108,3 +108,27 @@ Write /large and confirm with _Enter_.
 Write /rule and confirm with _Enter_.
 
 ---
+
+# Code block
+
+Write /code and confirm with _Enter_.
+
+```
+#include <stdio.h>
+int main() {
+  printf("Hello, World!");
+  return 0;
+}
+```
+
+- Hover over the code block and click on the copy button to copy the code to clipboard
+
+![Copy code.png](img/Copy%20code.png)
+
+# Inline code
+
+Write /code-inline and confirm with _Enter_.
+
+Example inline `code`
+
+Alternatively select text and press CTRL + Shift + C.

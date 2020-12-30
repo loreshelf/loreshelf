@@ -373,6 +373,7 @@ Still | renders | nicely
                             if (!title) {
                               title = url;
                             }
+                            title = title.trim();
                             const description = getMeta(htmlDoc, 'description');
                             const linkNode = view.state.doc.nodeAt(pos);
                             const len = node.content.content.length;
@@ -405,8 +406,13 @@ Still | renders | nicely
                       },
                       disabled:
                         workspace.readonly ||
-                        node.content.content[0].marks[0].attrs.href.startsWith(
-                          '@'
+                        !(
+                          node.content.content[0].marks[0].attrs.href.startsWith(
+                            'http'
+                          ) ||
+                          node.content.content[0].marks[0].attrs.href.startsWith(
+                            'www.'
+                          )
                         ),
                       text: 'Download link info'
                     }),
@@ -866,18 +872,21 @@ Still | renders | nicely
     setTimeout(() => {
       const { state, dispatch } = this.view;
       const baseURI = document.getElementById('baseURI');
-      const filePath = path.normalize(
-        ipcRenderer.sendSync('file-link', baseURI.href, [
-          { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'svg', 'gif'] }
-        ])
+      const fileLink = ipcRenderer.sendSync(
+        'file-link',
+        decodeURI(baseURI.href),
+        [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'svg', 'gif'] }]
       );
-      if (filePath) {
-        const insert = schema.nodes.image.create({
-          src: filePath,
-          alt: filePath.substring(filePath.lastIndexOf(path.sep) + 1)
-        });
-        const tr = state.tr.replaceSelectionWith(insert);
-        dispatch(tr);
+      if (fileLink) {
+        const filePath = path.normalize(fileLink);
+        if (filePath) {
+          const insert = schema.nodes.image.create({
+            src: filePath,
+            alt: filePath.substring(filePath.lastIndexOf(path.sep) + 1)
+          });
+          const tr = state.tr.replaceSelectionWith(insert);
+          dispatch(tr);
+        }
       }
     }, 200);
   }

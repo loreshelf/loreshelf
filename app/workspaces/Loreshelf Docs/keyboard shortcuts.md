@@ -12,6 +12,25 @@ Select text and press CTRL + I
 
 _Example text_
 
+## Strikethrough
+
+Select text and press CTRL + Shift + X
+
+~~Example text~~
+
+## Hardbreak
+
+Press CTRL + Enter to add a hard break.
+
+- Example text\
+  with hard break
+
+## Inline Code
+
+Select text and press CTRL + Shift + C.
+
+Example inline `code`
+
 # Notebook
 
 ## Create new notebook
@@ -57,3 +76,9 @@ Select the row with your mouse highlighting all the cells in the row and press â
 ## Move row up/down
 
 Place cursor to the row that you want to move and press ALT + UP/DOWN
+
+# Notecard
+
+```metadata
+ALT+UP/DOWN=[Move blocks](@sorting%20and%20placement#Move%20blocks "Open from 'sorting and placement'")
+```

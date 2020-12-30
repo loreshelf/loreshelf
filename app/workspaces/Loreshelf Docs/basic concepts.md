@@ -9,9 +9,7 @@ Store and organize concise information most effectively with Loreshelf.
 Workspaces \[_Loreshelf Docs_\]
 
 - Notebooks \[_Get Started_\]
-
-  - Notecards
-
+  - Notecards\
     \[_Data Organization_\]
 
 Workspace is a folder of your notebooks.
@@ -46,3 +44,19 @@ If you want to set one specific notebook which should open on startup follow the
 3. Click on the option “Open on startup“.
 
 In order reset the behaviour, open the Preferences and check “Remember the last notebook and open it on startup”.
+
+# Open Loreshelf
+
+## Focus
+
+In order to focus Loreshelf app from any application even when Loreshelf is minimized you may enable global app key in the Preferences.
+
+Once enabled, pressing ALT+C will gain focus to Loreshelf app.
+
+![Global app key.png](img/Global%20app%20key.png)
+
+# Keep above
+
+In order to keep Loreshelf above all other applications click on the Settings button and select “**Keep Above**“.
+
+![Keep above.png](img/Keep%20above.png)

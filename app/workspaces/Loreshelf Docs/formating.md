@@ -24,6 +24,8 @@ Keyshortcut to add row=Press *Enter*
 
 Create a new form using slash commands [Form](@slash%20commands#Form "Open from 'slash commands'")
 
+![Form.png](img/Form.png)
+
 # Table
 
 Structure information in tables.
