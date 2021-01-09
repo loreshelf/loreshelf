@@ -89,6 +89,11 @@ export function buildInputRules(schema) {
         if (url.startsWith('www.')) {
           url = `https://${url}`;
         }
+        const node = state.doc.nodeAt(start);
+        if (node?.marks[0]?.attrs?.href) {
+          const { anchor } = state.tr.selection;
+          return state.tr.insertText(' ', anchor);
+        }
         return state.tr
           .insertText(url, newStart, end)
           .addMark(

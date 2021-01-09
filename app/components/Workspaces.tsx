@@ -53,7 +53,7 @@ export const renderWorkspace: ItemRenderer<Workspace> = (
     return null;
   }
   return (
-    <span key={workspace.path}>
+    <div key={workspace.path}>
       <Button
         icon="small-cross"
         onClick={e => {
@@ -67,7 +67,7 @@ export const renderWorkspace: ItemRenderer<Workspace> = (
         text={highlightText(workspace.name, query)}
         label={workspace.numBoards.toString()}
       />
-    </span>
+    </div>
   );
 };
 

@@ -235,11 +235,19 @@ Still | renders | nicely
           ) {
             const dom = view.domAtPos(pos);
             const parent = dom.node.parentNode;
-            const icon =
-              dom.node.childNodes.length > 0 &&
-              dom.node.childNodes[0].getAttribute
-                ? dom.node.childNodes[0].getAttribute('href')
-                : null;
+            const transaction = view.state.tr;
+            const { anchor } = transaction.selection;
+            const linkNode = view.state.doc.nodeAt(anchor - 1);
+            const len = node.content.content.length;
+            let startPos = nodePos + 1;
+            for (let i = 0; i < len; i += 1) {
+              const child = node.content.content[i];
+              if (child === linkNode) {
+                break;
+              }
+              startPos += child.nodeSize;
+            }
+            const icon = linkNode?.marks[0]?.attrs?.href;
             if ((parent && parent.href) || icon) {
               const url = parent.href ? parent.href : icon;
               if (url) {
@@ -249,7 +257,6 @@ Still | renders | nicely
                     return true;
                   }
                   if (url.includes('@')) {
-                    const linkNode = view.state.doc.nodeAt(pos);
                     const gatewayUrl = linkNode.marks[0].attrs.href;
                     if (gatewayUrl.startsWith('@')) {
                       const separatorIndex = gatewayUrl.indexOf('/');
@@ -318,16 +325,6 @@ Still | renders | nicely
                     }),
                     React.createElement(MenuItem, {
                       onClick: () => {
-                        const linkNode = view.state.doc.nodeAt(pos);
-                        const len = node.content.content.length;
-                        let startPos = nodePos + 1;
-                        for (let i = 0; i < len; i += 1) {
-                          const child = node.content.content[i];
-                          if (child === linkNode) {
-                            break;
-                          }
-                          startPos += child.nodeSize;
-                        }
                         const { href, title } = linkNode.marks[0].attrs;
                         let newTitle;
                         if (title && title.startsWith('*')) {
@@ -375,16 +372,6 @@ Still | renders | nicely
                             }
                             title = title.trim();
                             const description = getMeta(htmlDoc, 'description');
-                            const linkNode = view.state.doc.nodeAt(pos);
-                            const len = node.content.content.length;
-                            let startPos = nodePos + 1;
-                            for (let i = 0; i < len; i += 1) {
-                              const child = node.content.content[i];
-                              if (child === linkNode) {
-                                break;
-                              }
-                              startPos += child.nodeSize;
-                            }
                             let tr = view.state.tr.delete(
                               startPos,
                               startPos + linkNode.nodeSize
@@ -404,31 +391,11 @@ Still | renders | nicely
                             console.log(err);
                           });
                       },
-                      disabled:
-                        workspace.readonly ||
-                        !(
-                          node.content.content[0].marks[0].attrs.href.startsWith(
-                            'http'
-                          ) ||
-                          node.content.content[0].marks[0].attrs.href.startsWith(
-                            'www.'
-                          )
-                        ),
                       text: 'Download link info'
                     }),
                     React.createElement(MenuDivider),
                     React.createElement(MenuItem, {
                       onClick: () => {
-                        const linkNode = view.state.doc.nodeAt(pos);
-                        const len = node.content.content.length;
-                        let startPos = nodePos + 1;
-                        for (let i = 0; i < len; i += 1) {
-                          const child = node.content.content[i];
-                          if (child === linkNode) {
-                            break;
-                          }
-                          startPos += child.nodeSize;
-                        }
                         view.dispatch(
                           view.state.tr.delete(
                             startPos,
@@ -453,11 +420,12 @@ Still | renders | nicely
                   );
                   return true;
                 }
+                const tooltip = document.getElementById('statusBar')?.innerHTML;
                 if (
                   isCTRL ||
-                  event.target.className === 'openUrlIcon' ||
-                  event.target.className === 'cardLinkIcon'
+                  (startPos + linkNode.nodeSize === anchor && tooltip === url)
                 ) {
+                  // CTRL or click on the icon
                   return openUrl();
                 }
               }

@@ -118,6 +118,7 @@ class StatusBar extends Component {
 
     return (
       <div
+        id="statusBar"
         style={{
           float: 'left',
           maxWidth: '328px',

@@ -362,25 +362,19 @@ export const schema = new Schema({
         if (title && title.startsWith('*')) {
           iconOnly = true;
         }
+        const iconClass = node.attrs.href.startsWith('@')
+          ? 'cardLinkIcon'
+          : 'openUrlIcon';
         return [
-          'span',
+          'a',
           {
             href: node.attrs.href,
-            class: node.attrs.href.startsWith('@')
-              ? 'cardLinkIcon'
-              : 'openUrlIcon'
+            title,
+            ...{
+              class: iconOnly ? `linkIconOnly ${iconClass}` : iconClass
+            }
           },
-          [
-            'a',
-            {
-              href: node.attrs.href,
-              title,
-              ...{
-                class: iconOnly ? 'linkIconOnly' : ''
-              }
-            },
-            0
-          ]
+          0
         ];
       }
     },

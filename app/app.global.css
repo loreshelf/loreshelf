@@ -194,6 +194,8 @@ div + ul.bp3-menu {
   content: ' \f35d';
   cursor: pointer;
   color: #92f8e6;
+  font-size: initial;
+  padding-right: 3px;
 }
 
 .cardLinkIcon::after {
@@ -203,10 +205,12 @@ div + ul.bp3-menu {
   content: ' \f105';
   cursor: pointer;
   color: #92f8e6;
+  font-size: initial;
+  padding-right: 3px;
 }
 
 .linkIconOnly {
-  display: none;
+  font-size: 0;
 }
 
 h6 {
