@@ -155,7 +155,9 @@ class Home extends Component {
       loading: true,
       appVersion: '?',
       updateLastChecked,
-      showonly: { enabled: false, notecards: null }
+      showonly: { enabled: false, notecards: null },
+      // eslint-disable-next-line react/no-unused-state
+      closing: false
     };
     this.newCard = this.newCard.bind(this);
     this.editTitle = this.editTitle.bind(this);
@@ -285,7 +287,10 @@ class Home extends Component {
     });
 
     ipcRenderer.on('board-save-callback', (event, stats?, error?) => {
-      if (error) {
+      const { closing } = self.state;
+      if (closing) {
+        ipcRenderer.send('closed');
+      } else if (error) {
         AppToaster.show({
           message: `Error when saving the notebook. Please check your permissions.`,
           intent: Intent.DANGER
@@ -446,6 +451,20 @@ class Home extends Component {
 
     ipcRenderer.on('refresh-and-save-callback', () => {
       self.autoSave();
+    });
+
+    ipcRenderer.on('close-app', () => {
+      const { saveTimer } = self.state;
+      const { rememberLastNotebook } = self.state.settings;
+      if (rememberLastNotebook) {
+        self.setBoardOnStartup();
+      }
+      if (saveTimer) {
+        self.setState({ closing: true });
+        self.saveBoard();
+      } else {
+        ipcRenderer.send('closed');
+      }
     });
 
     document.addEventListener('keyup', e => {

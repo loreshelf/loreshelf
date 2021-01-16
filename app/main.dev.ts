@@ -694,22 +694,25 @@ const createWindow = async () => {
     mainWindow.webContents.send('update-download-callback');
   });
 
-  mainWindow.on('close', () => {
-    mainWindow.webContents.send('remember-last-notebook');
-    mainWindow.webContents.send('board-save');
-    if (watcher != null) {
-      watcher.close();
-    }
-    if (boardWatcher != null) {
-      boardWatcher.close();
-    }
-    if (globalShortcut.isRegistered('Alt+C')) {
-      globalShortcut.unregister('Alt+C');
+  mainWindow.on('close', e => {
+    if (mainWindow) {
+      e.preventDefault();
+      if (watcher != null) {
+        watcher.close();
+      }
+      if (boardWatcher != null) {
+        boardWatcher.close();
+      }
+      if (globalShortcut.isRegistered('Alt+C')) {
+        globalShortcut.unregister('Alt+C');
+      }
+      mainWindow.webContents.send('close-app');
     }
   });
 
-  mainWindow.on('closed', () => {
+  ipcMain.on('closed', () => {
     mainWindow = null;
+    app.quit();
   });
 
   const menuBuilder = new MenuBuilder(app, mainWindow);
