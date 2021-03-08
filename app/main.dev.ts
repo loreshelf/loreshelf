@@ -336,6 +336,7 @@ const createWindow = async () => {
       buttonLabel: 'Open workspace',
       properties: [
         'openDirectory',
+        'multiSelections',
         'createDirectory',
         'promptToCreate',
         'treatPackageAsDirectory',
@@ -346,30 +347,31 @@ const createWindow = async () => {
     dialog.showOpenDialog(mainWindow, options).then(data => {
       // eslint-disable-next-line promise/always-return
       if (!data.canceled) {
-        const workspacePath = data.filePaths[0];
-        fs.access(workspacePath, fs.constants.W_OK, err => {
-          const readonly = err != null;
-          if (watcher == null) {
-            initializeWatcher(workspacePath);
-          } else {
-            watcher.add(workspacePath);
-          }
-          fs.readdir(workspacePath, (err2, files) => {
-            if (!err2) {
-              const stats = [];
-              files.forEach(filePath => {
-                stats.push(
-                  fs.statSync(`${workspacePath}${path.sep}${filePath}`)
-                );
-              });
-              event.reply(
-                'workspace-add-callback',
-                workspacePath,
-                files,
-                stats,
-                readonly
-              );
+        data.filePaths.forEach(workspacePath => {
+          fs.access(workspacePath, fs.constants.W_OK, err => {
+            const readonly = err != null;
+            if (watcher == null) {
+              initializeWatcher(workspacePath);
+            } else {
+              watcher.add(workspacePath);
             }
+            fs.readdir(workspacePath, (err2, files) => {
+              if (!err2) {
+                const stats = [];
+                files.forEach(filePath => {
+                  stats.push(
+                    fs.statSync(`${workspacePath}${path.sep}${filePath}`)
+                  );
+                });
+                event.reply(
+                  'workspace-add-callback',
+                  workspacePath,
+                  files,
+                  stats,
+                  readonly
+                );
+              }
+            });
           });
         });
       }
