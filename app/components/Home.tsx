@@ -163,6 +163,7 @@ class Home extends Component {
     this.editTitle = this.editTitle.bind(this);
     this.editCard = this.editCard.bind(this);
     this.removeCard = this.removeCard.bind(this);
+    this.sortCards = this.sortCards.bind(this);
     this.reorderCards = this.reorderCards.bind(this);
     this.newBoard = this.newBoard.bind(this);
     this.duplicateBoard = this.duplicateBoard.bind(this);
@@ -187,6 +188,7 @@ class Home extends Component {
     this.onStartupCallback = this.onStartupCallback.bind(this);
     this.exportToPDF = this.exportToPDF.bind(this);
     this.switchShowOnly = this.switchShowOnly.bind(this);
+    this.updateNotebookConfig = this.updateNotebookConfig.bind(this);
 
     window.onkeydown = e => {
       if (e.ctrlKey || e.metaKey) {
@@ -562,10 +564,24 @@ class Home extends Component {
   getCurrentBoardMd(data?) {
     const { boardData } = this.state;
     const bd = data || boardData;
+    const { notebookConfig } = bd;
     const cards = bd.cards.map(
       c => `# ${c.title}\n\n${serializeMarkdown(c.doc).trim()}`
     );
-    let boardMd = cards.join('\n\n');
+    let configHeader = '';
+    if (
+      notebookConfig &&
+      (notebookConfig.addToEnd === false || notebookConfig.sortBy !== 'custom')
+    ) {
+      configHeader += '---\n';
+      configHeader += `add-notecard:${
+        notebookConfig.addToEnd === false ? 'top' : 'bottom'
+      }\n`;
+      configHeader += `sort-notecards:${notebookConfig.sortBy}\n`;
+      configHeader += '---\n\n';
+    }
+    let boardMd = configHeader;
+    boardMd += cards.join('\n\n');
     MarkdownIcons.forEach(mdi => {
       const regExp = new RegExp(`\\!\\[Icon\\]\\(${mdi.icon}\\)`, 'g');
       boardMd = boardMd.replace(regExp, mdi.code);
@@ -870,6 +886,27 @@ class Home extends Component {
   // eslint-disable-next-line class-methods-use-this
   toBoardData(boardMeta, text, stats) {
     let newText = text;
+    const notebookConfig = { addToEnd: true, sortBy: 'custom' };
+    if (text.startsWith('---\n')) {
+      const newLineIndex = text.indexOf('\n\n', 4);
+      const separatorIndex = text.indexOf('---\n', 4);
+      const closer =
+        newLineIndex < separatorIndex ? newLineIndex : separatorIndex;
+      const notebookHeaderText = text.substring(4, closer);
+      const properties = notebookHeaderText.split('\n');
+      properties.forEach(line => {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex > 0) {
+          const prop = line.substring(0, colonIndex).trim();
+          const propValue = line.substring(colonIndex + 1).trim();
+          if (prop === 'add-notecard') {
+            notebookConfig.addToEnd = propValue !== 'top';
+          } else if (prop === 'sort-notecards') {
+            notebookConfig.sortBy = propValue;
+          }
+        }
+      });
+    }
     newText = icons2links(newText);
     newText = metadata2table(newText);
     const mdCards = newText.split(/^(?=# )/gm);
@@ -895,7 +932,8 @@ class Home extends Component {
       cards,
       status,
       modified,
-      name: boardMeta.name
+      name: boardMeta.name,
+      notebookConfig
     };
     return boardData;
   }
@@ -1082,6 +1120,7 @@ class Home extends Component {
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
+    this.sortCards();
     this.setState({ boardData, workspace });
     this.menuRef.current.forceUpdate();
   }
@@ -1145,9 +1184,13 @@ class Home extends Component {
   newCard() {
     const { boardData } = this.state;
     if (boardData) {
-      const { cards } = boardData;
+      const { cards, notebookConfig } = boardData;
       const doc = parseMarkdown('');
-      cards.push({ doc, title: '' });
+      if (notebookConfig.addToEnd || notebookConfig.addToEnd === undefined) {
+        cards.push({ doc, title: '' });
+      } else {
+        cards.unshift({ doc, title: '' });
+      }
       this.autoSave();
       this.boardRef.forceUpdate();
 
@@ -1155,11 +1198,40 @@ class Home extends Component {
       setTimeout(() => {
         // this.boardRef.boardRef.current.scrollTop = this.boardRef.boardRef.current.scrollHeight;
         const n = this.boardRef.boardRef.current.firstChild.childNodes;
+        const pos =
+          notebookConfig.addToEnd || notebookConfig.addToEnd === undefined
+            ? n.length - 1
+            : 0;
         const title =
-          n[n.length - 1].firstChild.firstChild.firstChild.firstChild.lastChild
+          n[pos].firstChild.firstChild.firstChild.firstChild.lastChild
             .firstChild.firstChild.firstChild.firstElementChild;
         title.focus();
       }, 100);
+    }
+  }
+
+  sortCards() {
+    const { boardData } = this.state;
+    const { cards, notebookConfig } = boardData;
+    if (notebookConfig.sortBy === 'title') {
+      let updateOrder = false;
+      cards.sort((a, b) => {
+        const titleA = a.title.toUpperCase(); // ignore upper and lowercase
+        const titleB = b.title.toUpperCase(); // ignore upper and lowercase
+        if (titleA < titleB) {
+          updateOrder = true;
+          return -1;
+        }
+        if (titleA > titleB) {
+          updateOrder = true;
+          return 1;
+        }
+        // titles must be equal
+        return 0;
+      });
+      if (updateOrder) {
+        this.boardRef.forceUpdate();
+      }
     }
   }
 
@@ -1566,6 +1638,13 @@ class Home extends Component {
     this.boardRef.forceUpdate();
   }
 
+  updateNotebookConfig(notebookConfig) {
+    const { boardData } = this.state;
+    boardData.notebookConfig = { ...notebookConfig };
+    this.boardRef.forceUpdate();
+    this.autoSave();
+  }
+
   autoSave(immediatelyWhenNeeded?) {
     const { boardData } = this.state;
     let { saveTimer } = this.state;
@@ -1847,9 +1926,11 @@ class Home extends Component {
               workspace={workspace}
               knownWorkspaces={knownWorkspaces}
               boardPath={boardPath}
+              boardData={boardData}
               showonly={showonly}
               openBoard={this.loadBoardWithPath}
               onSwitchShowOnly={this.switchShowOnly}
+              onUpdateNotebookConfig={this.updateNotebookConfig}
             />
           ]
         ) : (

@@ -7,9 +7,13 @@ import {
   ButtonGroup,
   Card,
   Elevation,
+  FormGroup,
   InputGroup,
   Intent,
+  Radio,
+  RadioGroup,
   Spinner,
+  Switch,
   Tag
 } from '@blueprintjs/core';
 import WorkspaceIndex from '../search/WorkspaceIndex';
@@ -17,7 +21,7 @@ import styles from './SidePanel.css';
 
 enum SidePanelContent {
   SEARCH = 1,
-  PINNED
+  NOTEBOOK_CONFIG = 2
 }
 
 enum SearchStatus {
@@ -34,17 +38,25 @@ class SidePanel extends Component {
       searchText: '',
       workspaceIndex: null,
       results: null,
-      searchStatus: SearchStatus.DONE
+      searchStatus: SearchStatus.DONE,
+      notebookConfig: { ...props.boardData.notebookConfig }
     };
     this.search = this.search.bind(this);
     this.selectSearch = this.selectSearch.bind(this);
+    this.selectNotebookConfig = this.selectNotebookConfig.bind(this);
     this.searchReady = this.searchReady.bind(this);
+    this.changeNotecardAdding = this.changeNotecardAdding.bind(this);
+    this.changeNotecardSorting = this.changeNotecardSorting.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    const { workspace } = this.props;
+    const { workspace, boardPath } = this.props;
     if (workspace !== nextProps.workspace) {
       this.setState({ results: null, searchText: '' });
+    }
+    if (boardPath !== nextProps.boardPath) {
+      const { boardData } = nextProps;
+      this.setState({ notebookConfig: { ...boardData.notebookConfig } });
     }
     return true;
   }
@@ -140,6 +152,20 @@ class SidePanel extends Component {
     }
   }
 
+  selectNotebookConfig() {
+    const { open, content } = this.state;
+    if (content === SidePanelContent.NOTEBOOK_CONFIG) {
+      this.setState({
+        open: !open
+      });
+    } else {
+      this.setState({
+        open: true,
+        content: SidePanelContent.NOTEBOOK_CONFIG
+      });
+    }
+  }
+
   selectSearch() {
     const { open, content } = this.state;
     if (content === SidePanelContent.SEARCH) {
@@ -154,8 +180,35 @@ class SidePanel extends Component {
     }
   }
 
+  changeNotecardAdding() {
+    const { notebookConfig } = this.state;
+    const { onUpdateNotebookConfig } = this.props;
+    if (notebookConfig.addToEnd || notebookConfig.addToEnd === undefined) {
+      notebookConfig.addToEnd = false;
+    } else {
+      notebookConfig.addToEnd = true;
+    }
+    onUpdateNotebookConfig(notebookConfig);
+    this.setState(notebookConfig);
+  }
+
+  changeNotecardSorting(e) {
+    const { notebookConfig } = this.state;
+    const { onUpdateNotebookConfig } = this.props;
+    notebookConfig.sortBy = e.target.value;
+    onUpdateNotebookConfig(notebookConfig);
+    this.setState(notebookConfig);
+  }
+
   render() {
-    const { open, content, searchText, results, searchStatus } = this.state;
+    const {
+      open,
+      content,
+      searchText,
+      results,
+      searchStatus,
+      notebookConfig
+    } = this.state;
     const {
       workspace,
       boardPath,
@@ -175,6 +228,12 @@ class SidePanel extends Component {
         <ButtonGroup>
           <ButtonGroup vertical fill style={{ marginRight: '12px' }}>
             <Button
+              icon="widget-header"
+              large
+              onClick={this.selectNotebookConfig}
+              style={{ marginBottom: '6px' }}
+            />
+            <Button
               icon="search"
               onClick={this.selectSearch}
               disabled={!workspace}
@@ -186,6 +245,69 @@ class SidePanel extends Component {
               }
             />
           </ButtonGroup>
+          {open && content === SidePanelContent.NOTEBOOK_CONFIG && (
+            <div className={styles.sidePanelContent}>
+              <div
+                style={{
+                  borderBottom: '1px solid hsl(206, 24%, 64%)',
+                  width: 'calc(100% + 20px)',
+                  marginLeft: '-10px',
+                  padding: '0px 10px',
+                  paddingBottom: '5px'
+                }}
+              >
+                Notebook Configuration
+              </div>
+              <span style={{ margin: '15px 0px' }}>
+                Placement of a newly added notecard
+              </span>
+              <FormGroup inline>
+                <span
+                  style={{
+                    padding: '5px',
+                    backgroundColor:
+                      notebookConfig.addToEnd === false
+                        ? '#137cbd'
+                        : 'rgb(48, 64, 77)'
+                  }}
+                >
+                  Top
+                </span>
+                <Switch
+                  checked={
+                    notebookConfig.addToEnd ||
+                    notebookConfig.addToEnd === undefined
+                  }
+                  inline
+                  large
+                  onChange={this.changeNotecardAdding}
+                  style={{ margin: '0px', marginLeft: '10px' }}
+                />
+                <span
+                  style={{
+                    padding: '5px',
+                    backgroundColor:
+                      notebookConfig.addToEnd ||
+                      notebookConfig.addToEnd === undefined
+                        ? '#137cbd'
+                        : 'rgb(48, 64, 77)'
+                  }}
+                >
+                  Bottom
+                </span>
+              </FormGroup>
+              <div style={{ marginTop: '15px' }}>
+                <RadioGroup
+                  label="Notecard sorting"
+                  onChange={this.changeNotecardSorting}
+                  selectedValue={notebookConfig.sortBy}
+                >
+                  <Radio label="Custom" value="custom" />
+                  <Radio label="By title" value="title" />
+                </RadioGroup>
+              </div>
+            </div>
+          )}
           {open && content === SidePanelContent.SEARCH && (
             <div className={styles.sidePanelContent}>
               <div

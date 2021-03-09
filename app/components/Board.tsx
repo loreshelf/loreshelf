@@ -143,6 +143,7 @@ class Board extends Component {
                       dividerLeft={dividerLeft}
                       moveCard={moveCard}
                       hoverDivider={hoverDivider}
+                      notebookConfig={boardData.notebookConfig}
                       onEditCard={onEditCard}
                       onRemoveCard={onRemoveCard}
                       onEditTitle={onEditTitle}
