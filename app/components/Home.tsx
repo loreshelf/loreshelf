@@ -1120,7 +1120,6 @@ class Home extends Component {
     workspace.boards.sort((a, b) => {
       return SORTING_METHODS[sortBy.method](a, b, sortBy.asc);
     });
-    this.sortCards();
     this.setState({ boardData, workspace });
     this.menuRef.current.forceUpdate();
   }
@@ -1133,6 +1132,7 @@ class Home extends Component {
     }
     if (saveTimer || backgroundBoardData) {
       const boardPath = data.path;
+      this.sortCards();
       const boardContent = this.getCurrentBoardMd(data);
       if (workspace.zipdata) {
         const { zip } = workspace;
