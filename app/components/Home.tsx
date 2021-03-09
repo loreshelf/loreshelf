@@ -1214,22 +1214,34 @@ class Home extends Component {
     const { boardData } = this.state;
     const { cards, notebookConfig } = boardData;
     if (notebookConfig.sortBy === 'title') {
-      let updateOrder = false;
-      cards.sort((a, b) => {
+      const compareFunc = (a, b) => {
         const titleA = a.title.toUpperCase(); // ignore upper and lowercase
         const titleB = b.title.toUpperCase(); // ignore upper and lowercase
         if (titleA < titleB) {
-          updateOrder = true;
           return -1;
         }
         if (titleA > titleB) {
-          updateOrder = true;
           return 1;
         }
         // titles must be equal
         return 0;
-      });
-      if (updateOrder) {
+      };
+      const isSorted = arr => {
+        const { length: l } = arr;
+        if (l <= 1) {
+          return true;
+        }
+        for (let i = 1; i < l; i += 1) {
+          const pos = compareFunc(arr[i - 1], arr[i]);
+          if (pos > 0) {
+            return false;
+          }
+        }
+        return true;
+      };
+      const sorted = isSorted(cards);
+      if (!sorted) {
+        cards.sort(compareFunc);
         this.boardRef.forceUpdate();
       }
     }
