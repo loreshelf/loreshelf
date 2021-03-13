@@ -156,7 +156,12 @@ const Card: React.FC<CardProps> = forwardRef(
     });
 
     const opacity = isDragging ? 0.5 : 1;
-    drop(blueRef);
+    if (
+      notebookConfig.sortBy === undefined ||
+      notebookConfig.sortBy === 'custom'
+    ) {
+      drop(blueRef);
+    }
 
     const [, updateState] = React.useState();
     const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -212,63 +217,67 @@ const Card: React.FC<CardProps> = forwardRef(
             >
               <h1 className={styles.title}>
                 <ButtonGroup style={{ width: '100%', overflow: 'hidden' }}>
-                  {!workspace.readonly &&
-                    (notebookConfig.sortBy === undefined ||
-                      notebookConfig.sortBy === 'custom') && (
-                      <div ref={drag}>
-                        <Icon
-                          icon="drag-handle-vertical"
-                          style={{
-                            cursor: 'grab',
-                            minWidth: '20px'
-                          }}
-                          onDoubleClick={onToggleCollapse}
-                          onClick={() => {
-                            if (collapsed) {
-                              card.collapsed =
-                                card.collapsed === undefined
-                                  ? false
-                                  : !card.collapsed;
-                              forceUpdate();
-                            }
-                          }}
-                          onContextMenu={e => {
-                            e.preventDefault();
-                            let parent = e.target;
-                            const rect = parent.getBoundingClientRect();
-                            if (parent.tagName !== 'BUTTON') {
-                              parent = e.target.offsetParent;
-                            }
-                            const boardContextMenu = React.createElement(
-                              Menu,
-                              {},
-                              React.createElement(MenuItem, {
-                                onClick: onMoveToTop,
-                                icon: 'double-chevron-up',
-                                text: 'Move to the top'
-                              }),
-                              React.createElement(MenuItem, {
-                                onClick: onMoveToBottom,
-                                icon: 'double-chevron-down',
-                                text: 'Move to the bottom'
-                              })
-                            );
+                  {!workspace.readonly && (
+                    <div ref={drag}>
+                      <Icon
+                        icon="drag-handle-vertical"
+                        style={{
+                          cursor: 'grab',
+                          minWidth: '20px'
+                        }}
+                        onDoubleClick={onToggleCollapse}
+                        onClick={() => {
+                          if (collapsed) {
+                            card.collapsed =
+                              card.collapsed === undefined
+                                ? false
+                                : !card.collapsed;
+                            forceUpdate();
+                          }
+                        }}
+                        onContextMenu={e => {
+                          e.preventDefault();
+                          if (
+                            notebookConfig.sortBy !== undefined &&
+                            notebookConfig.sortBy !== 'custom'
+                          ) {
+                            return;
+                          }
+                          let parent = e.target;
+                          const rect = parent.getBoundingClientRect();
+                          if (parent.tagName !== 'BUTTON') {
+                            parent = e.target.offsetParent;
+                          }
+                          const boardContextMenu = React.createElement(
+                            Menu,
+                            {},
+                            React.createElement(MenuItem, {
+                              onClick: onMoveToTop,
+                              icon: 'double-chevron-up',
+                              text: 'Move to the top'
+                            }),
+                            React.createElement(MenuItem, {
+                              onClick: onMoveToBottom,
+                              icon: 'double-chevron-down',
+                              text: 'Move to the bottom'
+                            })
+                          );
 
-                            ContextMenu.show(
-                              boardContextMenu,
-                              {
-                                left: rect.left - 5,
-                                top: rect.bottom + 7
-                              },
-                              () => {
-                                // menu was closed; callback optional
-                              },
-                              true
-                            );
-                          }}
-                        />
-                      </div>
-                    )}
+                          ContextMenu.show(
+                            boardContextMenu,
+                            {
+                              left: rect.left - 5,
+                              top: rect.bottom + 7
+                            },
+                            () => {
+                              // menu was closed; callback optional
+                            },
+                            true
+                          );
+                        }}
+                      />
+                    </div>
+                  )}
                   <Tooltip
                     content={card.title}
                     disabled={card.title.length <= notecardWidth / 8.5}

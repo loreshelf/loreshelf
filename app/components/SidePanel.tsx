@@ -319,7 +319,9 @@ class SidePanel extends Component {
                   <Radio label="By title" value="title" />
                 </RadioGroup>
               </div>
-              <div style={{ marginTop: '15px' }}>Notecard width</div>
+              <div style={{ marginTop: '15px' }}>
+                {`Notecard width (${notebookConfig.width || 220})`}
+              </div>
               <div style={{ padding: '5px' }}>
                 <Slider
                   min={220}
