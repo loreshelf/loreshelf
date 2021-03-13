@@ -571,7 +571,10 @@ class Home extends Component {
     let configHeader = '';
     if (
       notebookConfig &&
-      (notebookConfig.addToEnd === false || notebookConfig.sortBy !== 'custom')
+      (notebookConfig.addToEnd === false ||
+        notebookConfig.sortBy !== 'custom' ||
+        notebookConfig.width !== 220 ||
+        notebookConfig.zenmode)
     ) {
       configHeader += '---\n';
       if (notebookConfig.addToEnd === false) {
@@ -582,6 +585,9 @@ class Home extends Component {
       }
       if (notebookConfig.width !== undefined && notebookConfig.width !== 220) {
         configHeader += `notecard-width:${notebookConfig.width}\n`;
+      }
+      if (notebookConfig.zenmode !== undefined && notebookConfig.zenmode) {
+        configHeader += `zenmode:true\n`;
       }
       configHeader += '---\n\n';
     }
@@ -891,7 +897,12 @@ class Home extends Component {
   // eslint-disable-next-line class-methods-use-this
   toBoardData(boardMeta, text, stats) {
     let newText = text;
-    const notebookConfig = { addToEnd: true, sortBy: 'custom' };
+    const notebookConfig = {
+      addToEnd: true,
+      sortBy: 'custom',
+      width: 220,
+      zenmode: false
+    };
     if (text.startsWith('---\n')) {
       const newLineIndex = text.indexOf('\n\n', 4);
       const separatorIndex = text.indexOf('---\n', 4);
@@ -910,6 +921,8 @@ class Home extends Component {
             notebookConfig.sortBy = propValue;
           } else if (prop === 'notecard-width') {
             notebookConfig.width = Number(propValue) || undefined;
+          } else if (prop === 'zenmode') {
+            notebookConfig.zenmode = Boolean(propValue) || undefined;
           }
         }
       });
@@ -956,6 +969,9 @@ class Home extends Component {
     let newLoading = loading;
     if (loading) {
       newLoading = false;
+    }
+    if (this.boardRef.state) {
+      this.boardRef.setState({ collapsed: undefined });
     }
     this.setState({
       boardData,
@@ -1195,9 +1211,9 @@ class Home extends Component {
       const { cards, notebookConfig } = boardData;
       const doc = parseMarkdown('');
       if (notebookConfig.addToEnd || notebookConfig.addToEnd === undefined) {
-        cards.push({ doc, title: '' });
+        cards.push({ doc, title: '', collapsed: false });
       } else {
-        cards.unshift({ doc, title: '' });
+        cards.unshift({ doc, title: '', collapsed: false });
       }
       this.autoSave();
       this.boardRef.forceUpdate();

@@ -24,10 +24,8 @@ class Board extends Component {
       dividerIndex: -1,
       dividerLeft: false,
       imageSrc: null,
-      collapsed: false
+      collapsed: undefined
     };
-    // const { boardData } = this.props;
-    // this.numCards = boardData ? boardData.cards.length : 0;
     this.updateDivider = this.updateDivider.bind(this);
     this.openImage = this.openImage.bind(this);
     this.closeImage = this.closeImage.bind(this);
@@ -136,7 +134,11 @@ class Board extends Component {
                       card={c}
                       workspace={workspace}
                       settings={settings}
-                      collapsed={collapsed}
+                      collapsed={
+                        collapsed === undefined
+                          ? boardData.notebookConfig.zenmode
+                          : collapsed || false
+                      }
                       index={cardData.indexOf(c)}
                       resetDivider={resetDivider}
                       dividerIndex={dividerIndex}

@@ -49,6 +49,7 @@ class SidePanel extends Component {
     this.changeNotecardAdding = this.changeNotecardAdding.bind(this);
     this.changeNotecardSorting = this.changeNotecardSorting.bind(this);
     this.changeNotecardWidth = this.changeNotecardWidth.bind(this);
+    this.changeNotecardZenmode = this.changeNotecardZenmode.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -210,6 +211,14 @@ class SidePanel extends Component {
     this.setState(notebookConfig);
   }
 
+  changeNotecardZenmode() {
+    const { notebookConfig } = this.state;
+    const { onUpdateNotebookConfig } = this.props;
+    notebookConfig.zenmode = !notebookConfig.zenmode;
+    onUpdateNotebookConfig(notebookConfig);
+    this.setState(notebookConfig);
+  }
+
   render() {
     const {
       open,
@@ -347,6 +356,14 @@ class SidePanel extends Component {
                   vertical={false}
                 />
               </div>
+              <div style={{ margin: '15px 0px' }}>Open in zenmode</div>
+              <Switch
+                checked={notebookConfig.zenmode}
+                inline
+                label={notebookConfig.zenmode ? 'collapsed' : 'expanded'}
+                large
+                onChange={this.changeNotecardZenmode}
+              />
             </div>
           )}
           {open && content === SidePanelContent.SEARCH && (
