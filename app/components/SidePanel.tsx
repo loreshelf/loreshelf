@@ -12,6 +12,7 @@ import {
   Intent,
   Radio,
   RadioGroup,
+  Slider,
   Spinner,
   Switch,
   Tag
@@ -47,6 +48,7 @@ class SidePanel extends Component {
     this.searchReady = this.searchReady.bind(this);
     this.changeNotecardAdding = this.changeNotecardAdding.bind(this);
     this.changeNotecardSorting = this.changeNotecardSorting.bind(this);
+    this.changeNotecardWidth = this.changeNotecardWidth.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -200,6 +202,14 @@ class SidePanel extends Component {
     this.setState(notebookConfig);
   }
 
+  changeNotecardWidth(val) {
+    const { notebookConfig } = this.state;
+    const { onUpdateNotebookConfig } = this.props;
+    notebookConfig.width = val;
+    onUpdateNotebookConfig(notebookConfig);
+    this.setState(notebookConfig);
+  }
+
   render() {
     const {
       open,
@@ -230,6 +240,7 @@ class SidePanel extends Component {
             <Button
               icon="widget-header"
               large
+              title="Configuration"
               onClick={this.selectNotebookConfig}
               style={{ marginBottom: '6px' }}
             />
@@ -238,11 +249,13 @@ class SidePanel extends Component {
               onClick={this.selectSearch}
               disabled={!workspace}
               large
+              title="Search"
               intent={
                 content === SidePanelContent.SEARCH && open
                   ? Intent.PRIMARY
                   : Intent.NONE
               }
+              style={{ marginBottom: '6px' }}
             />
           </ButtonGroup>
           {open && content === SidePanelContent.NOTEBOOK_CONFIG && (
@@ -305,6 +318,32 @@ class SidePanel extends Component {
                   <Radio label="Custom" value="custom" />
                   <Radio label="By title" value="title" />
                 </RadioGroup>
+              </div>
+              <div style={{ marginTop: '15px' }}>Notecard width</div>
+              <div style={{ padding: '5px' }}>
+                <Slider
+                  min={220}
+                  max={440}
+                  stepSize={110}
+                  labelStepSize={110}
+                  onChange={this.changeNotecardWidth}
+                  labelRenderer={(val: number) => {
+                    switch (val) {
+                      case 220:
+                        return 'Min';
+                      case 330:
+                        return 'Medium';
+                      case 440:
+                        return 'Max';
+                      default:
+                        break;
+                    }
+                    return 'Unknown';
+                  }}
+                  showTrackFill={false}
+                  value={notebookConfig.width || 220}
+                  vertical={false}
+                />
               </div>
             </div>
           )}

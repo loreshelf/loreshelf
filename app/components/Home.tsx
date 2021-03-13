@@ -574,10 +574,15 @@ class Home extends Component {
       (notebookConfig.addToEnd === false || notebookConfig.sortBy !== 'custom')
     ) {
       configHeader += '---\n';
-      configHeader += `add-notecard:${
-        notebookConfig.addToEnd === false ? 'top' : 'bottom'
-      }\n`;
-      configHeader += `sort-notecards:${notebookConfig.sortBy}\n`;
+      if (notebookConfig.addToEnd === false) {
+        configHeader += `add-notecard:top\n`;
+      }
+      if (notebookConfig.sortBy !== 'custom') {
+        configHeader += `sort-notecards:${notebookConfig.sortBy}\n`;
+      }
+      if (notebookConfig.width !== undefined && notebookConfig.width !== 220) {
+        configHeader += `notecard-width:${notebookConfig.width}\n`;
+      }
       configHeader += '---\n\n';
     }
     let boardMd = configHeader;
@@ -903,6 +908,8 @@ class Home extends Component {
             notebookConfig.addToEnd = propValue !== 'top';
           } else if (prop === 'sort-notecards') {
             notebookConfig.sortBy = propValue;
+          } else if (prop === 'notecard-width') {
+            notebookConfig.width = Number(propValue) || undefined;
           }
         }
       });
@@ -954,6 +961,7 @@ class Home extends Component {
       boardData,
       loading: newLoading
     });
+    this.sortCards(true);
     if (this.menuRef.current) {
       this.menuRef.current.forceUpdate();
     }
@@ -1210,7 +1218,7 @@ class Home extends Component {
     }
   }
 
-  sortCards() {
+  sortCards(saveIfChanged?) {
     const { boardData } = this.state;
     const { cards, notebookConfig } = boardData;
     if (notebookConfig.sortBy === 'title') {
@@ -1243,6 +1251,9 @@ class Home extends Component {
       if (!sorted) {
         cards.sort(compareFunc);
         this.boardRef.forceUpdate();
+        if (saveIfChanged) {
+          this.autoSave();
+        }
       }
     }
   }
@@ -1652,7 +1663,13 @@ class Home extends Component {
 
   updateNotebookConfig(notebookConfig) {
     const { boardData } = this.state;
+    const sortNow =
+      boardData.notebookConfig.sortBy !== notebookConfig.sortBy &&
+      notebookConfig.sortBy === 'title';
     boardData.notebookConfig = { ...notebookConfig };
+    if (sortNow) {
+      this.sortCards();
+    }
     this.boardRef.forceUpdate();
     this.autoSave();
   }

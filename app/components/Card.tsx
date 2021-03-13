@@ -71,7 +71,7 @@ const Card: React.FC<CardProps> = forwardRef(
     const blueRef = useRef<BlueCard>(null);
     const titleRef = useRef<EditableText>(null);
 
-    const { notecardWidth } = settings;
+    const notecardWidth = notebookConfig.width || settings.notecardWidth;
 
     let cardData = card;
     if (card.spooling) {
