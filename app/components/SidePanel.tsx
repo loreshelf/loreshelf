@@ -356,7 +356,7 @@ class SidePanel extends Component {
                   vertical={false}
                 />
               </div>
-              <div style={{ margin: '15px 0px' }}>Open in zenmode</div>
+              <div style={{ margin: '15px 0px' }}>Open in zen mode</div>
               <Switch
                 checked={notebookConfig.zenmode}
                 inline
