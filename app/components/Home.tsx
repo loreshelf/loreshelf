@@ -970,7 +970,7 @@ class Home extends Component {
     if (loading) {
       newLoading = false;
     }
-    if (this.boardRef.state) {
+    if (this.boardRef && this.boardRef.state) {
       this.boardRef.setState({ collapsed: undefined });
     }
     this.setState({
