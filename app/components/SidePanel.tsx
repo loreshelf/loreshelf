@@ -59,7 +59,11 @@ class SidePanel extends Component {
     }
     if (boardPath !== nextProps.boardPath) {
       const { boardData } = nextProps;
-      this.setState({ notebookConfig: { ...boardData.notebookConfig } });
+      let notebookConfig;
+      if (boardData) {
+        notebookConfig = { ...boardData.notebookConfig };
+      }
+      this.setState({ notebookConfig });
     }
     return true;
   }
@@ -241,7 +245,6 @@ class SidePanel extends Component {
         totalResults += r.total;
       });
     }
-
     return (
       <div className={styles.sidePanel}>
         <ButtonGroup>
@@ -250,13 +253,14 @@ class SidePanel extends Component {
               icon="widget-header"
               large
               title="Configuration"
+              disabled={!workspace || !notebookConfig}
               onClick={this.selectNotebookConfig}
               style={{ marginBottom: '6px' }}
             />
             <Button
               icon="search"
               onClick={this.selectSearch}
-              disabled={!workspace}
+              disabled={!workspace || !notebookConfig}
               large
               title="Search"
               intent={
