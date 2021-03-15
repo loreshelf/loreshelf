@@ -1,7 +1,7 @@
 {
   "name": "loreshelf",
   "productName": "Loreshelf",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Concise notes, secure and lasting.",
   "main": "./main.prod.js",
   "author": {
