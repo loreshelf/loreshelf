@@ -40,7 +40,9 @@ class SidePanel extends Component {
       workspaceIndex: null,
       results: null,
       searchStatus: SearchStatus.DONE,
-      notebookConfig: { ...props.boardData.notebookConfig }
+      notebookConfig: props.boardData
+        ? { ...props.boardData.notebookConfig }
+        : {}
     };
     this.search = this.search.bind(this);
     this.selectSearch = this.selectSearch.bind(this);
